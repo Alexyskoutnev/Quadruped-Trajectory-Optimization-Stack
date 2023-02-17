@@ -1,0 +1,11 @@
+---
+  robot: "SOLO12"
+  joint_count: 12
+  endeffector_count: 4
+  mass: 1.16115091
+  ixx: 0.00578574
+  ixy: 0.0
+  ixz: 0.0
+  iyy: 0.01938108
+  iyz: 0.0
+  izz: 0.02476124
