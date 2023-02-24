@@ -1,6 +1,8 @@
 ---
   robot: "SOLO12"
   joint_count: 12
+  q_init : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  # q_init : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   endeffector_count: 4
   mass: 1.16115091
   ixx: 0.00578574

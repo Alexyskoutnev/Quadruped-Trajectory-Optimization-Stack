@@ -57,17 +57,23 @@ if __name__ == "__main__":
     robot = importRobot(URDF, Pose)
     ROBOT = SOLO12(py_client, robot, cfg)
     traj = sampleTraj(ROBOT, r) 
+    init_phase = False
     for key, value in traj.items():
         traj[key] = value * 100
     for i in range (10000):
-        joints_FL = ROBOT.invKinematics(traj['FL_FOOT'][i], ROBOT.EE_index['FL_FOOT'])
-        ROBOT.setJointControl([0,1,2], p.POSITION_CONTROL, joints_FL[0:3])
-        joints_FR = ROBOT.invKinematics(traj['FR_FOOT'][i], ROBOT.EE_index['FR_FOOT'])
-        ROBOT.setJointControl([3,4,5], p.POSITION_CONTROL, joints_FR[3:6])
-        joints_HL = ROBOT.invKinematics(traj['HL_FOOT'][i], ROBOT.EE_index['HL_FOOT'])
-        ROBOT.setJointControl([6,7,8], p.POSITION_CONTROL, joints_HL[6:9])
-        joints_HR = ROBOT.invKinematics(traj['HR_FOOT'][i], ROBOT.EE_index['HR_FOOT'])
-        ROBOT.setJointControl([9,10,11], p.POSITION_CONTROL, joints_HR[9:12])
-        p.stepSimulation()
-        time.sleep(1.0/100000.0)
+        if init_phase:
+            p.stepSimulation()
+            time.sleep(1.0/100000.0)
+        else:
+            # breakpoint()
+            joints_FL = ROBOT.invKinematics(traj['FL_FOOT'][i], ROBOT.EE_index['FL_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['FL'], p.POSITION_CONTROL, joints_FL[0:3])
+            joints_FR = ROBOT.invKinematics(traj['FR_FOOT'][i], ROBOT.EE_index['FR_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['FR'], p.POSITION_CONTROL, joints_FR[3:6])
+            joints_HL = ROBOT.invKinematics(traj['HL_FOOT'][i], ROBOT.EE_index['HL_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['BL'], p.POSITION_CONTROL, joints_HL[6:9])
+            joints_HR = ROBOT.invKinematics(traj['HR_FOOT'][i], ROBOT.EE_index['HR_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['BR'], p.POSITION_CONTROL, joints_HR[9:12])
+            p.stepSimulation()
+            time.sleep(1.0/100000.0)
     p.disconnect()
