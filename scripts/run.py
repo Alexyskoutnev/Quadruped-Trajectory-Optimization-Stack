@@ -13,6 +13,7 @@ import numpy as np
 #project
 from SOLO12_SIM_CONTROL.robot import SOLO12
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv
+from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"
@@ -39,9 +40,9 @@ def sampleTraj(robot, r, N=100):
 
 def setup_enviroment():
     py_client = p.connect(p.GUI)
-    # py_client = p.connect(p.DIRECT)
+    py_client = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.setGravity(0,0,-9.81)
+    p.setGravity(0,0,0)
     p.setTimeStep(0.001) 
     return py_client 
 
@@ -57,8 +58,14 @@ if __name__ == "__main__":
     planeId = p.loadURDF("plane.urdf")
     # robot = importRobot(URDF, Pose)
     ROBOT = SOLO12(py_client, URDF, cfg)
+    gait = Gait(ROBOT)
     traj = sampleTraj(ROBOT, r) 
-    init_phase = True
+    angle = 0
+    velocity = 1
+    offsets = np.array([0.5, 0.0, 0.0, 0.5])
+    trot_2_stance_ratio = 0.5
+    init_phase = False
+    trot_phase = True
     for key, value in traj.items():
         traj[key] = value * 100
     cmd = np.zeros((12, 1))
@@ -68,6 +75,20 @@ if __name__ == "__main__":
             p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
             p.stepSimulation()
             time.sleep(1.0/100000.0)
+        elif trot_phase:
+            gait_traj = gait.runTrajectory(velocity, angle, offsets, trot_2_stance_ratio, timestep=0.001)
+            print(f"{i}: {gait_traj}")
+            joints_FL = ROBOT.invKinematics(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['FL'], p.POSITION_CONTROL, joints_FL[0:3])
+            joints_FR = ROBOT.invKinematics(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['FR'], p.POSITION_CONTROL, joints_FR[3:6])
+            joints_HL = ROBOT.invKinematics(gait_traj['HL_FOOT'], ROBOT.EE_index['HL_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['BL'], p.POSITION_CONTROL, joints_HL[6:9])
+            joints_HR = ROBOT.invKinematics(gait_traj['HR_FOOT'], ROBOT.EE_index['HR_FOOT'])
+            ROBOT.setJointControl(ROBOT.jointidx['BR'], p.POSITION_CONTROL, joints_HR[9:12])
+            p.stepSimulation()
+            time.sleep(1.0/100000.0)
+
         else:
             # breakpoint()
             joints_FL = ROBOT.invKinematics(traj['FL_FOOT'][i], ROBOT.EE_index['FL_FOOT'])

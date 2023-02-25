@@ -2,6 +2,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt 
 
+from SOLO12_SIM_CONTROL.utils import trajectory_2_world_frame
+
 def binomial_factor(n, k):
     return np.math.factorial(n) / (np.math.factorial(k)*np.math.factorial(n - k))
 
@@ -16,16 +18,17 @@ def plot(t, val):
 
 class Gait(object):
 
-    def __init__(self):
+    def __init__(self, robot):
+        self.robot = robot
         self.feetPose = {"FL": np.zeros(3), "FR": np.zeros(3), "BL": np.zeros(3), "BR": np.zeros(3)}
         self.t = 0
         self.phiStance = 0
-        self.lastTime = 0
+        self.lastTime = time.time()
         self.alpha = 0
         self.s = False
         self.offset = np.array([0, 0.5, 0.5, 0]) #(FR, FL, BR, BL)
-        self.bodytofeet_cmd = np.zeros((4, 3))
-    
+        self.gaitTraj = {'FL_FOOT': np.zeros(3), 'FR_FOOT': np.zeros(3), 'HL_FOOT': np.zeros(3), 'HR_FOOT': np.zeros(3)}
+        self.cntTraj = 0
 
     def calculateStance(self, t, V, angle):
         c = np.cos(angle)
@@ -40,8 +43,6 @@ class Gait(object):
 
     def calculateSwing(self, t, velocity, angle):
         
-
-
         X_pts = np.abs(velocity) * np.cos(angle) * np.array([-0.05 ,
                                   -0.06 ,
                                   -0.07 , 
@@ -77,83 +78,125 @@ class Gait(object):
         swingY = 0.0
         swingZ = 0.0
 
-        for i in range(10):
+        for i in range(10): #Bezier Curve Computation
             swingX += bezier(t, i, X_pts[i])
             swingY += bezier(t, i, Y_pts[i])
             swingZ += bezier(t, i, Z_pts[i])
         
         return swingX, swingY, swingZ
 
-
-
-
-    def stepTrajectory(self, t, velocity, angle, angle_vel, centerTofoot):
-        
-        stepOffset = 0.75
+    def stepTrajectory(self, t, velocity, angle, stepOffset): 
+        if t >= 1.0:
+            t = (1.0 - t)
         if t <= stepOffset:
             T_stance = t/stepOffset
             stepX_pos, stepY_pos, stepZ_pos = self.calculateStance(T_stance, velocity, angle)
+            # stepX_pos, stepY_pos, stepZ_pos = 0, 0, 0
+
             # stepX_rot, stepY_rot, stepZ_rot = self.calculateStance(phiStance, angle_vel, )
         else:
             T_swing = (t - stepOffset)/(1 - stepOffset)
             stepX_pos, stepY_pos, stepZ_pos = self.calculateSwing(T_swing, velocity, angle)
-
+        # breakpoint()
         coord = np.empty(3)
         coord[0] = stepX_pos
         coord[1] = stepY_pos
         coord[2] = stepZ_pos
         return coord
 
-    def runTrajectory(velocity, angle, offset, T, cmd):
-        if T <= 0.01:
-            T = 0.01
+    def runTrajectory(self, velocity, angle, offset, T, timestep=0.01):
+        if T <= 0.001:
+            T = 0.001
+        if (abs(self.lastTime  - time.time()) < timestep):
+            return self.gaitTraj
+        else:
+            self.t += timestep
+            self.lastTime = time.time()
+            self.cntTraj += 1
         if (self.t >= 0.99):
-            self.lastTime = time.time()   
-        self.t = (time.time() - self.lastTime)/T
+            self.lastTime = time.time()
+            self.t = 0   
 
+        assert(self.t >= 0.0)
+        assert(self.t < 1.0)
 
         #Front-left
-        step_coord = self.stepTrajectory(self.t + offset[0], velocity, angle, cmd[0, :])
-        self.bodytofeet_cmd[0][0] += step_coord[0] 
-        self.bodytofeet_cmd[0][1] += step_coord[1]
-        self.bodytofeet_cmd[0][2] += step_coord[2]
+        step_coord = self.stepTrajectory(self.t + offset[0], velocity, angle, T)
+        self.gaitTraj['FL_FOOT'][0] = step_coord[0] 
+        self.gaitTraj['FL_FOOT'][1] = step_coord[1]
+        self.gaitTraj['FL_FOOT'][2] = step_coord[2]
 
         #Front-right
-        step_coord = self.stepTrajectory(self.t + offset[1], velocity, angle, cmd[1, :])
-        self.bodytofeet_cmd[1][0] += step_coord[0] 
-        self.bodytofeet_cmd[1][1] += step_coord[1]
-        self.bodytofeet_cmd[1][2] += step_coord[2]
+        step_coord = self.stepTrajectory(self.t + offset[1], velocity, angle, T)
+        self.gaitTraj['FR_FOOT'][0] = step_coord[0] 
+        self.gaitTraj['FR_FOOT'][1] = step_coord[1]
+        self.gaitTraj['FR_FOOT'][2] = step_coord[2]
 
         #Back-left
-        step_coord = self.stepTrajectory(self.t + offset[2], velocity, angle, cmd[2, :])
-        self.bodytofeet_cmd[2][0] += step_coord[0] 
-        self.bodytofeet_cmd[2][1] += step_coord[1]
-        self.bodytofeet_cmd[2][2] += step_coord[2]
+        step_coord = self.stepTrajectory(self.t + offset[2], velocity, angle, T)
+        self.gaitTraj['HL_FOOT'][0] = step_coord[0] 
+        self.gaitTraj['HL_FOOT'][1] = step_coord[1]
+        self.gaitTraj['HL_FOOT'][2] = step_coord[2]
 
         #Back-right
-        step_coord = self.stepTrajectory(self.t + offset[3], velocity, angle, cmd[3, :])
-        self.bodytofeet_cmd[3][0] += step_coord[0] 
-        self.bodytofeet_cmd[3][1] += step_coord[1]
-        self.bodytofeet_cmd[3][2] += step_coord[2]
+        step_coord = self.stepTrajectory(self.t + offset[3], velocity, angle, T)
+        self.gaitTraj['HR_FOOT'][0] = step_coord[0] 
+        self.gaitTraj['HR_FOOT'][1] = step_coord[1]
+        self.gaitTraj['HR_FOOT'][2] = step_coord[2]
+
+
+        self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj)
+        return self.gaitTraj
+
 
 
 
         
 if __name__ == "__main__":
-
-    t = np.linspace(0, 1, 1000)
+    itr = 5000
+    t = np.linspace(0, 1, itr)
     velocity = 1
-    X = list()
-    Y = list()
-    Z = list()
+    X_FL_FOOT = list()
+    Y_FL_FOOT = list()
+    Z_FL_FOOT = list()
+    X_FR_FOOT = list()
+    Y_FR_FOOT = list()
+    Z_FR_FOOT = list()
+    X_HL_FOOT = list()
+    Y_HL_FOOT = list()
+    Z_HL_FOOT = list()
+    X_HR_FOOT = list()
+    Y_HR_FOOT = list()
+    Z_HR_FOOT = list()
+    
     gait = Gait()
-    angle = np.pi/4
+    angle = 0
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
-    for _ in t:
-        _X, _Y, _Z = gait.calculateSwing(_, 1, np.pi/3)
-        X.append(_X)
-        Y.append(_Y)
-        Z.append(_Z)
+    # for _ in t:
+    #     _X, _Y, _Z = gait.calculateSwing(_, 1, np.pi/3)
+    #     X.append(_X)
+    #     Y.append(_Y)
+    #     Z.append(_Z)
     
 
-    breakpoint()
+    # T = np.linspace(0, 1, 100)
+    while(True):
+    # if
+        gait_traj = gait.runTrajectory(velocity, angle, offsets, 0.50, timestep=0.001)
+        if gait_traj is not None:
+            X_FL_FOOT.append(gait_traj['FL_FOOT'][0])
+            Y_FL_FOOT.append(gait_traj['FL_FOOT'][1])
+            Z_FL_FOOT.append(gait_traj['FL_FOOT'][2])
+            X_FR_FOOT.append(gait_traj['FR_FOOT'][0])
+            Y_FR_FOOT.append(gait_traj['FR_FOOT'][1])
+            Z_FR_FOOT.append(gait_traj['HL_FOOT'][2])
+            X_HL_FOOT.append(gait_traj['HL_FOOT'][0])
+            Y_HL_FOOT.append(gait_traj['HL_FOOT'][1])
+            Z_HL_FOOT.append(gait_traj['HL_FOOT'][2])
+            X_HR_FOOT.append(gait_traj['HR_FOOT'][0])
+            Y_HR_FOOT.append(gait_traj['HR_FOOT'][1])
+            Z_HR_FOOT.append(gait_traj['HR_FOOT'][2])
+        else:
+            continue
+        if gait.cntTraj == itr:
+            breakpoint()

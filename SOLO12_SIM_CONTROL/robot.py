@@ -28,12 +28,12 @@ class SOLO12(object):
     def __init__(self, client, URDF, config):
         self.client = client
         self.config = config
-        self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'])
+        self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=1)
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
         self.fixjointidx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
         self.links = links_to_id(self.robot)
         # self.q_init = np.array(config['q_init'])
-        self.q_init = np.array([np.pi for i in range(12)])
+        self.q_init = np.array([0 for i in range(12)])
         self.q_init16 = q_init_16_arr(self.q_init)
         # self.q_init = [0 for i in range(12)]
         self.EE = {'FL_FOOT': None, 'FR_FOOT': None, "HL_FOOT": None, "HR_FOOT": None}
@@ -49,6 +49,9 @@ class SOLO12(object):
                                       controlMode=p.VELOCITY_CONTROL,
                                       targetVelocities= [0.0 for m in self.jointidx['idx']],
                                       forces= [0.0 for m in self.jointidx['idx']])
+
+    def CoM_states(self):
+        pass
 
 
 
@@ -68,9 +71,9 @@ class SOLO12(object):
     
     def invKinematics(self, pose, index):
         joint = None
-        if len(pose) == 3:
+        if len(pose) == 3: #Position (3d)
             joint = p.calculateInverseKinematics(self.robot, index, pose)
-        elif len(pose) == 2:
+        elif len(pose) == 2: #Position (3d) & Angle (4d)
             joint = p.calculateInverseKinematics(self.robot, index, pose[0], pose[1])
         return joint
 

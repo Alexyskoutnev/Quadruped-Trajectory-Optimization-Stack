@@ -20,3 +20,14 @@ def transformation_inv(M):
     mtx[:,3][:3]= R_inv_t
     return mtx
     
+def trajectory_2_world_frame(robot, traj):
+    traj_dict = {}
+    config = robot.get_endeffector_pose()
+    for link in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
+        print("link -> ", link)
+        tf_mtx = transformation_mtx(config[link]['linkWorldPosition'], config[link]['linkWorldOrientation'])
+        vec = np.concatenate((np.array([traj[link][0]]), np.array([traj[link][1]]), np.array([traj[link][2]]), np.ones(1)))
+        tf_vec = tf_mtx @ vec
+        traj_dict[link] = tf_vec[:3]
+    return traj_dict
+    
