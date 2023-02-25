@@ -2,6 +2,8 @@
   robot: "SOLO12"
   joint_count: 12
   q_init : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  start_pos : [0,0,0.35]
+  start_ang : [0.0, 0.0, 0.0, 1.0]
   # q_init : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   endeffector_count: 4
   mass: 1.16115091

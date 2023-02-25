@@ -41,12 +41,12 @@ def setup_enviroment():
     py_client = p.connect(p.GUI)
     # py_client = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.setGravity(0,0,0)
+    p.setGravity(0,0,-9.81)
     p.setTimeStep(0.001) 
     return py_client 
 
 def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
-    planeId = p.loadURDF("plane.urdf")
+    
     solo12 = p.loadURDF(URDF, *POSE)
     return solo12
 
@@ -54,14 +54,18 @@ if __name__ == "__main__":
     py_client = setup_enviroment()
     cfg = yaml.safe_load(open(config, 'r'))
     Pose = ([0,0,0.5], p.getQuaternionFromEuler([0,0,1]))
-    robot = importRobot(URDF, Pose)
-    ROBOT = SOLO12(py_client, robot, cfg)
+    planeId = p.loadURDF("plane.urdf")
+    # robot = importRobot(URDF, Pose)
+    ROBOT = SOLO12(py_client, URDF, cfg)
     traj = sampleTraj(ROBOT, r) 
-    init_phase = False
+    init_phase = True
     for key, value in traj.items():
         traj[key] = value * 100
+    cmd = np.zeros((12, 1))
     for i in range (10000):
         if init_phase:
+            jointTorques = ROBOT.default_stance_control(cmd, p.TORQUE_CONTROL)
+            p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
             p.stepSimulation()
             time.sleep(1.0/100000.0)
         else:
@@ -76,4 +80,5 @@ if __name__ == "__main__":
             ROBOT.setJointControl(ROBOT.jointidx['BR'], p.POSITION_CONTROL, joints_HR[9:12])
             p.stepSimulation()
             time.sleep(1.0/100000.0)
+        ROBOT.time_step += 1
     p.disconnect()
