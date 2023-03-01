@@ -40,9 +40,9 @@ def sampleTraj(robot, r, N=100):
 
 def setup_enviroment():
     py_client = p.connect(p.GUI)
-    py_client = p.connect(p.DIRECT)
+    # py_client = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.setGravity(0,0,0)
+    p.setGravity(0,0,-9.81)
     p.setTimeStep(0.001) 
     return py_client 
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     angle = 0
     velocity = 1
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
-    trot_2_stance_ratio = 0.5
+    trot_2_stance_ratio = 0.2
     init_phase = False
     trot_phase = True
     for key, value in traj.items():
@@ -77,8 +77,9 @@ if __name__ == "__main__":
             time.sleep(1.0/100000.0)
         elif trot_phase:
             gait_traj = gait.runTrajectory(velocity, angle, offsets, trot_2_stance_ratio, timestep=0.001)
-            print(f"{i}: {gait_traj}")
+            # print(f"{i}: {gait_traj}")
             joints_FL = ROBOT.invKinematics(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'])
+            # joints_FL = ROBOT.invKinematics(np.array([0, 0, 0.529]), ROBOT.EE_index['FL_FOOT'])
             ROBOT.setJointControl(ROBOT.jointidx['FL'], p.POSITION_CONTROL, joints_FL[0:3])
             joints_FR = ROBOT.invKinematics(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'])
             ROBOT.setJointControl(ROBOT.jointidx['FR'], p.POSITION_CONTROL, joints_FR[3:6])
@@ -100,6 +101,6 @@ if __name__ == "__main__":
             joints_HR = ROBOT.invKinematics(traj['HR_FOOT'][i], ROBOT.EE_index['HR_FOOT'])
             ROBOT.setJointControl(ROBOT.jointidx['BR'], p.POSITION_CONTROL, joints_HR[9:12])
             p.stepSimulation()
-            time.sleep(1.0/100000.0)
+            time.sleep(1.0/10000.0)
         ROBOT.time_step += 1
     p.disconnect()

@@ -1,8 +1,14 @@
 import time
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+
+
+import yaml 
+import pybullet as p
+import pybullet_data
 
 from SOLO12_SIM_CONTROL.utils import trajectory_2_world_frame
+from SOLO12_SIM_CONTROL.robot import SOLO12
 
 def binomial_factor(n, k):
     return np.math.factorial(n) / (np.math.factorial(k)*np.math.factorial(n - k))
@@ -87,7 +93,8 @@ class Gait(object):
 
     def stepTrajectory(self, t, velocity, angle, stepOffset): 
         if t >= 1.0:
-            t = (1.0 - t)
+            t = (t - 1.0)
+        print(f"t: -> {t}")
         if t <= stepOffset:
             T_stance = t/stepOffset
             stepX_pos, stepY_pos, stepZ_pos = self.calculateStance(T_stance, velocity, angle)
@@ -96,7 +103,7 @@ class Gait(object):
             # stepX_rot, stepY_rot, stepZ_rot = self.calculateStance(phiStance, angle_vel, )
         else:
             T_swing = (t - stepOffset)/(1 - stepOffset)
-            stepX_pos, stepY_pos, stepZ_pos = self.calculateSwing(T_swing, velocity, angle)
+            stepX_pos, stepY_pos, stepZ_pos = self.calculateSwing(t, velocity, angle)
         # breakpoint()
         coord = np.empty(3)
         coord[0] = stepX_pos
@@ -109,6 +116,7 @@ class Gait(object):
             T = 0.001
         if (abs(self.lastTime  - time.time()) < timestep):
             return self.gaitTraj
+            # return None
         else:
             self.t += timestep
             self.lastTime = time.time()
@@ -122,30 +130,43 @@ class Gait(object):
 
         #Front-left
         step_coord = self.stepTrajectory(self.t + offset[0], velocity, angle, T)
-        self.gaitTraj['FL_FOOT'][0] = step_coord[0] 
+        self.gaitTraj['FL_FOOT'][0] = step_coord[0]
+        # self.gaitTraj['FL_FOOT'][0] = 0.14
         self.gaitTraj['FL_FOOT'][1] = step_coord[1]
-        self.gaitTraj['FL_FOOT'][2] = step_coord[2]
+        # self.gaitTraj['FL_FOOT'][1] = step_coord[1]
+        self.gaitTraj['FL_FOOT'][2] = step_coord[2] * 2
 
         #Front-right
         step_coord = self.stepTrajectory(self.t + offset[1], velocity, angle, T)
-        self.gaitTraj['FR_FOOT'][0] = step_coord[0] 
+        self.gaitTraj['FR_FOOT'][0] = step_coord[0]
+        # self.gaitTraj['FR_FOOT'][0] = 
         self.gaitTraj['FR_FOOT'][1] = step_coord[1]
-        self.gaitTraj['FR_FOOT'][2] = step_coord[2]
+        # self.gaitTraj['FR_FOOT'][1] = 0
+        self.gaitTraj['FR_FOOT'][2] = step_coord[2]  * 2
 
         #Back-left
         step_coord = self.stepTrajectory(self.t + offset[2], velocity, angle, T)
         self.gaitTraj['HL_FOOT'][0] = step_coord[0] 
         self.gaitTraj['HL_FOOT'][1] = step_coord[1]
-        self.gaitTraj['HL_FOOT'][2] = step_coord[2]
+        # self.gaitTraj['HL_FOOT'][0] = 0
+        # self.gaitTraj['HL_FOOT'][1] = 0
+        self.gaitTraj['HL_FOOT'][2] = step_coord[2] * 2
 
         #Back-right
         step_coord = self.stepTrajectory(self.t + offset[3], velocity, angle, T)
         self.gaitTraj['HR_FOOT'][0] = step_coord[0] 
+        # self.gaitTraj['HR_FOOT'][0] = 0
         self.gaitTraj['HR_FOOT'][1] = step_coord[1]
-        self.gaitTraj['HR_FOOT'][2] = step_coord[2]
+        # self.gaitTraj['HR_FOOT'][1] = 0
+        self.gaitTraj['HR_FOOT'][2] = step_coord[2] * 2
 
-
+        # breakpoint()
+        # self.gaitTraj = self.gaitTraj.values()*10
+        # breakpoint()
+        # print(f"t: {self.t}")
+        print(f"Before Transformation -> {self.gaitTraj}")
         self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj)
+        print(f"After Transformation -> {self.gaitTraj}")
         return self.gaitTraj
 
 
@@ -168,10 +189,19 @@ if __name__ == "__main__":
     X_HR_FOOT = list()
     Y_HR_FOOT = list()
     Z_HR_FOOT = list()
+    URDF = "./data/urdf/solo12.urdf"
+    config = "./data/config/solo12.yml"
+    cfg = yaml.safe_load(open(config, 'r'))
+    # py_client = p.connect(p.GUI)
+    py_client = p.connect(p.DIRECT)
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    p.setGravity(0,0,0)
+    p.setTimeStep(0.001) 
+    ROBOT = SOLO12(py_client, URDF, cfg)
     
-    gait = Gait()
+    gait = Gait(ROBOT)
     angle = 0
-    offsets = np.array([0.5, 0.0, 0.0, 0.5])
+    offsets = np.array([0.0, 0.0, 0.0, 0.0])
     # for _ in t:
     #     _X, _Y, _Z = gait.calculateSwing(_, 1, np.pi/3)
     #     X.append(_X)
@@ -199,4 +229,5 @@ if __name__ == "__main__":
         else:
             continue
         if gait.cntTraj == itr:
-            breakpoint()
+            break
+    breakpoint()

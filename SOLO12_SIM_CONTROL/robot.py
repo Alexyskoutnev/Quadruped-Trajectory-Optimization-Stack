@@ -4,6 +4,8 @@ import time
 import pybullet as p
 import numpy as np
 
+from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv
+
 def links_to_id(robot):
     _link_name_to_index = {p.getBodyInfo(robot)[0].decode('UTF-8'):-1,}
     for _id in range(p.getNumJoints(robot)):
@@ -23,12 +25,17 @@ def q_init_16_arr(q_init):
         q_init_new[i] = q_val
     return q_init_new
 
+def base_frame_tf(mtx, pt):
+    vec = np.concatenate((np.array([pt[0]]), np.array([pt[1]]),np.array([pt[2]]), np.ones(1)))
+    tf_vec = mtx @ vec
+    return tf_vec[:3]
+
 
 class SOLO12(object):
     def __init__(self, client, URDF, config):
         self.client = client
         self.config = config
-        self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=1)
+        self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=0)
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
         self.fixjointidx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
         self.links = links_to_id(self.robot)
@@ -39,6 +46,10 @@ class SOLO12(object):
         self.EE = {'FL_FOOT': None, 'FR_FOOT': None, "HL_FOOT": None, "HR_FOOT": None}
         self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15}
         self.time_step = 0
+        
+        self.tfBaseMtx = transformation_inv(transformation_mtx(self.CoM_states()['linkWorldPosition'], self.CoM_states()['linkWorldOrientation']))
+        self.shift = {'FL_FOOT': base_frame_tf(self.tfBaseMtx, self.get_endeffector_pose()['FL_FOOT']['linkWorldPosition']), 'FR_FOOT': base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['FR_FOOT']['linkWorldPosition']),
+                     'HL_FOOT': base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HL_FOOT']['linkWorldPosition']), 'HR_FOOT': base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HR_FOOT']['linkWorldPosition'])}
         
         #initial robot pose and configuration
         for i in self.jointidx['idx']:
@@ -51,8 +62,8 @@ class SOLO12(object):
                                       forces= [0.0 for m in self.jointidx['idx']])
 
     def CoM_states(self):
-        pass
-
+        CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
+        return {"linkWorldPosition": CoM_pos, "linkWorldOrientation": CoM_angle}
 
 
     def get_link_states(self):
@@ -106,7 +117,7 @@ class SOLO12(object):
                 t_max = 2.5
                 jointTorques[jointTorques > t_max] = t_max
                 jointTorques[jointTorques < -t_max] = -t_max
-                print(f"cpt {cpt} -> {jointTorques}")
+                # print(f"cpt {cpt} -> {jointTorques}")
                 # breakpoint()
 
         # while True or np.max(np.abs(q_cmd - q_mes)) > 0.1:

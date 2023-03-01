@@ -1,9 +1,11 @@
 README.md
 setup.py
 SOLO12_SIM_CONTROL/__init__.py
+SOLO12_SIM_CONTROL/gaitPlanner.py
 SOLO12_SIM_CONTROL/robot.py
 SOLO12_SIM_CONTROL/simulation.py
 SOLO12_SIM_CONTROL/trajectory.py
+SOLO12_SIM_CONTROL/utils.py
 SOLO12_SIM_CONTROL.egg-info/PKG-INFO
 SOLO12_SIM_CONTROL.egg-info/SOURCES.txt
 SOLO12_SIM_CONTROL.egg-info/dependency_links.txt
