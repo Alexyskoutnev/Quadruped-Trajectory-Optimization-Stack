@@ -17,13 +17,8 @@ def bezier(t, k, p):
     n = 9
     return p*binomial_factor(n, k)*np.power(t, k)*np.power(1 - t, n - k)
 
-def plot(t, val):
-    plt.plot(t, val)
-
-
-
 class Gait(object):
-
+    
     def __init__(self, robot):
         self.robot = robot
         self.feetPose = {"FL": np.zeros(3), "FR": np.zeros(3), "BL": np.zeros(3), "BR": np.zeros(3)}
@@ -49,7 +44,6 @@ class Gait(object):
 
     def calculateSwing(self, t, velocity, angle):
         angle = np.deg2rad(angle)
-        
         X_pts = np.abs(velocity) * np.cos(angle) * np.array([-0.05 ,
                                   -0.06 ,
                                   -0.07 , 
@@ -72,19 +66,17 @@ class Gait(object):
                                    -0.05 ])
         Z_pts = np.abs(velocity) * np.array([0. ,
                                 0. ,
-                                0.05 , 
-                                0.05 ,
-                                0.05 ,
-                                0.06 , 
-                                0.06 ,
-                                0.06 ,
+                                0.15 , 
+                                0.15 ,
+                                0.15 ,
+                                0.18 , 
+                                0.18 ,
+                                0.18 ,
                                 0. ,
                                 0. ])
-
         swingX = 0.0
         swingY = 0.0
         swingZ = 0.0
-
         for i in range(10): #Bezier Curve Computation
             swingX += bezier(t, i, X_pts[i])
             swingY += bezier(t, i, Y_pts[i])
@@ -96,12 +88,10 @@ class Gait(object):
         if t >= 1.0:
             t = (t - 1.0)
 
-        # print(f"foot id: {footID} -> {t}")
 
         #a circumference to rotate around
         r = np.sqrt(self.robot.shift[footID][0]**2 + self.robot.shift[footID][1]**2)
         footAngle = np.arctan2(self.robot.shift[footID][0], self.robot.shift[footID][1])
-        # breakpoint()
         if angle_velocity >= 0:
             circleTrajectory = 90. - np.rad2deg(footAngle - self.alpha)
         else:
@@ -158,11 +148,7 @@ class Gait(object):
         if (self.t >= 1.00):
             self.lastTime = time.time()
             self.t = 0.0
-        # print(f"t - > {self.t}")
-        self.cntTraj += 1
-        # breakpoint()
 
-        # print(f"T -> {self.t}")
         assert(self.t >= 0.0)
         assert(self.t <= 1.0)
 
@@ -170,30 +156,27 @@ class Gait(object):
         step_coord = self.stepTrajectory(self.t + offset[0], velocity, angle, angle_velocity,  step_stance_ratio, 'FL_FOOT')
         self.gaitTraj['FL_FOOT'][0] = step_coord[0]
         self.gaitTraj['FL_FOOT'][1] = step_coord[1]
-        self.gaitTraj['FL_FOOT'][2] = step_coord[2] * 2
+        self.gaitTraj['FL_FOOT'][2] = step_coord[2]
 
         #Front-right
         step_coord = self.stepTrajectory(self.t + offset[1], velocity, angle, angle_velocity, step_stance_ratio, 'FR_FOOT')
         self.gaitTraj['FR_FOOT'][0] = step_coord[0]
         self.gaitTraj['FR_FOOT'][1] = step_coord[1]
-        self.gaitTraj['FR_FOOT'][2] = step_coord[2] * 2
+        self.gaitTraj['FR_FOOT'][2] = step_coord[2]
 
         #Back-left
         step_coord = self.stepTrajectory(self.t + offset[2], velocity, angle, angle_velocity, step_stance_ratio, 'HL_FOOT')
         self.gaitTraj['HL_FOOT'][0] = step_coord[0] 
         self.gaitTraj['HL_FOOT'][1] = step_coord[1]
-        self.gaitTraj['HL_FOOT'][2] = step_coord[2] * 2
+        self.gaitTraj['HL_FOOT'][2] = step_coord[2]
 
         #Back-right
         step_coord = self.stepTrajectory(self.t + offset[3], velocity, angle, angle_velocity, step_stance_ratio, 'HR_FOOT')
         self.gaitTraj['HR_FOOT'][0] = step_coord[0] 
         self.gaitTraj['HR_FOOT'][1] = step_coord[1]
-        self.gaitTraj['HR_FOOT'][2] = step_coord[2] * 2
+        self.gaitTraj['HR_FOOT'][2] = step_coord[2]
 
-
-        # print(f"Before Transformation -> {self.gaitTraj}")
         self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj)
-        # print(f"After Transformation -> {self.gaitTraj}")
         return self.gaitTraj
 
 

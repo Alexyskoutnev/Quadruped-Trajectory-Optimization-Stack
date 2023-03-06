@@ -59,7 +59,6 @@ if __name__ == "__main__":
     cfg = yaml.safe_load(open(config, 'r'))
     Pose = ([0,0,0.5], p.getQuaternionFromEuler([0,0,1]))
     planeId = p.loadURDF("plane.urdf")
-    # robot = importRobot(URDF, Pose)
     ROBOT = SOLO12(py_client, URDF, cfg)
     gait = Gait(ROBOT)
     traj = sampleTraj(ROBOT, r) 
@@ -67,17 +66,9 @@ if __name__ == "__main__":
     trot_phase = True
 
     pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
-
-    # angle = 0
-    # angle_velocity = 0.0
-    # velocity = 1.0
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
     trot_2_stance_ratio = 0.5
-    # stepPeriod = 1.0
 
-
-
-    
     cmd = np.zeros((12, 1))
     for i in range (10000):
         pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
@@ -86,9 +77,7 @@ if __name__ == "__main__":
             p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
             p.stepSimulation()
         elif trot_phase:
-            # print("v", velocity, " ang", angle_velocity)
             gait_traj = gait.runTrajectory(velocity, angle, angle_velocity, offsets, stepPeriod, trot_2_stance_ratio)
-            # print(f"{i}: {gait_traj}")
             joints_FL = ROBOT.invKinematics(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'])
             ROBOT.setJointControl(ROBOT.jointidx['FL'], p.POSITION_CONTROL, joints_FL[0:3])
             joints_FR = ROBOT.invKinematics(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'])
