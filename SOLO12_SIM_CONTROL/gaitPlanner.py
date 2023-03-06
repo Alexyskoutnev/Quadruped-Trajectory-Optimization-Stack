@@ -48,6 +48,7 @@ class Gait(object):
         return stanceX, stanceY, stanceZ
 
     def calculateSwing(self, t, velocity, angle):
+        angle = np.deg2rad(angle)
         
         X_pts = np.abs(velocity) * np.cos(angle) * np.array([-0.05 ,
                                   -0.06 ,
@@ -91,82 +92,108 @@ class Gait(object):
         
         return swingX, swingY, swingZ
 
-    def stepTrajectory(self, t, velocity, angle, stepOffset): 
+    def stepTrajectory(self, t, velocity, angle, angle_velocity, stepOffset, footID): 
         if t >= 1.0:
             t = (t - 1.0)
-        print(f"t: -> {t}")
-        if t <= stepOffset:
+
+        # print(f"foot id: {footID} -> {t}")
+
+        #a circumference to rotate around
+        r = np.sqrt(self.robot.shift[footID][0]**2 + self.robot.shift[footID][1]**2)
+        footAngle = np.arctan2(self.robot.shift[footID][0], self.robot.shift[footID][1])
+        # breakpoint()
+        if angle_velocity >= 0:
+            circleTrajectory = 90. - np.rad2deg(footAngle - self.alpha)
+        else:
+            circleTrajectory = 270. - np.rad2deg(footAngle - self.alpha)
+
+        if t <= stepOffset: #stance phase
             T_stance = t/stepOffset
             stepX_pos, stepY_pos, stepZ_pos = self.calculateStance(T_stance, velocity, angle)
-            # stepX_pos, stepY_pos, stepZ_pos = 0, 0, 0
-
-            # stepX_rot, stepY_rot, stepZ_rot = self.calculateStance(phiStance, angle_vel, )
-        else:
+            stepX_rot, stepY_rot, stepZ_rot = self.calculateStance(T_stance, angle_velocity, circleTrajectory)
+        else: #swing phase
             T_swing = (t - stepOffset)/(1 - stepOffset)
-            stepX_pos, stepY_pos, stepZ_pos = self.calculateSwing(t, velocity, angle)
-        # breakpoint()
+            stepX_pos, stepY_pos, stepZ_pos = self.calculateSwing(T_swing, velocity, angle)
+            stepX_rot, stepY_rot, stepZ_rot = self.calculateSwing(T_swing, angle_velocity, circleTrajectory)
+
+        if (self.robot.shift[footID][1] > 0):
+            if (stepX_rot < 0):
+                self.alpha = -np.arctan2(np.sqrt(stepX_rot**2 + stepY_rot**2), r)
+            else:
+                self.alpha = np.arctan2(np.sqrt(stepX_rot**2 + stepY_rot**2), r)
+        else:
+            if (stepX_rot < 0):
+                self.alpha = np.arctan2(np.sqrt(stepX_rot**2 + stepY_rot**2), r)
+            else:
+                self.alpha = -np.arctan2(np.sqrt(stepX_rot**2 + stepY_rot**2), r)
+
         coord = np.empty(3)
-        coord[0] = stepX_pos
-        coord[1] = stepY_pos
-        coord[2] = stepZ_pos
+        coord[0] = stepX_pos + stepX_rot
+        coord[1] = stepY_pos + stepY_rot
+        coord[2] = stepZ_pos + stepY_rot
         return coord
 
-    def runTrajectory(self, velocity, angle, offset, T, timestep=0.01):
-        if T <= 0.001:
-            T = 0.001
-        if (abs(self.lastTime  - time.time()) < timestep):
+    def runTrajectory(self, velocity, angle, angle_velocity, offset, T, step_stance_ratio, hz = 1000):
+        
+        # if T <= 0.001:
+        #     T = 0.001
+        # if (abs(self.lastTime  - time.time()) < timestep):
+        #     return self.gaitTraj
+        #     # return None
+        # else:
+        #     self.t += timestep
+        #     self.lastTime = time.time()
+        #     self.cntTraj += 1
+        # if (self.t >= 0.99):
+        #     self.lastTime = time.time()
+        #     self.t = 0   
+        diff_t = (time.time() - self.lastTime)
+        if (diff_t < T / hz):
             return self.gaitTraj
-            # return None
         else:
-            self.t += timestep
+            time_itr = (time.time() - self.lastTime)/T
+            self.t += time_itr
             self.lastTime = time.time()
             self.cntTraj += 1
-        if (self.t >= 0.99):
+        if (self.t >= 1.00):
             self.lastTime = time.time()
-            self.t = 0   
+            self.t = 0.0
+        # print(f"t - > {self.t}")
+        self.cntTraj += 1
+        # breakpoint()
 
+        # print(f"T -> {self.t}")
         assert(self.t >= 0.0)
-        assert(self.t < 1.0)
+        assert(self.t <= 1.0)
 
         #Front-left
-        step_coord = self.stepTrajectory(self.t + offset[0], velocity, angle, T)
+        step_coord = self.stepTrajectory(self.t + offset[0], velocity, angle, angle_velocity,  step_stance_ratio, 'FL_FOOT')
         self.gaitTraj['FL_FOOT'][0] = step_coord[0]
-        # self.gaitTraj['FL_FOOT'][0] = 0.14
         self.gaitTraj['FL_FOOT'][1] = step_coord[1]
-        # self.gaitTraj['FL_FOOT'][1] = step_coord[1]
         self.gaitTraj['FL_FOOT'][2] = step_coord[2] * 2
 
         #Front-right
-        step_coord = self.stepTrajectory(self.t + offset[1], velocity, angle, T)
+        step_coord = self.stepTrajectory(self.t + offset[1], velocity, angle, angle_velocity, step_stance_ratio, 'FR_FOOT')
         self.gaitTraj['FR_FOOT'][0] = step_coord[0]
-        # self.gaitTraj['FR_FOOT'][0] = 
         self.gaitTraj['FR_FOOT'][1] = step_coord[1]
-        # self.gaitTraj['FR_FOOT'][1] = 0
-        self.gaitTraj['FR_FOOT'][2] = step_coord[2]  * 2
+        self.gaitTraj['FR_FOOT'][2] = step_coord[2] * 2
 
         #Back-left
-        step_coord = self.stepTrajectory(self.t + offset[2], velocity, angle, T)
+        step_coord = self.stepTrajectory(self.t + offset[2], velocity, angle, angle_velocity, step_stance_ratio, 'HL_FOOT')
         self.gaitTraj['HL_FOOT'][0] = step_coord[0] 
         self.gaitTraj['HL_FOOT'][1] = step_coord[1]
-        # self.gaitTraj['HL_FOOT'][0] = 0
-        # self.gaitTraj['HL_FOOT'][1] = 0
         self.gaitTraj['HL_FOOT'][2] = step_coord[2] * 2
 
         #Back-right
-        step_coord = self.stepTrajectory(self.t + offset[3], velocity, angle, T)
+        step_coord = self.stepTrajectory(self.t + offset[3], velocity, angle, angle_velocity, step_stance_ratio, 'HR_FOOT')
         self.gaitTraj['HR_FOOT'][0] = step_coord[0] 
-        # self.gaitTraj['HR_FOOT'][0] = 0
         self.gaitTraj['HR_FOOT'][1] = step_coord[1]
-        # self.gaitTraj['HR_FOOT'][1] = 0
         self.gaitTraj['HR_FOOT'][2] = step_coord[2] * 2
 
-        # breakpoint()
-        # self.gaitTraj = self.gaitTraj.values()*10
-        # breakpoint()
-        # print(f"t: {self.t}")
-        print(f"Before Transformation -> {self.gaitTraj}")
+
+        # print(f"Before Transformation -> {self.gaitTraj}")
         self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj)
-        print(f"After Transformation -> {self.gaitTraj}")
+        # print(f"After Transformation -> {self.gaitTraj}")
         return self.gaitTraj
 
 
@@ -174,60 +201,60 @@ class Gait(object):
 
         
 if __name__ == "__main__":
-    itr = 5000
-    t = np.linspace(0, 1, itr)
-    velocity = 1
-    X_FL_FOOT = list()
-    Y_FL_FOOT = list()
-    Z_FL_FOOT = list()
-    X_FR_FOOT = list()
-    Y_FR_FOOT = list()
-    Z_FR_FOOT = list()
-    X_HL_FOOT = list()
-    Y_HL_FOOT = list()
-    Z_HL_FOOT = list()
-    X_HR_FOOT = list()
-    Y_HR_FOOT = list()
-    Z_HR_FOOT = list()
-    URDF = "./data/urdf/solo12.urdf"
-    config = "./data/config/solo12.yml"
-    cfg = yaml.safe_load(open(config, 'r'))
-    # py_client = p.connect(p.GUI)
-    py_client = p.connect(p.DIRECT)
-    p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.setGravity(0,0,0)
-    p.setTimeStep(0.001) 
-    ROBOT = SOLO12(py_client, URDF, cfg)
+    # pass
+    # print("in Gait")
+    # itr = 10000
+    # t = np.linspace(0, 1, itr)
+    # velocity = 1
+    # X_FL_FOOT = list()
+    # Y_FL_FOOT = list()
+    # Z_FL_FOOT = list()
+    # X_FR_FOOT = list()
+    # Y_FR_FOOT = list()
+    # Z_FR_FOOT = list()
+    # X_HL_FOOT = list()
+    # Y_HL_FOOT = list()
+    # Z_HL_FOOT = list()
+    # X_HR_FOOT = list()
+    # Y_HR_FOOT = list()
+    # Z_HR_FOOT = list()
+    # URDF = "./data/urdf/solo12.urdf"
+    # config = "./data/config/solo12.yml"
+    # cfg = yaml.safe_load(open(config, 'r'))
+    # # py_client = p.connect(p.GUI)
+    # py_client = p.connect(p.DIRECT)
+    # p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    # p.setGravity(0,0,0)
+    # p.setTimeStep(0.001) 
+    # ROBOT = SOLO12(py_client, URDF, cfg)
     
-    gait = Gait(ROBOT)
-    angle = 0
-    offsets = np.array([0.0, 0.0, 0.0, 0.0])
-    # for _ in t:
-    #     _X, _Y, _Z = gait.calculateSwing(_, 1, np.pi/3)
-    #     X.append(_X)
-    #     Y.append(_Y)
-    #     Z.append(_Z)
-    
-
-    # T = np.linspace(0, 1, 100)
-    while(True):
-    # if
-        gait_traj = gait.runTrajectory(velocity, angle, offsets, 0.50, timestep=0.001)
-        if gait_traj is not None:
-            X_FL_FOOT.append(gait_traj['FL_FOOT'][0])
-            Y_FL_FOOT.append(gait_traj['FL_FOOT'][1])
-            Z_FL_FOOT.append(gait_traj['FL_FOOT'][2])
-            X_FR_FOOT.append(gait_traj['FR_FOOT'][0])
-            Y_FR_FOOT.append(gait_traj['FR_FOOT'][1])
-            Z_FR_FOOT.append(gait_traj['HL_FOOT'][2])
-            X_HL_FOOT.append(gait_traj['HL_FOOT'][0])
-            Y_HL_FOOT.append(gait_traj['HL_FOOT'][1])
-            Z_HL_FOOT.append(gait_traj['HL_FOOT'][2])
-            X_HR_FOOT.append(gait_traj['HR_FOOT'][0])
-            Y_HR_FOOT.append(gait_traj['HR_FOOT'][1])
-            Z_HR_FOOT.append(gait_traj['HR_FOOT'][2])
-        else:
-            continue
-        if gait.cntTraj == itr:
-            break
-    breakpoint()
+    # gait = Gait(ROBOT)
+    # angle = 30
+    # offsets = np.array([0.5, 0.0, 0.0, 0.5])
+    # angle_velocity = 0.0
+    # T = 1.0
+    # step_ratio = 0.5
+    # while(True):
+    #     # breakpoint()
+    #     gait_traj = gait.runTrajectory(velocity, angle, angle_velocity, offsets, T, step_ratio)
+    #     if gait_traj is not None:
+    #         X_FL_FOOT.append(gait_traj['FL_FOOT'][0])
+    #         Y_FL_FOOT.append(gait_traj['FL_FOOT'][1])
+    #         Z_FL_FOOT.append(gait_traj['FL_FOOT'][2])
+    #         X_FR_FOOT.append(gait_traj['FR_FOOT'][0])
+    #         Y_FR_FOOT.append(gait_traj['FR_FOOT'][1])
+    #         Z_FR_FOOT.append(gait_traj['HL_FOOT'][2])
+    #         X_HL_FOOT.append(gait_traj['HL_FOOT'][0])
+    #         Y_HL_FOOT.append(gait_traj['HL_FOOT'][1])
+    #         Z_HL_FOOT.append(gait_traj['HL_FOOT'][2])
+    #         X_HR_FOOT.append(gait_traj['HR_FOOT'][0])
+    #         Y_HR_FOOT.append(gait_traj['HR_FOOT'][1])
+    #         Z_HR_FOOT.append(gait_traj['HR_FOOT'][2])
+    #     else:
+    #         continue
+    #     if gait.cntTraj == itr:
+    #         break
+    # breakpoint()
+    # plt.plot(t, Z_FL_FOOT)
+    # plt.show()
+    pass
