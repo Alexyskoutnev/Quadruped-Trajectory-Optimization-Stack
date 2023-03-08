@@ -32,8 +32,7 @@ def base_frame_tf(mtx, pt):
 
 
 class SOLO12(object):
-    def __init__(self, client, URDF, config):
-        self.client = client
+    def __init__(self, URDF, config):
         self.config = config
         self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=0)
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
@@ -42,10 +41,12 @@ class SOLO12(object):
         # self.q_init = np.array(config['q_init'])
         self.q_init = np.array([0 for i in range(12)])
         self.q_init16 = q_init_16_arr(self.q_init)
-        # self.q_init = [0 for i in range(12)]
         self.EE = {'FL_FOOT': None, 'FR_FOOT': None, "HL_FOOT": None, "HR_FOOT": None}
         self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15}
         self.time_step = 0
+        self.t_max = config['t_max']
+        self.modes = {"position": p.POSITION_CONTROL, "velocity": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
+        self.mode = config['mode']
         
         self.tfBaseMtx = transformation_inv(transformation_mtx(self.CoM_states()['linkWorldPosition'], self.CoM_states()['linkWorldOrientation']))
         self.shift = {'FL_FOOT': base_frame_tf(self.tfBaseMtx, self.get_endeffector_pose()['FL_FOOT']['linkWorldPosition']), 'FR_FOOT': base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['FR_FOOT']['linkWorldPosition']),
@@ -74,11 +75,55 @@ class SOLO12(object):
         
     
     def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_f=None):
-        p.setJointMotorControlArray(self.robot, jointsInx, controlMode, cmd_pose)
+        p.setJointMotorControlArray(self.robot, jointsInx, self.modes[controlMode], cmd_pose)
         
     def get_endeffector_pose(self):
         EE1, EE2, EE3, EE4 = p.getLinkStates(self.robot,  self.EE_index.values())
         return {"FL_FOOT": link_info(EE1), "FR_FOOT": link_info(EE2), "HL_FOOT": link_info(EE3), "HR_FOOT": link_info(EE4)}
+    
+    
+    def invDynamics(self, pose, index):
+        # breakpoint()
+        q_vel = None
+        if len(pose) == 3: #Position (3d)
+            q_cmd = np.array(p.calculateInverseKinematics(self.robot, index, pose))
+        elif len(pose) == 2: #Position (3d) & Angle (4d)
+            q_cmd = np.array(p.calculateInverseKinematics(self.robot, index, pose[0], pose[1]))
+        q_mes = np.zeros((12, 1))
+        v_mes = np.zeros((12, 1))
+        jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
+        q_mes[:, 0] = [state[0] for state in jointStates]
+        v_mes[:, 0] = [state[1] for state in jointStates]
+        kp = 0.1
+        kd = 0.05 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
+        dt = 0.001
+        cpt = self.time_step
+        t1 = 4
+        ev = dt * cpt
+        # breakpoint()
+        A3 = 2 * (q_mes - q_cmd.reshape((12, 1))) / t1**3
+        A2 = (-3/2) * t1 * A3
+        q_des = q_mes + A2*(ev**2) + A3*(ev**3)
+        v_des = 2*A2*ev + 3*A3*(ev**2)
+        q_toq = kp * (q_des - q_mes) + kd * (v_des - v_mes)
+        q_toq[q_toq > self.t_max] = self.t_max
+        q_toq[q_toq < -self.t_max] = -self.t_max
+        print(f"{cpt}: q_toq -> {q_toq}")
+        breakpoint()
+        return q_cmd, q_vel, q_toq
+
+    def control(self, pose, index, mode="position"):
+        q_cmd = None
+        q_vel = None
+        q_toq = None
+        if mode == 'position':
+            q_cmd = self.invKinematics(pose, index)
+        elif mode == 'velocity':
+            pass
+        elif mode == 'torque':
+            q_cmd, q_vel, q_toq = self.invDynamics(pose, index)
+
+        return q_cmd, q_vel, q_toq
     
     def invKinematics(self, pose, index):
         joint = None
@@ -89,7 +134,6 @@ class SOLO12(object):
         return joint
 
     def default_stance_control(self, q_cmd, control=p.POSITION_CONTROL):
-        pass
         q_mes = np.zeros((12, 1))
         v_mes = np.zeros((12, 1))
 

@@ -1,0 +1,57 @@
+<robot
+  name="stairs">
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass value="23.5" />
+      <inertia
+        ixx="2.662714"
+        ixy="-0.001741"
+        ixz="-0.446500"
+        iyy="1.766451"
+        iyz="0.000057"
+        izz="3.344618" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+       <box size="2.0 2.0 0.05"/>
+      </geometry>
+      <material name="">
+        <color rgba="0 0.5 0.5 1" />
+      </material>
+    </visual>
+    <collision>   
+    <origin xyz="0 0 0.0"
+        rpy="0 0 0" />
+      <geometry>
+        <box size="2.0 2.0 0.05"/>
+      </geometry>
+      <material name="">
+        <color rgba="0 0.5 0.5 1" />
+      </material>
+    </collision> 
+    <visual>
+      <origin xyz="-.127 0 .05"
+        rpy="0 0 0" />
+      <geometry>
+       <box size="2.0 2.0 0.05"/>
+      </geometry>
+      <material name="">
+        <color rgba="0 0.5 0.5 1" />
+      </material>
+    </visual>
+    <collision>   
+    <origin xyz="-.127 0 0.05"
+            rpy="0 0 0" />
+        <geometry>
+            <box size="2.0 2.0 0.05"/>
+        </geometry>
+        <material name="">
+            <color rgba="0 0.5 0.5 1" />
+        </material>
+    </collision> 
+</link>
+</robot>

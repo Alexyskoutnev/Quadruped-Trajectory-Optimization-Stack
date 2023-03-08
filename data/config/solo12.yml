@@ -4,6 +4,9 @@
   q_init : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   start_pos : [0,0,0.35]
   start_ang : [0.0, 0.0, 0.0, 1.0]
+  t_max : 2.0
+  mode : "position"
+  # mode : "torque"
   # q_init : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   endeffector_count: 4
   mass: 1.16115091
