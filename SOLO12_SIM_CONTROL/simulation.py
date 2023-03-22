@@ -16,11 +16,16 @@ class Simulation(object):
 
     def setup(self, sim_config = "height_terrain"):
         py_client = None
-        if sim_config == "height_terrian":
+
+        if sim_config == "plane":
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-9.81)
-            p.setTimeStep(0.001) 
+            p.setGravity(0,0,-10)
+
+        elif sim_config == "height_terrian":
+            py_client = p.connect(p.GUI)
+            p.setAdditionalSearchPath(pybullet_data.getDataPath())
+            p.setGravity(0,0,-10)
             rot_stair1 =  Rotation.from_euler('xyz', [0, 0, 180], degrees=True)
             rot_wall = Rotation.from_euler('xyz', [0, 0, 0], degrees=True)
             stair1_pos, stair1_rot = [2, 0, 0], rot_stair1.as_quat()
@@ -35,9 +40,6 @@ class Simulation(object):
 
         elif sim_config == "traj":
             py_client = p.connect(p.DIRECT)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            # p.setGravity(0,0,-9.81)
-            # p.setTimeStep(0.001) 
 
         return py_client
 

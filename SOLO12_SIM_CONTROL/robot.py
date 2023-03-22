@@ -38,8 +38,8 @@ class SOLO12(object):
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
         self.fixjointidx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
         self.links = links_to_id(self.robot)
-        # self.q_init = np.array(config['q_init'])
-        self.q_init = np.array([0 for i in range(12)])
+        self.q_init = np.array(config['q_init'])
+        # self.q_init = np.array([0 for i in range(12)])
         self.q_init16 = q_init_16_arr(self.q_init)
         self.EE = {'FL_FOOT': None, 'FR_FOOT': None, "HL_FOOT": None, "HR_FOOT": None}
         self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15}

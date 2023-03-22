@@ -123,7 +123,7 @@ class Gait(object):
         coord[2] = stepZ_pos + stepY_rot
         return coord
 
-    def runTrajectory(self, velocity, angle, angle_velocity, offset, T, step_stance_ratio, hz = 1000):
+    def runTrajectory(self, velocity, angle, angle_velocity, offset, T, step_stance_ratio, hz = 100):
         
         # if T <= 0.001:
         #     T = 0.001

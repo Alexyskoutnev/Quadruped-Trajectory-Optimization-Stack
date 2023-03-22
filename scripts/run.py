@@ -26,7 +26,7 @@ def setup_enviroment():
     # py_client = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.setGravity(0,0,-9.81)
-    p.setTimeStep(0.002) 
+    # p.setTimeStep(0.001) 
     return py_client 
 
 def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
@@ -35,8 +35,7 @@ def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
     return solo12
 
 if __name__ == "__main__":
-    # py_client = setup_enviroment()
-    type = "height_terrian"
+    type = "plane"
     sim = Simulation(type)
     py_client = sim.setup(type)
     pybullet_interface = PybulletInterface()
@@ -50,7 +49,6 @@ if __name__ == "__main__":
     pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
     trot_2_stance_ratio = 0.5
-
     cmd = np.zeros((12, 1))
     for i in range (10000):
         pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
@@ -68,6 +66,6 @@ if __name__ == "__main__":
             ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
             joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(gait_traj['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
             ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
-            p.stepSimulation()
+        p.stepSimulation()
         ROBOT.time_step += 1
     p.disconnect()
