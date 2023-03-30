@@ -74,3 +74,13 @@ def sampleTraj(robot, r=0.1, N=100):
         traj_dic[link] = traj
         traj = list()
     return traj_dic
+
+def convert12arr_2_16arr(arr):
+    arr16 = np.zeros(16,)
+    idx = 0
+    for i in range(4):
+        for j in range(3):
+            arr16[idx] = arr[i*3 + j]
+            idx += 1
+        idx += 1
+    return arr16

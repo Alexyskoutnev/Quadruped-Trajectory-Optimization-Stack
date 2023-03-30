@@ -17,6 +17,15 @@ def bezier(t, k, p):
     n = 9
     return p*binomial_factor(n, k)*np.power(t, k)*np.power(1 - t, n - k)
 
+def bezier_d_1(t, k, p):
+    n = 9
+    b_i = n * (binomial_factor(n, k + 1) - binomial_factor(n, k))
+    return b_i * bezier(t, k - 1, p)
+
+def bezier_d_2(t, k, p):
+    pass
+    # b_i_2 = 
+
 class Gait(object):
     
     def __init__(self, robot):
@@ -77,10 +86,18 @@ class Gait(object):
         swingX = 0.0
         swingY = 0.0
         swingZ = 0.0
+        swingX_d = 0.0
+        swingY_d = 0.0
+        swingZ_d = 0.0
         for i in range(10): #Bezier Curve Computation
             swingX += bezier(t, i, X_pts[i])
             swingY += bezier(t, i, Y_pts[i])
             swingZ += bezier(t, i, Z_pts[i])
+        
+        # for i in range(9): #Derivative Bezier Curve
+        #     swingX_d += bezier_d_1(t, i, X_pts[i])
+        #     swingY_d += 0
+        #     swingZ_d += 0
         
         return swingX, swingY, swingZ
 
@@ -123,31 +140,24 @@ class Gait(object):
         coord[2] = stepZ_pos + stepY_rot
         return coord
 
-    def runTrajectory(self, velocity, angle, angle_velocity, offset, T, step_stance_ratio, hz = 100):
-        
-        # if T <= 0.001:
-        #     T = 0.001
-        # if (abs(self.lastTime  - time.time()) < timestep):
-        #     return self.gaitTraj
-        #     # return None
-        # else:
-        #     self.t += timestep
-        #     self.lastTime = time.time()
-        #     self.cntTraj += 1
-        # if (self.t >= 0.99):
-        #     self.lastTime = time.time()
-        #     self.t = 0   
-        diff_t = (time.time() - self.lastTime)
-        if (diff_t < T / hz):
-            return self.gaitTraj
-        else:
-            time_itr = (time.time() - self.lastTime)/T
-            self.t += time_itr
-            self.lastTime = time.time()
-            self.cntTraj += 1
-        if (self.t >= 1.00):
-            self.lastTime = time.time()
-            self.t = 0.0
+    def runTrajectory(self, velocity, angle, angle_velocity, offset, T, step_stance_ratio, hz = 1000, mode = "sim"): 
+        if mode == "collect":
+            self.t += T/hz
+            if (self.t >= 1.00):
+                self.t = 0.0
+        elif mode == "sim":
+            diff_t = (time.time() - self.lastTime)
+            if (diff_t < T / hz):
+                return self.gaitTraj, False
+            else:
+                time_itr = (time.time() - self.lastTime)/T
+                self.t += time_itr
+                self.t += T/hz
+                self.lastTime = time.time()
+                self.cntTraj += 1
+            if (self.t >= 1.00):
+                self.lastTime = time.time()
+                self.t = 0.0
 
         assert(self.t >= 0.0)
         assert(self.t <= 1.0)
@@ -177,7 +187,7 @@ class Gait(object):
         self.gaitTraj['HR_FOOT'][2] = step_coord[2]
 
         self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj)
-        return self.gaitTraj
+        return self.gaitTraj, True
 
 
 

@@ -4,7 +4,7 @@ import time
 import pybullet as p
 import numpy as np
 
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv
+from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr
 
 def links_to_id(robot):
     _link_name_to_index = {p.getBodyInfo(robot)[0].decode('UTF-8'):-1,}
@@ -83,33 +83,74 @@ class SOLO12(object):
     
     
     def invDynamics(self, pose, index):
+
+        
         # breakpoint()
-        q_vel = None
+        # q_vel = None
+        # desiredPos = pos[]
+
         if len(pose) == 3: #Position (3d)
             q_cmd = np.array(p.calculateInverseKinematics(self.robot, index, pose))
         elif len(pose) == 2: #Position (3d) & Angle (4d)
             q_cmd = np.array(p.calculateInverseKinematics(self.robot, index, pose[0], pose[1]))
-        q_mes = np.zeros((12, 1))
-        v_mes = np.zeros((12, 1))
-        jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
-        q_mes[:, 0] = [state[0] for state in jointStates]
-        v_mes[:, 0] = [state[1] for state in jointStates]
-        kp = 0.1
-        kd = 0.05 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
-        dt = 0.001
-        cpt = self.time_step
-        t1 = 4
-        ev = dt * cpt
-        # breakpoint()
-        A3 = 2 * (q_mes - q_cmd.reshape((12, 1))) / t1**3
-        A2 = (-3/2) * t1 * A3
-        q_des = q_mes + A2*(ev**2) + A3*(ev**3)
-        v_des = 2*A2*ev + 3*A3*(ev**2)
-        q_toq = kp * (q_des - q_mes) + kd * (v_des - v_mes)
-        q_toq[q_toq > self.t_max] = self.t_max
-        q_toq[q_toq < -self.t_max] = -self.t_max
-        print(f"{cpt}: q_toq -> {q_toq}")
+
         breakpoint()
+        numJoints = len(q_cmd)
+        curPos, curOrn = p.getBasePositionAndOrientation(self.robot)
+        q1 = [curPos[0], curPos[1], curPos[2], curOrn[0], curOrn[1], curOrn[2], curOrn[3]]
+        baseLinVel, baseAngVel = p.getBaseVelocity(self.robot)
+        qdot1 = [
+        baseLinVel[0], baseLinVel[1], baseLinVel[2], baseAngVel[0], baseAngVel[1], baseAngVel[2], 0
+        ]
+        qError = [0]*7
+        qIndex = 7
+        qdotIndex = 7
+        zeroAccelerations = [0, 0, 0, 0, 0, 0, 0]
+        jointIdx = self.jointidx['idx']
+        for i in range(numJoints):
+            js = p.getJointStateMultiDof(self.robot, jointIdx[i])
+            jointPos = js[0]
+            jointVel = js[1]
+            # breakpoint()
+
+        # q_mes = np.zeros((12, 1))
+        # v_mes = np.zeros((12, 1))
+        # jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
+        # q_mes[:, 0] = [state[0] for state in jointStates]
+        # v_mes[:, 0] = [state[1] for state in jointStates]
+        # q_acc = np.ones((12))
+        # q_vel = np.ones((12))
+        # kp = 0.1
+        # kd = 0.05 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
+
+        # breakpoint()
+        # q_cmd_16 = convert12arr_2_16arr(q_cmd).tolist()
+        # test_1_v = [0.1,0.1,0.1,0.0,0.1,0.1,0.1,0.0,0.1,0.1,0.1,0.0, 0.1,0.1,0.1,0.0]
+        # # test_1_v = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
+        # test_1_a = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+        # # test_1_a = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+        # joint_torques = p.calculateInverseDynamics(self.robot, q_cmd, test_1_v, test_1_a, flags=1)
+        # breakpoint()
+
+        # # breakpoint()
+        # for i in range(12):
+        #     p.setJointMotorControl2(self.robot, i, p.TORQUE_CONTROL, force=joint_torques[i])
+        
+        
+        # dt = 0.001
+        # cpt = self.time_step
+        # t1 = 4
+        # ev = dt * cpt
+        # # breakpoint()
+        # A3 = 2 * (q_mes - q_cmd.reshape((12, 1))) / t1**3
+        # A2 = (-3/2) * t1 * A3
+        # q_des = q_mes + A2*(ev**2) + A3*(ev**3)
+        # v_des = 2*A2*ev + 3*A3*(ev**2)
+        # q_toq = kp * (q_des - q_mes) + kd * (v_des - v_mes)
+        # q_toq[q_toq > self.t_max] = self.t_max
+        # q_toq[q_toq < -self.t_max] = -self.t_max
+        # print(f"{cpt}: q_toq -> {q_toq}")
+        # breakpoint()
         return q_cmd, q_vel, q_toq
 
     def control(self, pose, index, mode="position"):
@@ -118,6 +159,7 @@ class SOLO12(object):
         q_toq = None
         if mode == 'position':
             q_cmd = self.invKinematics(pose, index)
+            # breakpoint()
         elif mode == 'velocity':
             pass
         elif mode == 'torque':

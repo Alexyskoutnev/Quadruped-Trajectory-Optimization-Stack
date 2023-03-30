@@ -21,11 +21,13 @@ class Simulation(object):
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10)
+            p.loadURDF("plane.urdf")
 
         elif sim_config == "height_terrian":
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10)
+            p.loadURDF("plane.urdf")
             rot_stair1 =  Rotation.from_euler('xyz', [0, 0, 180], degrees=True)
             rot_wall = Rotation.from_euler('xyz', [0, 0, 0], degrees=True)
             stair1_pos, stair1_rot = [2, 0, 0], rot_stair1.as_quat()
