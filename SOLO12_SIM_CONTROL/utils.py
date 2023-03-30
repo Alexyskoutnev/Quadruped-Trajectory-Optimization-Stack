@@ -44,17 +44,17 @@ def euler_to_quaternion(yaw, pitch, roll):
         return [qx, qy, qz, qw]
     
 def trajectory_2_world_frame(robot, traj):
-    traj_dict = {}
-    # config = robot.get_endeffector_pose()
+    traj_dict = {'FL_FOOT': {"P" : np.zeros(3), "D" : np.zeros(3)}, 'FR_FOOT': {"P" : np.zeros(3), "D" : np.zeros(3)}, 'HL_FOOT': {"P" : np.zeros(3), "D" : np.zeros(3)}, 'HR_FOOT': {"P" : np.zeros(3), "D" : np.zeros(3)}}
     config = robot.CoM_states()
     for link in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
-        # print("link -> ", link)
-        # breakpoint()
-        tf_mtx = transformation_mtx(config['linkWorldPosition'], config['linkWorldOrientation'])
-        # breakpoint()
-        vec = np.concatenate((np.array([traj[link][0] + robot.shift[link][0]]), np.array([traj[link][1] + robot.shift[link][1]]), np.array([traj[link][2] + robot.shift[link][2]]), np.ones(1)))
-        tf_vec = tf_mtx @ vec
-        traj_dict[link] = tf_vec[:3]
+        for mode in ("P", "D"):
+            if mode == "P":
+                tf_mtx = transformation_mtx(config['linkWorldPosition'], config['linkWorldOrientation'])
+            if mode == "D":
+                tf_mtx = transformation_mtx(np.zeros(3), config['linkWorldOrientation'])
+            vec = np.concatenate((np.array([traj[link][mode][0] + robot.shift[link][0]]), np.array([traj[link][mode][1] + robot.shift[link][1]]), np.array([traj[link][mode][2] + robot.shift[link][2]]), np.ones(1)))
+            tf_vec = tf_mtx @ vec
+            traj_dict[link][mode] = tf_vec[:3]
     return traj_dict
     
 def sampleTraj(robot, r=0.1, N=100):

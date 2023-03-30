@@ -45,7 +45,7 @@ class SOLO12(object):
         self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15}
         self.time_step = 0
         self.t_max = config['t_max']
-        self.modes = {"position": p.POSITION_CONTROL, "velocity": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
+        self.modes = {"P": p.POSITION_CONTROL, "V": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
         self.mode = config['mode']
         
         self.tfBaseMtx = transformation_inv(transformation_mtx(self.CoM_states()['linkWorldPosition'], self.CoM_states()['linkWorldOrientation']))
@@ -153,17 +153,17 @@ class SOLO12(object):
         # breakpoint()
         return q_cmd, q_vel, q_toq
 
-    def control(self, pose, index, mode="position"):
+    def control(self, cmd, index, mode="P"):
         q_cmd = None
         q_vel = None
         q_toq = None
-        if mode == 'position':
+        if mode == 'P':
+            pose = cmd['P']
             q_cmd = self.invKinematics(pose, index)
-            # breakpoint()
-        elif mode == 'velocity':
+        elif mode == 'PD':
             pass
         elif mode == 'torque':
-            q_cmd, q_vel, q_toq = self.invDynamics(pose, index)
+            q_cmd, q_vel, q_toq = self.invDynamics(cmd, index)
 
         return q_cmd, q_vel, q_toq
     

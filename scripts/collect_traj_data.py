@@ -29,7 +29,7 @@ HZ = 1000
 
 def plot(t, joint):
     plt.plot(t, joint)
-    plt.savefig("../traj/traj_EE_pos.png")
+    plt.savefig("../data/traj/traj_EE_pos.png")
 
 
 if __name__ == "__main__":
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         while (itr < NUM_TIME_STEPS):
             gait_traj, updated = gait.runTrajectory(velocity, angle, angle_velocity, offsets, steps_per_sec, trot_2_stance_ratio, HZ, mode = "collect")
             if updated:
-                traj.append(gait_traj['FL_FOOT'][2])
+                traj.append(gait_traj['FL_FOOT']['P'][2])
                 joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
                 ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
                 joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
