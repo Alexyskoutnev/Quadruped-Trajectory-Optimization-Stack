@@ -32,9 +32,9 @@ def base_frame_tf(mtx, pt):
 
 
 class SOLO12(object):
-    def __init__(self, URDF, config):
+    def __init__(self, URDF, config, fixed = 0):
         self.config = config
-        self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=0)
+        self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=fixed)
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
         self.fixjointidx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
         self.links = links_to_id(self.robot)
@@ -45,7 +45,7 @@ class SOLO12(object):
         self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15}
         self.time_step = 0
         self.t_max = config['t_max']
-        self.modes = {"P": p.POSITION_CONTROL, "V": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
+        self.modes = {"P": p.POSITION_CONTROL, "PD": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
         self.mode = config['mode']
         
         self.tfBaseMtx = transformation_inv(transformation_mtx(self.CoM_states()['linkWorldPosition'], self.CoM_states()['linkWorldOrientation']))
@@ -75,7 +75,8 @@ class SOLO12(object):
         
     
     def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_f=None):
-        p.setJointMotorControlArray(self.robot, jointsInx, self.modes[controlMode], cmd_pose)
+        # p.setJointMotorControlArray(self.robot, jointsInx, self.modes[controlMode], cmd_pose)
+        p.setJointMotorControlArray(self.robot, jointsInx, self.modes['P'], cmd_pose)
         
     def get_endeffector_pose(self):
         EE1, EE2, EE3, EE4 = p.getLinkStates(self.robot,  self.EE_index.values())
@@ -158,22 +159,50 @@ class SOLO12(object):
         q_vel = None
         q_toq = None
         if mode == 'P':
-            pose = cmd['P']
-            q_cmd = self.invKinematics(pose, index)
+            q_cmd, q_vel = self.invKinematics(cmd, index, mode=mode)
         elif mode == 'PD':
-            pass
+            q_cmd, q_vel = self.invKinematics(cmd, index, mode=mode)
         elif mode == 'torque':
             q_cmd, q_vel, q_toq = self.invDynamics(cmd, index)
-
         return q_cmd, q_vel, q_toq
     
-    def invKinematics(self, pose, index):
-        joint = None
-        if len(pose) == 3: #Position (3d)
-            joint = p.calculateInverseKinematics(self.robot, index, pose)
-        elif len(pose) == 2: #Position (3d) & Angle (4d)
-            joint = p.calculateInverseKinematics(self.robot, index, pose[0], pose[1])
-        return joint
+    def invKinematics(self, cmd, index, mode = 'P'):
+        joint_position = None
+        joint_velocity = None
+        if mode == 'P':
+            if len(cmd['P']) == 3: #Position (3d)
+                joint_position = p.calculateInverseKinematics(self.robot, index, cmd["P"])
+            elif len(cmd['P']) == 2: #Position (3d) & Angle (4d)
+                joint_position = p.calculateInverseKinematics(self.robot, index, cmd["P"][0], cmd["P"][1])
+        elif mode == "PD":
+            joint_velocity = np.zeros(12)
+            if len(cmd['P']) == 3: #Position (3d)
+                joint_position = p.calculateInverseKinematics(self.robot, index, cmd["P"])
+            elif len(cmd['P']) == 2: #Position (3d) & Angle (4d)
+                joint_position = p.calculateInverseKinematics(self.robot, index, cmd["P"][0], cmd["P"][1])
+            velocities = []
+            if index == 3: #FL
+                for state in p.getJointStates(self.robot, [0, 1, 2]):
+                    velocities.append(state[1])
+                for i, idx in enumerate([0, 1, 2]):
+                    joint_velocity[idx] = velocities[i]
+            elif index == 7: #FR
+                for state in p.getJointStates(self.robot, [4, 5, 6]):
+                    velocities.append(state[1])
+                for i, idx in enumerate([3, 4, 5]):
+                    joint_velocity[idx] = velocities[i]
+            elif index == 11: #HL
+                for state in p.getJointStates(self.robot, [8, 9, 10]):
+                    velocities.append(state[1])
+                for i, idx in enumerate([6, 7, 8]):
+                    joint_velocity[idx] = velocities[i]
+            elif index == 15:
+                for state in p.getJointStates(self.robot, [12, 13, 14]):
+                    velocities.append(state[1])
+                for i, idx in enumerate([9, 10, 10]):
+                    joint_velocity[idx] = velocities[i]
+            # breakpoint()
+        return joint_position, joint_velocity
 
     def default_stance_control(self, q_cmd, control=p.POSITION_CONTROL):
         q_mes = np.zeros((12, 1))
