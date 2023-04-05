@@ -42,7 +42,7 @@ if __name__ == "__main__":
     ROBOT = SOLO12(URDF, cfg, fixed=1)
     gait = Gait(ROBOT)
     # pybullet_interface = PybulletInterface()
-    velocity, angle_velocity , angle, steps_per_sec = 1, 0, 0, 1
+    velocity, angle_velocity , angle, steps_per_sec = 0.5, 0, 0, 0.5
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
     trot_2_stance_ratio = 0.5
     cmd = np.zeros((12, 1))
