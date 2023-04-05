@@ -21,6 +21,7 @@ from SOLO12_SIM_CONTROL.utils import combine
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 
 URDF = "./data/urdf/solo12.urdf"
+PLOTS = "../plots"
 config = "./data/config/solo12.yml"
 TRAJ = "./data/traj/gait.csv"
 NUM_TIME_STEPS = 10000
@@ -28,9 +29,12 @@ TIMESTEPS = 0.001
 HZ = 1000
 
 
-def plot(t, joint):
-    plt.plot(t, joint)
-    plt.savefig("./traj_EE_pos.png")
+def plot(t, *joints):
+    str_ = {0: "FL", 1: "FR", 2: "HL", 3: "HL"}
+    for i in range(len(joints)):
+        plt.plot(t, joints[i])
+        plt.savefig("/traj_" + str_[i] +  "_pos_FL.png")
+        plt.close()
     # plt.show()
 
 
@@ -42,13 +46,13 @@ if __name__ == "__main__":
     ROBOT = SOLO12(URDF, cfg, fixed=1)
     gait = Gait(ROBOT)
     # pybullet_interface = PybulletInterface()
-    velocity, angle_velocity , angle, steps_per_sec = 0.5, 0, 0, 0.5
+    velocity, angle_velocity , angle, steps_per_sec = 1.0, 0, 0, 1.0
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
     trot_2_stance_ratio = 0.5
     cmd = np.zeros((12, 1))
     itr = 0
 
-    traj = []
+    traj_FL, traj_FR, traj_HL, traj_HR = [], [], [], []
     _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
 
     with open(TRAJ, 'w', newline='') as file:
@@ -56,7 +60,10 @@ if __name__ == "__main__":
         while (itr < NUM_TIME_STEPS):
             gait_traj, updated = gait.runTrajectory(velocity, angle, angle_velocity, offsets, steps_per_sec, trot_2_stance_ratio, HZ, mode = "collect")
             if updated:
-                traj.append(gait_traj['FL_FOOT']['P'][2])
+                traj_FL.append(gait_traj['FL_FOOT']['P'][2])
+                traj_FR.append(gait_traj['FR_FOOT']['P'][2])
+                traj_HL.append(gait_traj['HL_FOOT']['P'][2])
+                traj_HR.append(gait_traj['HR_FOOT']['P'][2])
                 joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
                 ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
                 joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
@@ -74,6 +81,6 @@ if __name__ == "__main__":
             else:
                 continue
             p.stepSimulation()
-    plot(_t, traj)
+    # plot(_t, traj_FL, traj_FR, traj_HL, traj_HR)
     p.disconnect()
     file.close()

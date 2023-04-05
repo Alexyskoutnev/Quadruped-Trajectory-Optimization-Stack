@@ -1,8 +1,6 @@
 import pybullet as p
 import numpy as np
 
-
-
 def combine(*vectors):
     v = np.zeros(12)
     cnt = len(vectors)
@@ -14,7 +12,6 @@ def combine(*vectors):
             v[(i-1)*3:i*3] = vectors[i - 1][(i-1)*3:i*3]
         i += 1
     return v
-        
 
 def transformation_mtx(t, R):
     mtx = np.eye(4)
