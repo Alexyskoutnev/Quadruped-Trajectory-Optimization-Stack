@@ -26,7 +26,6 @@ sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 TOWR = "./data/traj/towr.csv"
 HZ = sim_cfg['HZ']
 
-
 def setup_enviroment():
     py_client = p.connect(p.GUI)
     # py_client = p.connect(p.DIRECT)

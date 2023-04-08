@@ -33,7 +33,6 @@ def transformation_inv(M):
     return mtx
 
 def euler_to_quaternion(yaw, pitch, roll):
-
         qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
         qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
@@ -86,14 +85,15 @@ def towr_transform(traj):
     shift = {'FL': np.array([0.213, 0.15, -0.21]), 'FR': np.array([0.213, -0.15, -0.21]), "HL": np.array([-0.213, 0.15, -0.21]), "HR": np.array([-0.213, -0.15, -0.21])}
     for t in traj:
         if t == 'FL_FOOT':
-            traj['FL_FOOT']['P'] = traj['FL_FOOT']['P'] - traj['COM'] + shift['FL']
-            # breakpoint()
+            # traj['FL_FOOT']['P'] = traj['FL_FOOT']['P'] - traj['COM'] + shift['FL']
+            traj['FL_FOOT']['P'] = traj['FL_FOOT']['P'] - traj['COM']
         elif t == "FR_FOOT":
-            traj['FR_FOOT']['P'] = traj['FR_FOOT']['P'] - traj['COM'] + shift['FR']
+            traj['FR_FOOT']['P'] = traj['FR_FOOT']['P'] - traj['COM']
+            # traj['FR_FOOT']['P'] = traj['FR_FOOT']['P'] - traj['COM'] + shift['FR']
         elif t == "HL_FOOT":
-            traj['HL_FOOT']['P'] = traj['HL_FOOT']['P'] - traj['COM'] + shift['HL']
+            # traj['HL_FOOT']['P'] = traj['HL_FOOT']['P'] - traj['COM'] + shift['HL']
+            traj['HL_FOOT']['P'] = traj['HL_FOOT']['P'] - traj['COM']
         elif t == "HR_FOOT":
-            traj['HR_FOOT']['P'] = traj['HR_FOOT']['P'] - traj['COM'] + shift['HR']
-    print(traj)
-    # breakpoint()
+            traj['HR_FOOT']['P'] = traj['HR_FOOT']['P'] - traj['COM']
+            # traj['HR_FOOT']['P'] = traj['HR_FOOT']['P'] - traj['COM'] + shift['HR']
     return traj
