@@ -81,3 +81,19 @@ def convert12arr_2_16arr(arr):
             idx += 1
         idx += 1
     return arr16
+
+def towr_transform(traj):
+    shift = {'FL': np.array([0.213, 0.15, -0.21]), 'FR': np.array([0.213, -0.15, -0.21]), "HL": np.array([-0.213, 0.15, -0.21]), "HR": np.array([-0.213, -0.15, -0.21])}
+    for t in traj:
+        if t == 'FL_FOOT':
+            traj['FL_FOOT']['P'] = traj['FL_FOOT']['P'] - traj['COM'] + shift['FL']
+            # breakpoint()
+        elif t == "FR_FOOT":
+            traj['FR_FOOT']['P'] = traj['FR_FOOT']['P'] - traj['COM'] + shift['FR']
+        elif t == "HL_FOOT":
+            traj['HL_FOOT']['P'] = traj['HL_FOOT']['P'] - traj['COM'] + shift['HL']
+        elif t == "HR_FOOT":
+            traj['HR_FOOT']['P'] = traj['HR_FOOT']['P'] - traj['COM'] + shift['HR']
+    print(traj)
+    # breakpoint()
+    return traj
