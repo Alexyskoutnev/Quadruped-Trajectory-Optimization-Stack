@@ -1,5 +1,5 @@
 # mode : "bezier"
-mode : "towr"
+mode : "track"
 velocity: 1.0
 angle_velocity : 0.0
 angle : 0.0
