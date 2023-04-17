@@ -1,4 +1,3 @@
-
 import time
 import os
 import sys
@@ -40,16 +39,16 @@ def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
     return solo12
 
 def simulation():
-    type = "plane"
-    sim = Simulation(type)
-    py_client = sim.setup(type)
-    pybullet_interface = PybulletInterface()
-    planeId = p.loadURDF("plane.urdf")
-    ROBOT = SOLO12(URDF, cfg, fixed=False)
+    Simulation(sim_cfg['enviroment'])
+    ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'])
     gait = Gait(ROBOT)
     init_phase = False
     trot_phase = True
-
+    if sim_cfg['py_interface']:
+        pybullet_interface = PybulletInterface()
+        pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
+    elif sim_cfg['enviroment'] == "testing":
+        velocity, angle_velocity , angle, stepPeriod = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_per_sec']
     if sim_cfg['mode'] == "towr":
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
@@ -61,13 +60,13 @@ def simulation():
         csv_file = open(TRACK, 'r', newline='')
         reader =csv.reader(csv_file, delimiter=' ')
 
-    pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
     trot_2_stance_ratio = 0.5
     cmd = np.zeros((12, 1))
     for i in range (10000):
         if sim_cfg['mode'] == "bezier":
-            pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
+            if sim_cfg['py_interface']:
+                pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
             if init_phase:
                 jointTorques, newCmd = ROBOT.default_stance_control(cmd, p.TORQUE_CONTROL)
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
@@ -87,6 +86,7 @@ def simulation():
         elif sim_cfg['mode'] == "towr":
             try: 
                 EE_POSE = np.array([float(x) for x in next(reader)])
+                # breakpoint()
             except StopIteration:
                 break
             towr = {"COM": EE_POSE[0:3], "FL_FOOT": {'P' : EE_POSE[3:6], 'D': np.zeros(3)}, "FR_FOOT": {'P': EE_POSE[6:9], 'D': np.zeros(3)}, 

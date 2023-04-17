@@ -1,5 +1,6 @@
 import pybullet as p
 import numpy as np
+import math
 
 def combine(*vectors):
     v = np.zeros(12)
@@ -82,18 +83,35 @@ def convert12arr_2_16arr(arr):
     return arr16
 
 def towr_transform(traj):
-    shift = {'FL': np.array([0.213, 0.15, -0.21]), 'FR': np.array([0.213, -0.15, -0.21]), "HL": np.array([-0.213, 0.15, -0.21]), "HR": np.array([-0.213, -0.15, -0.21])}
+    shift = {'FL': np.array([0.213, 0.15, 0.15]), 'FR': np.array([0.213, -0.15, 0.15]), "HL": np.array([-0.213, 0.15, 0.15]), "HR": np.array([-0.213, -0.15, 0.24])}
+    print("before transform")
+    print(traj)
     for t in traj:
         if t == 'FL_FOOT':
-            # traj['FL_FOOT']['P'] = traj['FL_FOOT']['P'] - traj['COM'] + shift['FL']
-            traj['FL_FOOT']['P'] = traj['FL_FOOT']['P'] - traj['COM']
+            if traj['FL_FOOT']['P'][2] < 0 or math.isclose(traj['FL_FOOT']['P'][2], 0, rel_tol=1e-3):
+                traj['FL_FOOT']['P'][2] = 0
+            traj['FL_FOOT']['P'][0] =  traj['FL_FOOT']['P'][0] - traj['COM'][0]
+            traj['FL_FOOT']['P'][1] =  traj['FL_FOOT']['P'][1] - traj['COM'][1]
+            # traj['FL_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
+            traj['FL_FOOT']['P'][2] = 0
         elif t == "FR_FOOT":
-            traj['FR_FOOT']['P'] = traj['FR_FOOT']['P'] - traj['COM']
-            # traj['FR_FOOT']['P'] = traj['FR_FOOT']['P'] - traj['COM'] + shift['FR']
+            if traj['FR_FOOT']['P'][2] < 0 or math.isclose(traj['FR_FOOT']['P'][2], 0, rel_tol=1e-3):
+                traj['FR_FOOT']['P'][2] = 0
+            traj['FR_FOOT']['P'][0] =  traj['FR_FOOT']['P'][0] - traj['COM'][0]
+            traj['FR_FOOT']['P'][1] =  traj['FR_FOOT']['P'][1] - traj['COM'][0]
+            traj['FR_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
         elif t == "HL_FOOT":
-            # traj['HL_FOOT']['P'] = traj['HL_FOOT']['P'] - traj['COM'] + shift['HL']
-            traj['HL_FOOT']['P'] = traj['HL_FOOT']['P'] - traj['COM']
+            if traj['HL_FOOT']['P'][2] < 0 or math.isclose(traj['HL_FOOT']['P'][2], 0, rel_tol = 1e-3):
+                traj['HL_FOOT']['P'][2] = 0
+            traj['HL_FOOT']['P'][0] =  traj['HL_FOOT']['P'][0] - traj['COM'][0]
+            traj['HL_FOOT']['P'][1] = traj['HL_FOOT']['P'][1] - traj['COM'][1]
+            traj['HL_FOOT']['P'][2] = abs(traj['HL_FOOT']['P'][2])
         elif t == "HR_FOOT":
-            traj['HR_FOOT']['P'] = traj['HR_FOOT']['P'] - traj['COM']
-            # traj['HR_FOOT']['P'] = traj['HR_FOOT']['P'] - traj['COM'] + shift['HR']
+            if traj['HR_FOOT']['P'][2] < 0 or math.isclose(traj['HR_FOOT']['P'][2], 0, rel_tol = 1e-3):
+                 traj['HR_FOOT']['P'][2] = 0
+            traj['HR_FOOT']['P'][0] =  traj['HR_FOOT']['P'][0] - traj['COM'][0]
+            traj['HR_FOOT']['P'][1] =  traj['HR_FOOT']['P'][1] - traj['COM'][1]
+            traj['HR_FOOT']['P'][2] = abs(traj['HR_FOOT']['P'][2])
+    print("after transform")
+    print(traj, "\n")
     return traj

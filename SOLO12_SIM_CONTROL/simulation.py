@@ -9,15 +9,20 @@ URDF = "./data/urdf/"
 class Simulation(object):
 
     def __init__(self, simulation_type) -> None:
-
         self._wall = "./data/urdf/wall.urdf"
         self._stairs = "./data/urdf/stair.urdf"
-        # self.setup(sim_config=simulation_type)
+        self.p = self.setup(sim_config=simulation_type)
 
     def setup(self, sim_config = "height_terrain"):
         py_client = None
 
-        if sim_config == "plane":
+        if sim_config == "testing":
+            py_client = p.connect(p.DIRECT)
+            p.setAdditionalSearchPath(pybullet_data.getDataPath())
+            p.setGravity(0,0,-10)
+            p.loadURDF("plane.urdf")
+
+        elif sim_config == "plane":
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10)
