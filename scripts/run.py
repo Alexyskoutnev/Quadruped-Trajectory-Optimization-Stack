@@ -53,8 +53,6 @@ def keypress():
             key_press_init_phase = False
             break
 
-
-
 def simulation():
     Simulation(sim_cfg['enviroment'])
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'])
@@ -81,7 +79,8 @@ def simulation():
     trot_2_stance_ratio = 0.5
     cmd = np.zeros((12, 1))
     keypress_io = Thread(target=keypress)
-    keypress_io.start()
+    if init_phase:
+        keypress_io.start()
 
     for i in range (10000):
         if sim_cfg['mode'] == "bezier":
@@ -94,13 +93,26 @@ def simulation():
             else:
                 gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, stepPeriod, trot_2_stance_ratio)
                 joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+                elif ROBOT.mode == 'torque':
+                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_toq_FL[0:3])
                 joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
+                elif ROBOT.mode == 'torque':
+                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_toq_FR[3:6])
                 joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(gait_traj['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
+                elif ROBOT.mode == 'torque':
+                     ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_toq_HL[6:9])
                 joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(gait_traj['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
+                elif ROBOT.mode == 'torque':
+                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
+
             p.stepSimulation()
             ROBOT.time_step += 1
         elif sim_cfg['mode'] == "towr":
@@ -117,13 +129,25 @@ def simulation():
                         "HL_FOOT": {'P': EE_POSE[9:12], 'D' : np.zeros(3)}, "HR_FOOT": {'P': EE_POSE[12:15], 'D': np.zeros(3)}}
                 towr = towr_transform(towr)
                 joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(towr['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+                elif ROBOT.mode == 'torque':
+                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_toq_FL[0:3])
                 joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(towr['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
+                elif ROBOT.mode == 'torque':
+                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_toq_FR[3:6])
                 joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(towr['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
+                elif ROBOT.mode == 'torque':
+                     ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_toq_HL[6:9])
                 joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(towr['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
+                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
+                elif ROBOT.mode == 'torque':
+                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
                 p.stepSimulation()
                 ROBOT.time_step += 1
         elif sim_cfg['mode'] == "track":
