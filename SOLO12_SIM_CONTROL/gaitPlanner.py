@@ -24,7 +24,6 @@ def bezier_d_1(t, k, p_i, p_i_1):
 
 def bezier_d_2(t, k, p):
     pass
-    # b_i_2 = 
 
 class Gait(object):
     

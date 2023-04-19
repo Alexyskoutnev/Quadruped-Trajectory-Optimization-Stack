@@ -92,13 +92,12 @@ def towr_transform(traj):
                 traj['FL_FOOT']['P'][2] = 0
             traj['FL_FOOT']['P'][0] =  traj['FL_FOOT']['P'][0] - traj['COM'][0]
             traj['FL_FOOT']['P'][1] =  traj['FL_FOOT']['P'][1] - traj['COM'][1]
-            # traj['FL_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
-            traj['FL_FOOT']['P'][2] = 0
+            traj['FL_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
         elif t == "FR_FOOT":
             if traj['FR_FOOT']['P'][2] < 0 or math.isclose(traj['FR_FOOT']['P'][2], 0, rel_tol=1e-3):
                 traj['FR_FOOT']['P'][2] = 0
             traj['FR_FOOT']['P'][0] =  traj['FR_FOOT']['P'][0] - traj['COM'][0]
-            traj['FR_FOOT']['P'][1] =  traj['FR_FOOT']['P'][1] - traj['COM'][0]
+            traj['FR_FOOT']['P'][1] =  traj['FR_FOOT']['P'][1] - traj['COM'][1]
             traj['FR_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
         elif t == "HL_FOOT":
             if traj['HL_FOOT']['P'][2] < 0 or math.isclose(traj['HL_FOOT']['P'][2], 0, rel_tol = 1e-3):

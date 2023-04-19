@@ -35,8 +35,6 @@ def shift_z(v, shift):
     v[2] += shift
     return v
         
-
-
 class SOLO12(object):
     def __init__(self, URDF, config, fixed = 0):
         self.config = config
@@ -91,17 +89,6 @@ class SOLO12(object):
         EE1, EE2, EE3, EE4 = p.getLinkStates(self.robot,  self.EE_index.values())
         return {"FL_FOOT": link_info(EE1), "FR_FOOT": link_info(EE2), "HL_FOOT": link_info(EE3), "HR_FOOT": link_info(EE4)}
     
-    
-    # def invDynamics(self, d_pos, d_vel, index):
-
-
-    #     breakpoint()
-    #     numJoints = p.getNumJoints(self.robot)
-        
-    #     breakpoint()
-
-      
-    #     return q_cmd, q_vel, q_toq
 
     def control(self, cmd, index, mode="P"):
         q_cmd = None
@@ -241,10 +228,10 @@ class SOLO12(object):
                     velocities.append(state[1])
                 for i, idx in enumerate([9, 10, 10]):
                     joint_velocity[idx] = velocities[i]
-            # breakpoint()
         return joint_position, joint_velocity
 
-    def default_stance_control(self, q_cmd, control=p.POSITION_CONTROL):
+    def default_stance_control(self, q_cmd, control=p.TORQUE_CONTROL):
+
         q_mes = np.zeros((12, 1))
         v_mes = np.zeros((12, 1))
 
@@ -252,12 +239,12 @@ class SOLO12(object):
         jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
         q_mes[:, 0] = [state[0] for state in jointStates]
         v_mes[:, 0] = [state[1] for state in jointStates]
-        print(f"q_mes: {q_mes}")
-        print(f"v_mes: {v_mes}")
+        # print(f"q_mes: {q_mes}")
+        # print(f"v_mes: {v_mes}")
 
 
         kp = 5.0
-        kd = 0.05 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
+        kd = 0.10 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
         dt = 0.001
         cpt = self.time_step
         t1 = 4
@@ -268,7 +255,7 @@ class SOLO12(object):
                 A2 = (-3/2) * t1 * A3
                 q_des = q_mes + A2*(ev**2) + A3*(ev**3)
                 v_des = 2*A2*ev + 3*A3*(ev**2)
-                jointTorques = kp * (q_des - q_mes) + kd * (v_des - v_mes)
+                jointTorques = kp * (q_cmd.reshape((12, 1)) - q_mes) + kd * (v_des - v_mes)
                 t_max = 2.5
                 jointTorques[jointTorques > t_max] = t_max
                 jointTorques[jointTorques < -t_max] = -t_max

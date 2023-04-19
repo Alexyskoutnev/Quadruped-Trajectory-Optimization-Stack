@@ -1,5 +1,5 @@
 # mode : "bezier"
-mode : "towr"
+mode : "bezier"
 # enviroment : "testing"
 enviroment : "plane"
 # mode : "testing"
