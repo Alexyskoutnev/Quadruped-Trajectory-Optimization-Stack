@@ -66,7 +66,7 @@ def _run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--i', nargs=3, type=float, default=[0.5,0,0.24])
+    parser.add_argument('-i', '--i', nargs=3, type=float, default=[0.5,0,0.21])
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"start_pos": p_args.i, "docker_id": docker_id, "scripts": parse_scripts(scripts, docker_id)}

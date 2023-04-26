@@ -71,6 +71,9 @@ class SOLO12(object):
         
         self.kp = np.ones(12) * 0.5
         self.kd = np.ones(12) * 0.1
+        self._joint_ang = None
+        self._joint_vel = None
+        self._joint_toq = None
 
     def CoM_states(self):
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
@@ -79,6 +82,10 @@ class SOLO12(object):
     def get_link_states(self):
         pass
     
+    @property
+    def jointangles(self):
+        return self._joint_ang
+
     def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_f=None):
         if 'P' == controlMode or 'PD' == controlMode:
             maxForces = np.ones(len(jointsInx))*5
@@ -119,8 +126,6 @@ class SOLO12(object):
         jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
         q_mes[:, 0] = [state[0] for state in jointStates]
         v_mes[:, 0] = [state[1] for state in jointStates]
-        # print(f"q_mes: {q_mes}")
-        # print(f"v_mes: {v_mes}")
 
 
         kp = 5.0
@@ -265,9 +270,10 @@ class SOLO12(object):
             elif index == 15:
                 for state in p.getJointStates(self.robot, [12, 13, 14]):
                     velocities.append(state[1])
-                for i, idx in enumerate([9, 10, 10]):
+                for i, idx in enumerate([9, 10, 11]):
                     joint_velocity[idx] = velocities[i]
-        
+        self._joint_ang = joint_position
+        self._joint_vel = joint_velocity
         return joint_position, joint_velocity
 
     def default_stance_control(self, q_cmd, control=p.TORQUE_CONTROL):
