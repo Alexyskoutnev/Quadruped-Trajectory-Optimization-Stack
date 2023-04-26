@@ -1,8 +1,13 @@
+Robotic trajectory simulation package built on top of Pybullet. Used for testing trajectories (TOWR) and dynamics between robot model and enviroment  (SOLO12).
 # Docker Installation Steps #
- 1. docker build -t solo12 .
- 2. docker run -it solo12
+```console
+docker build -t solo12 .
+docker run -it solo12
+```
 # Python Installation Steps #
-1. conda create --name soloSim python=3.10
-2. conda activate soloSim
-3. conda install pybullet
-4. pip3 install -e .
+```
+conda create --name soloSim python=3.10
+conda activate soloSim
+conda install pybullet
+pip3 install -e .
+```
