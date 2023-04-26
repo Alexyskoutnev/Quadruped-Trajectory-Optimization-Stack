@@ -43,7 +43,6 @@ class SOLO12(object):
         self.fixjointidx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
         self.links = links_to_id(self.robot)
         self.q_init = np.array(config['q_init'])
-        # self.q_init = np.array([0 for i in range(12)])
         self.q_init16 = q_init_16_arr(self.q_init)
         self.EE = {'FL_FOOT': None, 'FR_FOOT': None, "HL_FOOT": None, "HR_FOOT": None}
         self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15}
@@ -111,20 +110,19 @@ class SOLO12(object):
         q_vel = None
         q_toq = None
         if mode == 'P':
-            q_cmd, q_vel = self.invKinematics(cmd, index, mode=mode)
+            q_cmd, q_vel = self.inv_kinematics(cmd, index, mode=mode)
         elif mode == 'PD':
-            q_cmd, q_vel = self.invKinematics(cmd, index, mode=mode)
+            q_cmd, q_vel = self.inv_kinematics(cmd, index, mode=mode)
         elif mode == 'torque':
-            q_cmd, q_vel, q_toq = self.invDynamics(cmd, index)
+            q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
-    def invDynamics(self, cmd, index):
+    def inv_dynamics(self, cmd, index):
 
-        # breakpoint()
-        q_cmd, q_vel = self.invKinematics(cmd, index, mode = "PD")
+        q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
         _q_cmd = np.array(q_cmd).reshape((12, 1))
         _q_vel = np.array(q_vel).reshape((12, 1))
-        # breakpoint()
+
         q_mes = np.zeros((12, 1))
         v_mes = np.zeros((12, 1))
 
@@ -158,7 +156,7 @@ class SOLO12(object):
     #     # jointindices = self.jointidx[jointmap[index]]
     #     jointindices = self.jointidx["idx"]
     #     numJoints = len(jointindices)
-    #     q_cmd, q_vel = self.invKinematics(cmd, index, mode = "PD")
+    #     q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
         
     #     q1 = []
     #     qdot1 = []
@@ -243,22 +241,23 @@ class SOLO12(object):
     #     # q_cmd, q_vel, q_tor = None, None, None
     #     return q_cmd, q_vel, q_tor
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
-        assert(len(cmds) == 4)
         assert(len(indices) == 4)
         joint_position = np.zeros(12)
         joint_velocity = np.zeros(12)
-        for i, (cmd, idx) in enumerate(zip(cmds, indices)):
-            breakpoint()
-            joint_position[3*i:3*i+3] = self.invKinematics(cmd, idx, mode)[3*i:3*i+3]
-
-
-        # if mode == 'P':
-        #     breakpoint()
-        #     joint_position = p.calculateInverseKinematics(self.robot, indices, cmds)
-        self._joint_ang = joint_position
+        idx_2_EE = {3 : "FL_FOOT", 7: "FR_FOOT", 11: "HL_FOOT", 15: "HR_FOOT"}
+        for idx in indices:
+            if idx_2_EE[idx] == "FL_FOOT":
+                joint_position[0:3] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][0:3]
+            elif idx_2_EE[idx] == "FR_FOOT":
+                joint_position[3:6] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][3:6]
+            elif idx_2_EE[idx] == "HL_FOOT":
+                joint_position[6:9] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][6:9]
+            elif idx_2_EE[idx] == "HR_FOOT":
+                joint_position[9:12] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][9:12]
+        self._joint_ang = joint_position #More accurate update ??
         return joint_position
 
-    def invKinematics(self, cmd, index, mode = 'P'):
+    def inv_kinematics(self, cmd, index, mode = 'P'):
         joint_position = None
         joint_velocity = None
         if mode == 'P':
@@ -293,7 +292,7 @@ class SOLO12(object):
                     velocities.append(state[1])
                 for i, idx in enumerate([9, 10, 11]):
                     joint_velocity[idx] = velocities[i]
-        self._joint_ang = joint_position
+        self._joint_ang = joint_position #COULD BE POTENTIALY NOT 100% accurate if we update joint 4 but we want 1 (old joint reference)
         self._joint_vel = joint_velocity
         return joint_position, joint_velocity
 

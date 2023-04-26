@@ -17,10 +17,11 @@ class Simulation(object):
         py_client = None
 
         if sim_config == "testing":
-            py_client = p.connect(p.DIRECT)
+            # py_client = p.connect(p.DIRECT)
+            py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-10)
-            p.loadURDF("plane.urdf")
+            p.setGravity(0,0,0)
+            # p.loadURDF("plane.urdf")
 
         elif sim_config == "plane":
             py_client = p.connect(p.GUI)

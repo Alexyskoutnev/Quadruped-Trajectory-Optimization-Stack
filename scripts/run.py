@@ -10,7 +10,6 @@ import pybullet as p
 import pybullet_data
 import yaml
 import numpy as np
-# import keyboard
 
 #project
 from SOLO12_SIM_CONTROL.robot import SOLO12
@@ -33,10 +32,8 @@ key_press_init_phase = True
 
 def setup_enviroment():
     py_client = p.connect(p.GUI)
-    # py_client = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.setGravity(0,0,-9.81)
-    # p.setTimeStep(0.001) 
     return py_client 
 
 def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
@@ -91,8 +88,6 @@ def simulation():
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
                 p.stepSimulation()
     for i in range (10000):
-        print("COM -> ", ROBOT.CoM_states()['linkWorldPosition'])
-        print("joint INIT pos -> ", ROBOT.jointangles)
         if sim_cfg['mode'] == "bezier":
             if sim_cfg['py_interface']:
                 pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
@@ -164,19 +159,17 @@ def simulation():
         elif sim_cfg['mode'] == "visual_track":
             try: 
                 EE_POSE = np.array([float(x) for x in next(reader)])
-                cmd = vec_to_cmd(EE_POSE)[3:12]
+                cmd = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
                 break
-            breakpoint()
             joint_position = ROBOT.inv_kinematics_multi(cmd, ROBOT.fixjointidx['idx'])
-            maxForces = np.ones(12)*20
-            posGains = np.ones(12)*1.0
-            p.setJointMotorControlArray(ROBOT.robot, revoluteJointIndices, 
-                                    controlMode=p.POSITION_CONTROL, targetPositions=joints, forces=maxForces, positionGains=posGains)   
+            revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
+            orientation = (0,0,0,1) #Need to update the orientation for the robot 
+            p.resetBasePositionAndOrientation(ROBOT.robot, cmd['COM'], orientation)
+            for joint_ang, joint_indx in zip(joint_position, revoluteJointIndices):
+                p.resetJointState(ROBOT.robot, joint_indx, joint_ang)
             p.stepSimulation()
             ROBOT.time_step += 1
-
-        # time.sleep(0.01)
     p.disconnect()
 
 
