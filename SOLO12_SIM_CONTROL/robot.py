@@ -36,7 +36,7 @@ def shift_z(v, shift):
     return v
         
 class SOLO12(object):
-    def __init__(self, URDF, config, fixed = 0):
+    def __init__(self, URDF, config, fixed = 0, sim_cfg=None):
         self.config = config
         self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=fixed)
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
@@ -51,11 +51,17 @@ class SOLO12(object):
         self.t_max = config['t_max']
         self.modes = {"P": p.POSITION_CONTROL, "PD": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
         self.mode = config['mode']
+        self.sim_cfg = sim_cfg
         
         self.tfBaseMtx = transformation_inv(transformation_mtx(self.CoM_states()['linkWorldPosition'], self.CoM_states()['linkWorldOrientation']))
         self.EE_WORLD = {"FL_W_POSE": base_frame_tf(self.tfBaseMtx, self.get_endeffector_pose()['FL_FOOT']['linkWorldPosition']), "FR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['FR_FOOT']['linkWorldPosition']),
                                     "HL_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HL_FOOT']['linkWorldPosition']), "HR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HR_FOOT']['linkWorldPosition'])}
-        self.shiftZ = 0.05
+        if sim_cfg['mode'] == "bezier":
+            self.shiftZ = 0.05
+        elif sim_cfg['mode'] == "towr":
+            self.shiftZ = 0.05
+        else:
+            self.shiftZ = 0.0
         self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         
@@ -88,8 +94,8 @@ class SOLO12(object):
 
     def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_f=None):
         if 'P' == controlMode or 'PD' == controlMode:
-            maxForces = np.ones(len(jointsInx))*5
-            posGains = np.ones(len(jointsInx)) * 0.5
+            maxForces = np.ones(len(jointsInx))*10
+            posGains = np.ones(len(jointsInx))*0.5
             p.setJointMotorControlArray(self.robot, jointsInx, self.modes['P'], cmd_pose, forces=maxForces, positionGains=posGains)
         elif 'torque' == controlMode:
             p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_pose)
@@ -236,6 +242,21 @@ class SOLO12(object):
 
     #     # q_cmd, q_vel, q_tor = None, None, None
     #     return q_cmd, q_vel, q_tor
+    def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
+        assert(len(cmds) == 4)
+        assert(len(indices) == 4)
+        joint_position = np.zeros(12)
+        joint_velocity = np.zeros(12)
+        for i, (cmd, idx) in enumerate(zip(cmds, indices)):
+            breakpoint()
+            joint_position[3*i:3*i+3] = self.invKinematics(cmd, idx, mode)[3*i:3*i+3]
+
+
+        # if mode == 'P':
+        #     breakpoint()
+        #     joint_position = p.calculateInverseKinematics(self.robot, indices, cmds)
+        self._joint_ang = joint_position
+        return joint_position
 
     def invKinematics(self, cmd, index, mode = 'P'):
         joint_position = None

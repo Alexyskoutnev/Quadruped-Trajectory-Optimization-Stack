@@ -1,10 +1,11 @@
-mode : "bezier"
-# mode : "towr"
+# mode : "bezier"
+mode : "towr"
+# mode : "visual_track"
 # enviroment : "testing"
 enviroment : "plane"
 # mode : "testing"
 py_interface : True
-fix-base : False
+fix-base : True
 velocity: 1.0
 angle_velocity : 0.0
 angle : 0.0
@@ -14,5 +15,5 @@ trot_2_stance_ratio : 0.5
 NUM_TIME_STEPS : 10000
 HZ : 1000
 TIMESTEPS : 0.01
-stance_phase : True
+stance_phase : False
 
