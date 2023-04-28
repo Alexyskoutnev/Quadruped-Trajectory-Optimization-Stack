@@ -52,7 +52,7 @@ def keypress():
 
 def simulation():
     global key_press_init_phase
-    Simulation(sim_cfg['enviroment'])
+    Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'])
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
@@ -164,8 +164,8 @@ def simulation():
                 break
             joint_position = ROBOT.inv_kinematics_multi(cmd, ROBOT.fixjointidx['idx'])
             revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
-            orientation = (0,0,0,1) #Need to update the orientation for the robot 
-            p.resetBasePositionAndOrientation(ROBOT.robot, cmd['COM'], orientation)
+            orientation = p.getQuaternionFromEuler(cmd['COM'][3:6]) #Need to update the orientation for the robot 
+            p.resetBasePositionAndOrientation(ROBOT.robot, cmd['COM'][0:3], orientation)
             for joint_ang, joint_indx in zip(joint_position, revoluteJointIndices):
                 p.resetJointState(ROBOT.robot, joint_indx, joint_ang)
             p.stepSimulation()

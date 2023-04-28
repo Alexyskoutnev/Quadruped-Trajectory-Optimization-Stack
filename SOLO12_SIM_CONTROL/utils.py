@@ -7,7 +7,7 @@ def create_cmd():
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
 
 def create_cmd_pose():
-    return {"COM": np.zeros(3), "FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
+    return {"COM": np.zeros(6), "FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
 
 def vec_to_cmd(vec, mode= "P", joint_cnt=3):
@@ -27,15 +27,15 @@ def vec_to_cmd_pose(vec, mode="P", joint_cnt=3):
     cmd = create_cmd_pose()
     for i in range(len(vec)//3):
         if i == 0:
-            cmd["COM"] = vec[0:3]
+            cmd["COM"] = vec[0:6]
         elif i == 1:
-            cmd["FL_FOOT"][mode] = vec[3:6]
+            cmd["FL_FOOT"][mode] = vec[6:9]
         elif i == 2:
-            cmd["FR_FOOT"][mode] = vec[6:9]
+            cmd["FR_FOOT"][mode] = vec[9:12]
         elif i == 3:
-            cmd["HL_FOOT"][mode] = vec[9:12]
+            cmd["HL_FOOT"][mode] = vec[12:15]
         elif i == 4:
-            cmd["HR_FOOT"][mode] = vec[12:15]
+            cmd["HR_FOOT"][mode] = vec[15:18]
     return cmd
 
 def combine(*vectors):
@@ -118,31 +118,30 @@ def convert12arr_2_16arr(arr):
     return arr16
 
 def towr_transform(robot, traj):
-
     for t in traj:
         if t == 'FL_FOOT':
             if traj['FL_FOOT']['P'][2] < 0 or math.isclose(traj['FL_FOOT']['P'][2], 0, rel_tol=1e-3):
                 traj['FL_FOOT']['P'][2] = 0
-            traj['FL_FOOT']['P'][0] =  traj['FL_FOOT']['P'][0] - traj['COM'][0]
-            traj['FL_FOOT']['P'][1] =  traj['FL_FOOT']['P'][1] - traj['COM'][1]
+            traj['FL_FOOT']['P'][0] =  traj['FL_FOOT']['P'][0] - traj['COM'][0:3][0]
+            traj['FL_FOOT']['P'][1] =  traj['FL_FOOT']['P'][1] - traj['COM'][0:3][1]
             traj['FL_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
         elif t == "FR_FOOT":
             if traj['FR_FOOT']['P'][2] < 0 or math.isclose(traj['FR_FOOT']['P'][2], 0, rel_tol=1e-3):
                 traj['FR_FOOT']['P'][2] = 0
-            traj['FR_FOOT']['P'][0] =  traj['FR_FOOT']['P'][0] - traj['COM'][0]
-            traj['FR_FOOT']['P'][1] =  traj['FR_FOOT']['P'][1] - traj['COM'][1]
+            traj['FR_FOOT']['P'][0] =  traj['FR_FOOT']['P'][0] - traj['COM'][0:3][0]
+            traj['FR_FOOT']['P'][1] =  traj['FR_FOOT']['P'][1] - traj['COM'][0:3][1]
             traj['FR_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
         elif t == "HL_FOOT":
             if traj['HL_FOOT']['P'][2] < 0 or math.isclose(traj['HL_FOOT']['P'][2], 0, rel_tol = 1e-3):
                 traj['HL_FOOT']['P'][2] = 0
-            traj['HL_FOOT']['P'][0] =  traj['HL_FOOT']['P'][0] - traj['COM'][0]
-            traj['HL_FOOT']['P'][1] = traj['HL_FOOT']['P'][1] - traj['COM'][1]
+            traj['HL_FOOT']['P'][0] =  traj['HL_FOOT']['P'][0] - traj['COM'][0:3][0]
+            traj['HL_FOOT']['P'][1] = traj['HL_FOOT']['P'][1] - traj['COM'][0:3][1]
             traj['HL_FOOT']['P'][2] = abs(traj['HL_FOOT']['P'][2])
         elif t == "HR_FOOT":
             if traj['HR_FOOT']['P'][2] < 0 or math.isclose(traj['HR_FOOT']['P'][2], 0, rel_tol = 1e-3):
                  traj['HR_FOOT']['P'][2] = 0
-            traj['HR_FOOT']['P'][0] =  traj['HR_FOOT']['P'][0] - traj['COM'][0]
-            traj['HR_FOOT']['P'][1] =  traj['HR_FOOT']['P'][1] - traj['COM'][1]
+            traj['HR_FOOT']['P'][0] =  traj['HR_FOOT']['P'][0] - traj['COM'][0:3][0]
+            traj['HR_FOOT']['P'][1] =  traj['HR_FOOT']['P'][1] - traj['COM'][0:3][1]
             traj['HR_FOOT']['P'][2] = abs(traj['HR_FOOT']['P'][2])
 
     return trajectory_2_world_frame(robot, traj)
