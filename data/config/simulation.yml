@@ -4,7 +4,7 @@ mode : "towr"
 # mode : "testing"
 # enviroment : "testing"
 enviroment : "plane"
-py_interface : True
+py_interface : False
 fix-base : False
 velocity: 1.0
 angle_velocity : 0.0
@@ -15,5 +15,5 @@ trot_2_stance_ratio : 0.5
 NUM_TIME_STEPS : 10000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_phase : True
+stance_phase : False
 

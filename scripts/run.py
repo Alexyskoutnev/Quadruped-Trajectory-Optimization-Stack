@@ -1,3 +1,5 @@
+#! /opt/homebrew/Caskroom/miniforge/base/envs/soloSim/bin/python3
+
 import time
 import os
 import sys
@@ -42,8 +44,8 @@ def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
     return solo12
 
 def _global_update(kwargs):
-    global_cfg.ROBOT_CFG.linkWorldPosition = kwargs['linkWorldPosition']
-    global_cfg.ROBOT_CFG.linkWorldOrientation = p.getEulerFromQuaternion(kwargs['linkWorldOrientation'])
+    global_cfg.ROBOT_CFG.linkWorldPosition = list(kwargs['linkWorldPosition'])
+    global_cfg.ROBOT_CFG.linkWorldOrientation = list(p.getEulerFromQuaternion(kwargs['linkWorldOrientation']))
 
 def keypress():
     global key_press_init_phase
@@ -121,11 +123,25 @@ def simulation():
             p.stepSimulation()
             ROBOT.time_step += 1
         elif sim_cfg['mode'] == "towr":
-            try: 
+            try:
+                if global_cfg.RUN:
+                    print("Reading updated CSV")
+                    csv_file = open(TOWR, 'r', newline='')
+                    reader = csv.reader(csv_file, delimiter=',')
+                    NUM_TIME_STEPS = sum(1 for row in reader)
+                    csv_file = open(TOWR, 'r', newline='')
+                    reader = csv.reader(csv_file, delimiter=',')
+                    global_cfg.RUN = False 
+                    # time.sleep(0.01)
                 EE_POSE = np.array([float(x) for x in next(reader)])
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
-                break
+                print("STANCE")
+                revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
+                maxForces = np.ones(12)*10
+                posGains = np.ones(12)*0.5
+                ROBOT.setJointControl(revoluteJointIndices, ROBOT.mode, ROBOT.q_init)  
+    
             joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(towr['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
             if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
                 ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
