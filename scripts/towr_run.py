@@ -7,9 +7,13 @@ import argparse
 
 import run
 
+import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
+
 scripts =  {'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
             'run': 'docker exec <id> ./towr-example',
             'info': 'docker ps -f ancestor=towr'}
+
+_flags = ['-g', '-s', '-s_ang', '-s_vel']
 
 def strip(x):
     st = " "
@@ -47,10 +51,27 @@ def _update(args):
     else:
         print("Error in copying Towr Trajectory")
 
+def _cmd_args(args):
+    def _bracket_rm(s):
+        return s.replace("[", "").replace("]", "")
+
+    def _remove_comma(s):
+        return s.replace(",", "")
+    
+    def _filter(s):
+        return _bracket_rm(_remove_comma(str(s)))
+    _cmd = ""
+    for key, value in args.items():
+        if key in _flags and value:
+            _cmd += key + " " + _filter(value)
+            _cmd += " "
+    return _cmd
+
 def _run(args):
+    file = open("./logs/towr_log.out", "w")
     towr_runtime_0 = time.time()
-    TOWR_SCRIPT = shlex.split(args['scripts']['run'] + strip(str(args['start_pos'])))
-    p = subprocess.run(TOWR_SCRIPT, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    p = subprocess.run(TOWR_SCRIPT, stdout=file, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
     if p.returncode == 0:
@@ -58,16 +79,33 @@ def _run(args):
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
         if p.returncode == 0:
             run.simulation()
+            print(global_cfg.ROBOT_CFG.linkWorldPosition)
+            print(global_cfg.ROBOT_CFG.linkWorldOrientation)
         else: 
             print("Error in copying Towr Trajectory")
     else:
-        print("Error in TOWR")
-        return
+        print("Error input trajectory cmds")
+        print("running default commamd")
+        TOWR_SCRIPT = shlex.split(args['scripts']['run'] + "-g 0.5 0.0 0.21 -s 0.0 0.0 0.21")
+        p = subprocess.run(TOWR_SCRIPT, stdout=file, stderr=subprocess.STDOUT)
+        breakpoint() 
+        if p.returncode == 0:
+            print("TOWR found a trajectory with default cmd")
+            p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
+            if p.returncode == 0:
+                run.simulation()
+            else: 
+                print("Error in copying Towr Trajectory")
+            return
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--i', nargs=3, type=float, default=[0.5,0,0.21])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[0.5,0,0.21])
+    parser.add_argument('-s', '--s', nargs=3, type=float)
+    parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
+    parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
-    args = {"start_pos": p_args.i, "docker_id": docker_id, "scripts": parse_scripts(scripts, docker_id)}
+    args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, 
+            "docker_id": docker_id, "scripts": parse_scripts(scripts, docker_id)}
     _run(args)

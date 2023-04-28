@@ -17,6 +17,7 @@ from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, tow
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
+import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"
@@ -39,6 +40,10 @@ def setup_enviroment():
 def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
     solo12 = p.loadURDF(URDF, *POSE)
     return solo12
+
+def _global_update(kwargs):
+    global_cfg.ROBOT_CFG.linkWorldPosition = kwargs['linkWorldPosition']
+    global_cfg.ROBOT_CFG.linkWorldOrientation = p.getEulerFromQuaternion(kwargs['linkWorldOrientation'])
 
 def keypress():
     global key_press_init_phase
@@ -142,6 +147,7 @@ def simulation():
             elif ROBOT.mode == 'torque':
                 ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
             p.stepSimulation()
+            _global_update(ROBOT.CoM_states())
             ROBOT.time_step += 1
         elif sim_cfg['mode'] == "track":
             try:
@@ -162,6 +168,7 @@ def simulation():
                 cmd = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
                 break
+            breakpoint()
             joint_position = ROBOT.inv_kinematics_multi(cmd, ROBOT.fixjointidx['idx'])
             revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
             orientation = p.getQuaternionFromEuler(cmd['COM'][3:6]) #Need to update the orientation for the robot 
