@@ -17,7 +17,7 @@ scripts =  {'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv
             'run': 'docker exec <id> ./towr-example',
             'info': 'docker ps -f ancestor=towr'}
 
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n']
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4']
 
 def strip(x):
     st = " "
@@ -51,7 +51,14 @@ def _plan(args):
     diff_vec[2] = 0.0
     print("diff vec ", diff_vec)
     args['-g'] = list(global_pos + diff_vec)
+    args['-g'][2] = 0.21
+    print('args -g ', args['-g'])
+    # breakpoint()
     args['-s'] = global_cfg.ROBOT_CFG.linkWorldPosition
+    args['-e1'] = global_cfg.ROBOT_CFG.EE['FL']
+    args['-e2'] = global_cfg.ROBOT_CFG.EE['FR']
+    args['-e3'] = global_cfg.ROBOT_CFG.EE['HL']
+    args['-e4'] = global_cfg.ROBOT_CFG.EE['HR']
     # args['-s_ang'] = global_cfg.ROBOT_CFG.linkWorldOrientation
     print("ARRGS", args)
     return args
