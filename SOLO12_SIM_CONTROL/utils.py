@@ -145,3 +145,9 @@ def towr_transform(robot, traj):
             traj['HR_FOOT']['P'][2] = abs(traj['HR_FOOT']['P'][2])
 
     return trajectory_2_world_frame(robot, traj)
+
+def norm(v1, v2):
+    l2 = 0.0
+    for i, j in zip(v1, v2):
+        l2 += (i - j)**2
+    return math.sqrt(l2)
