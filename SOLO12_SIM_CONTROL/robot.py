@@ -84,6 +84,14 @@ class SOLO12(object):
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         return {"linkWorldPosition": CoM_pos, "linkWorldOrientation": CoM_angle}
 
+    @property
+    def state(self):
+        CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
+        EE = self.get_endeffector_pose()
+        return {"COM": CoM_pos, "linkWorldOrientation": CoM_angle, "FL_FOOT": EE['FL_FOOT']['linkWorldPosition'], 
+                "FR_FOOT": EE['FR_FOOT']['linkWorldPosition'], "HL_FOOT": EE['HL_FOOT']['linkWorldPosition'], "HR_FOOT": EE['HR_FOOT']['linkWorldPosition']}
+
+    @property
     def get_link_states(self):
         pass
     

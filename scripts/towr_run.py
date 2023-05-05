@@ -11,7 +11,7 @@ import run
 import numpy as np
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
-from SOLO12_SIM_CONTROL.utils import norm
+from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame
 
 scripts =  {'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
             'run': 'docker exec <id> ./towr-example',
@@ -48,18 +48,22 @@ def _plan(args):
     global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
     goal = global_cfg.ROBOT_CFG.robot_goal
     diff_vec = np.clip(goal - global_pos, -step_size, step_size)
+    CoM = {"linkWorldPosition": global_cfg.ROBOT_CFG.linkWorldPosition, "linkWorldOrientation": global_cfg.ROBOT_CFG.linkWorldOrientation}
     diff_vec[2] = 0.0
     print("diff vec ", diff_vec)
     args['-g'] = list(global_pos + diff_vec)
     args['-g'][2] = 0.21
     print('args -g ', args['-g'])
-    # breakpoint()
     args['-s'] = global_cfg.ROBOT_CFG.linkWorldPosition
-    args['-e1'] = global_cfg.ROBOT_CFG.EE['FL']
-    args['-e2'] = global_cfg.ROBOT_CFG.EE['FR']
-    args['-e3'] = global_cfg.ROBOT_CFG.EE['HL']
-    args['-e4'] = global_cfg.ROBOT_CFG.EE['HR']
-    # args['-s_ang'] = global_cfg.ROBOT_CFG.linkWorldOrientation
+    args['-s'][2] = 0.21
+    args['-e1'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['FL_FOOT'], CoM)
+    args['-e1'][2] = 0.0
+    args['-e2'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['FR_FOOT'], CoM)
+    args['-e2'][2] = 0.0
+    args['-e3'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['HL_FOOT'], CoM)
+    args['-e3'][2] = 0.0
+    args['-e4'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['HR_FOOT'], CoM)
+    args['-e4'][2] = 0.0
     print("ARRGS", args)
     return args
     
@@ -137,13 +141,17 @@ def _run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[0.5,0,0.21])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[1.0,0,0.21])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
     parser.add_argument('-n', '--n', nargs=1, type=str, default="t")
+    parser.add_argument('-e1', '--e1', nargs=3, type=float)
+    parser.add_argument('-e2', '--e2', nargs=3, type=float)
+    parser.add_argument('-e3', '--e3', nargs=3, type=float)
+    parser.add_argument('-e4', '--e4', nargs=3, type=float)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
-            "docker_id": docker_id, "scripts": parse_scripts(scripts, docker_id)}
+            "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id, "scripts": parse_scripts(scripts, docker_id)}
     _run(args)

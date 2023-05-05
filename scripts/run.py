@@ -45,9 +45,14 @@ def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
     solo12 = p.loadURDF(URDF, *POSE)
     return solo12
 
-def _global_update(kwargs):
-    global_cfg.ROBOT_CFG.linkWorldPosition = list(kwargs['linkWorldPosition'])
+def _global_update(ROBOT, kwargs):
+    global_cfg.ROBOT_CFG.robot = ROBOT
+    global_cfg.ROBOT_CFG.linkWorldPosition = list(kwargs['COM'])
     global_cfg.ROBOT_CFG.linkWorldOrientation = list(p.getEulerFromQuaternion(kwargs['linkWorldOrientation']))
+    global_cfg.ROBOT_CFG.EE['FL_FOOT'] = list(kwargs['FL_FOOT'])
+    global_cfg.ROBOT_CFG.EE['FR_FOOT'] = list(kwargs['FR_FOOT'])
+    global_cfg.ROBOT_CFG.EE['HL_FOOT'] = list(kwargs['HL_FOOT'])
+    global_cfg.ROBOT_CFG.EE['HR_FOOT'] = list(kwargs['HR_FOOT'])
 
 def keypress():
     global key_press_init_phase
@@ -167,7 +172,7 @@ def simulation():
                 elif ROBOT.mode == 'torque':
                     ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
             p.stepSimulation()
-            _global_update(ROBOT.CoM_states())
+            _global_update(ROBOT, ROBOT.state)
             ROBOT.time_step += 1
         elif sim_cfg['mode'] == "track":
             try:
@@ -188,7 +193,6 @@ def simulation():
                 cmd = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
                 break
-            breakpoint()
             joint_position = ROBOT.inv_kinematics_multi(cmd, ROBOT.fixjointidx['idx'])
             revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
             orientation = p.getQuaternionFromEuler(cmd['COM'][3:6]) #Need to update the orientation for the robot 

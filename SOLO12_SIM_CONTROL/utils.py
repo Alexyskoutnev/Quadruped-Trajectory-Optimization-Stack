@@ -2,6 +2,8 @@ import pybullet as p
 import numpy as np
 import math
 
+from scipy.spatial.transform import Rotation
+
 def create_cmd():
     return {"FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
@@ -52,7 +54,11 @@ def combine(*vectors):
 
 def transformation_mtx(t, R):
     mtx = np.eye(4)
-    if len(R) == 3:
+    if type(R) == list:
+        r = Rotation.from_euler('xyz', [R[0], R[1], R[2]])
+        R = r.as_matrix()
+        mtx[0:3,0:3] = R
+    elif len(R) == 3:
         mtx[:3][:3] = R
     elif len(R) == 4:
         mtx[0][:3]= p.getMatrixFromQuaternion(R)[:3]
@@ -89,6 +95,13 @@ def trajectory_2_world_frame(robot, traj):
             traj[link][mode] = tf_vec[:3]
     return traj
     
+def tf_2_world_frame(traj, CoM):
+    traj[0] = traj[0] - CoM['linkWorldPosition'][0]
+    traj[1] = traj[1] - CoM['linkWorldPosition'][1]
+    # traj[2] = traj[2] - CoM[2]['linkWorldPosition']
+    traj[2] = 0
+    return traj
+
 def sampleTraj(robot, r=0.1, N=100):
     traj_dic = {}
     traj = list()
