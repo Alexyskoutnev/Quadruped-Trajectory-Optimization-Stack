@@ -43,8 +43,8 @@ def _plan(args):
     """
     Trajcetory plan towards the final goal
     """
-    max_norm = 0.5
-    step_size = 0.40
+    max_norm = 0.5 #try implementing in config-file
+    step_size = 0.40 #try implementing in config-file
     global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
     goal = global_cfg.ROBOT_CFG.robot_goal
     diff_vec = np.clip(goal - global_pos, -step_size, step_size)
@@ -53,7 +53,6 @@ def _plan(args):
     print("diff vec ", diff_vec)
     args['-g'] = list(global_pos + diff_vec)
     args['-g'][2] = 0.21
-    print('args -g ', args['-g'])
     args['-s'] = global_cfg.ROBOT_CFG.linkWorldPosition
     args['-s'][2] = 0.21
     args['-e1'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['FL_FOOT'], CoM)
@@ -91,6 +90,7 @@ def _update(args, log):
                 print("Error in copying Towr Trajectory")
 
 def _cmd_args(args):
+
     def _bracket_rm(s):
         return s.replace("[", "").replace("]", "")
 
@@ -99,6 +99,7 @@ def _cmd_args(args):
     
     def _filter(s):
         return _bracket_rm(_remove_comma(str(s)))
+
     _cmd = ""
     for key, value in args.items():
         if key in _flags and value:
@@ -153,5 +154,6 @@ if __name__ == "__main__":
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
-            "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id, "scripts": parse_scripts(scripts, docker_id)}
+            "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
+            "scripts": parse_scripts(scripts, docker_id)}
     _run(args)

@@ -44,10 +44,8 @@ def plot(t, *joints):
 
 
 if __name__ == "__main__":
-    type = "traj"
-    sim = Simulation(type)
-    py_client = sim.setup(type)
-    ROBOT = SOLO12(URDF, cfg, fixed=1)
+    Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'])
+    ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     velocity, angle_velocity , angle, steps_per_sec = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_per_sec']
     offsets = np.array(sim_cfg['offsets'])
@@ -69,29 +67,40 @@ if __name__ == "__main__":
         writer = csv.writer(file) 
         while (itr < NUM_TIME_STEPS):
             if sim_cfg['mode'] == "bezier":
-                gait_traj, updated = gait.runTrajectory(velocity, angle, angle_velocity, offsets, steps_per_sec, trot_2_stance_ratio, HZ, mode = "collect")
+                gait_traj, updated = gait.runTrajectory(velocity, angle, angle_velocity, offsets, steps_per_sec, trot_2_stance_ratio, HZ, mode = "sim")
                 if updated:
-                    traj_FL.append(gait_traj['FL_FOOT']['P'][2])
-                    traj_FR.append(gait_traj['FR_FOOT']['P'][2])
-                    traj_HL.append(gait_traj['HL_FOOT']['P'][2])
-                    traj_HR.append(gait_traj['HR_FOOT']['P'][2])
                     joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+                    if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                        ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+                    elif ROBOT.mode == 'torque':
+                        ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_toq_FL[0:3])
                     joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
+                    if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                        ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
+                    elif ROBOT.mode == 'torque':
+                        ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_toq_FR[3:6])
                     joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(gait_traj['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
+                    if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                        ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
+                    elif ROBOT.mode == 'torque':
+                            ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_toq_HL[6:9])
                     joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(gait_traj['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
+                    if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                        ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
+                    elif ROBOT.mode == 'torque':
+                        ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
                     joint_ang = combine(joint_ang_FL, joints_ang_FR, joints_ang_HL, joints_ang_HR)
-                    joint_vel = combine(tuple(joint_vel_FL), tuple(joints_vel_FR), tuple(joints_vel_HL), tuple(joints_vel_HR))
-                    joint_toq = combine(joint_toq_FL, joints_toq_FR, joints_toq_HL, joints_toq_HR)
+                    if ROBOT.mode == 'P':
+                        joint_vel = np.zeros(12)
+                        joint_toq = np.zeros(12)
+                    elif ROBOT.mode == 'PD':
+                        joint_vel = combine(tuple(joint_vel_FL), tuple(joints_vel_FR), tuple(joints_vel_HL), tuple(joints_vel_HR))
+                        joint_toq = combine(joint_toq_FL, joints_toq_FR, joints_toq_HL, joints_toq_HR)
                     csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
                     writer.writerow(csv_entry)
                     itr += 1
-                else:
-                    continue
-                p.stepSimulation()
+                    p.stepSimulation()
+                ROBOT.time_step += 1
             elif sim_cfg['mode'] == "towr":
                 with open(TOWR, 'r', newline='') as csv_file:
                     try: 
@@ -118,8 +127,6 @@ if __name__ == "__main__":
                     csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
                     writer.writerow(csv_entry)
                     itr += 1
-                    # breakpoint()
-
     # plot(_t, traj_FL, traj_FR, traj_HL, traj_HR)
     p.disconnect()
     file.close()

@@ -74,8 +74,10 @@ class SOLO12(object):
                                       targetVelocities= [0.0 for m in self.jointidx['idx']],
                                       forces= [0.0 for m in self.jointidx['idx']])
         
-        self.kp = np.ones(12) * 0.5
-        self.kd = np.ones(12) * 0.1
+        # self.kp = np.ones(12) * 1.0
+        self.kp = config['kp']
+        # self.kd = np.ones(12) * 0.1
+        self.kd = config['kd']
         self._joint_ang = None
         self._joint_vel = None
         self._joint_toq = None
@@ -101,8 +103,8 @@ class SOLO12(object):
 
     def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_f=None):
         if 'P' == controlMode or 'PD' == controlMode:
-            maxForces = np.ones(len(jointsInx))*10
-            posGains = np.ones(len(jointsInx))*0.5
+            maxForces = np.ones(len(jointsInx))*5
+            posGains = np.ones(len(jointsInx))*self.kp
             p.setJointMotorControlArray(self.robot, jointsInx, self.modes['P'], cmd_pose, forces=maxForces, positionGains=posGains)
         elif 'torque' == controlMode:
             p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_pose)

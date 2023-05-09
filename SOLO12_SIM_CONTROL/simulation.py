@@ -52,9 +52,7 @@ class Simulation(object):
             py_client = p.connect(p.DIRECT)
             # py_client = p.connect(p.GUI)
             p.setGravity(0,0,-10.0)
-        
-        # if self.timestep:
-        #     p.setTimeStep(self.timestep)
+    
 
         return py_client
 

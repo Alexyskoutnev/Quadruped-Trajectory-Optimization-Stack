@@ -142,6 +142,7 @@ def simulation():
                 EE_POSE = np.array([float(x) for x in next(reader)])
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
+                # print("In Stance Position")
                 stance = True
                 last_cnt = ROBOT.time_step
             if stance:
