@@ -1,6 +1,7 @@
 import pybullet as p
 import numpy as np
 import math
+import csv
 
 from scipy.spatial.transform import Rotation
 
@@ -164,3 +165,19 @@ def norm(v1, v2):
     for i, j in zip(v1, v2):
         l2 += (i - j)**2
     return math.sqrt(l2)
+
+
+def nearestPoint(point, file):
+    csv_file = csv.reader(file, delimiter=',')
+    l2 = math.inf
+    start_idx = 0
+    for i, entry in enumerate(csv_file):
+        compare_pt = tuple(float(s) for s in entry[0:3])
+        if l2 > norm(compare_pt, point):
+            start_idx = i
+            l2 = norm(compare_pt, point)
+    file.seek(0)
+    csv_file = csv.reader(file, delimiter=',')
+    for _ in range(0, start_idx):
+        next(csv_file)
+    return csv_file

@@ -15,7 +15,7 @@ import numpy as np
 
 #project
 from SOLO12_SIM_CONTROL.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose
+from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
@@ -132,18 +132,18 @@ def simulation():
             ROBOT.time_step += 1
         elif sim_cfg['mode'] == "towr":
             try:
-                if global_cfg.RUN:
+                if global_cfg.RUN.update:
                     mutex.acquire()
                     print("Reading updated CSV")
-                    csv_file = open(TOWR, 'r', newline='')
-                    reader = csv.reader(csv_file, delimiter=',')
+                    reader = nearestPoint(ROBOT.state['COM'], open(TOWR, 'r', newline=''))
                     mutex.release()
-                    global_cfg.RUN = False 
+                    global_cfg.RUN.update = False 
                 EE_POSE = np.array([float(x) for x in next(reader)])
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
                 # print("In Stance Position")
                 stance = True
+                global_cfg.RUN._wait = True
                 last_cnt = ROBOT.time_step
             if stance:
                 if ROBOT.time_step - last_cnt < sim_cfg['stance_period']:

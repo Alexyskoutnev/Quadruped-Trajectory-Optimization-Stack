@@ -74,9 +74,7 @@ class SOLO12(object):
                                       targetVelocities= [0.0 for m in self.jointidx['idx']],
                                       forces= [0.0 for m in self.jointidx['idx']])
         
-        # self.kp = np.ones(12) * 1.0
         self.kp = config['kp']
-        # self.kd = np.ones(12) * 0.1
         self.kd = config['kd']
         self._joint_ang = None
         self._joint_vel = None
@@ -92,10 +90,6 @@ class SOLO12(object):
         EE = self.get_endeffector_pose()
         return {"COM": CoM_pos, "linkWorldOrientation": CoM_angle, "FL_FOOT": EE['FL_FOOT']['linkWorldPosition'], 
                 "FR_FOOT": EE['FR_FOOT']['linkWorldPosition'], "HL_FOOT": EE['HL_FOOT']['linkWorldPosition'], "HR_FOOT": EE['HR_FOOT']['linkWorldPosition']}
-
-    @property
-    def get_link_states(self):
-        pass
     
     @property
     def jointangles(self):
@@ -105,7 +99,7 @@ class SOLO12(object):
         if 'P' == controlMode or 'PD' == controlMode:
             maxForces = np.ones(len(jointsInx))*5
             posGains = np.ones(len(jointsInx))*self.kp
-            p.setJointMotorControlArray(self.robot, jointsInx, self.modes['P'], cmd_pose, forces=maxForces, positionGains=posGains)
+            p.setJointMotorControlArray(self.robot, jointsInx, self.modes['P'], cmd_pose, positionGains=posGains)
         elif 'torque' == controlMode:
             p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_pose)
 

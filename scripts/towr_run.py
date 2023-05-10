@@ -13,9 +13,11 @@ import numpy as np
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame
 
-scripts =  {'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
+scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
+            'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
             'run': 'docker exec <id> ./towr-example',
-            'info': 'docker ps -f ancestor=towr'}
+            'info': 'docker ps -f ancestor=towr',
+            'data': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv'}
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4']
 
@@ -43,26 +45,35 @@ def _plan(args):
     """
     Trajcetory plan towards the final goal
     """
-    max_norm = 0.5 #try implementing in config-file
-    step_size = 0.40 #try implementing in config-file
+    step_size = 0.25 #try implementing in config-file
     global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
     goal = global_cfg.ROBOT_CFG.robot_goal
     diff_vec = np.clip(goal - global_pos, -step_size, step_size)
     CoM = {"linkWorldPosition": global_cfg.ROBOT_CFG.linkWorldPosition, "linkWorldOrientation": global_cfg.ROBOT_CFG.linkWorldOrientation}
+    print("EE -> ", global_cfg.ROBOT_CFG.EE)
     diff_vec[2] = 0.0
     print("diff vec ", diff_vec)
+    print("COM ", CoM)
     args['-g'] = list(global_pos + diff_vec)
-    args['-g'][2] = 0.21
-    args['-s'] = global_cfg.ROBOT_CFG.linkWorldPosition
-    args['-s'][2] = 0.21
-    args['-e1'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['FL_FOOT'], CoM)
-    args['-e1'][2] = 0.0
-    args['-e2'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['FR_FOOT'], CoM)
-    args['-e2'][2] = 0.0
-    args['-e3'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['HL_FOOT'], CoM)
-    args['-e3'][2] = 0.0
-    args['-e4'] = tf_2_world_frame(global_cfg.ROBOT_CFG.EE['HR_FOOT'], CoM)
-    args['-e4'][2] = 0.0
+    args['-g'][2] = 0.24
+    args['-s'] = list(global_cfg.ROBOT_CFG.linkWorldPosition)
+    # args['-s'][2] = 0.24
+    # args['-e1'] = global_cfg.ROBOT_CFG.EE['FL_FOOT']
+    # args['-e1'][0] = diff_vec[0]
+    # args['-e1'][1] = diff_vec[1]
+    # args['-e1'] = tf_2_world_frame(args['-e1'], CoM)
+    # args['-e2'] = global_cfg.ROBOT_CFG.EE['FR_FOOT']
+    # args['-e2'][0] += diff_vec[0]
+    # args['-e2'][1] += diff_vec[1]
+    # args['-e2'] = tf_2_world_frame(args['-e2'], CoM)
+    # args['-e3'] = global_cfg.ROBOT_CFG.EE['HL_FOOT']
+    # args['-e3'][0] += diff_vec[0]
+    # args['-e3'][1] += diff_vec[1]
+    # args['-e3'] = tf_2_world_frame(args['-e3'], CoM)
+    # args['-e4'] = global_cfg.ROBOT_CFG.EE['HR_FOOT']
+    # args['-e4'][0] += diff_vec[0]
+    # args['-e4'][1] += diff_vec[1]
+    # args['-e4'] = tf_2_world_frame(args['-e4'], CoM)
     print("ARRGS", args)
     return args
     
@@ -76,15 +87,19 @@ def _update(args, log):
             args = _plan(args)
             TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
             p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
-            if p.returncode == 0:
-                print("TOWR found a trajectory")
+            if global_cfg.RUN._wait:
+                global_cfg.ROBOT_CFG.last_POSE = global_cfg.ROBOT_CFG.linkWorldPosition
+                p = subprocess.run(shlex.split(scripts['copy_tmp']))
+                global_cfg.RUN._wait = False
+            elif p.returncode == 0:
+                p = subprocess.run(shlex.split(scripts['data'])) #temp hold csv
+                # breakpoint()
                 print("norm ", norm(global_cfg.ROBOT_CFG.last_POSE, global_cfg.ROBOT_CFG.linkWorldPosition))
-                if norm(global_cfg.ROBOT_CFG.last_POSE, global_cfg.ROBOT_CFG.linkWorldPosition) > 0.30:
-                    print("args ", args)
+                if norm(global_cfg.ROBOT_CFG.last_POSE, global_cfg.ROBOT_CFG.linkWorldPosition) > 0.25:
                     global_cfg.ROBOT_CFG.last_POSE = global_cfg.ROBOT_CFG.linkWorldPosition
-                    p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-                    global_cfg.RUN = True
-                    while (not global_cfg.RUN):
+                    p = subprocess.run(shlex.split(scripts['copy_tmp'])) #copy trajectory to simulator data
+                    global_cfg.RUN.update = True
+                    while (not global_cfg.RUN.update):
                         print("towr thread waiting")
             else:
                 print("Error in copying Towr Trajectory")
@@ -111,12 +126,11 @@ def _run(args):
     log = open("./logs/towr_log.out", "w")
     towr_runtime_0 = time.time()
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
-    args = _plan(args)
+    # args = _plan/(args)
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
-
     if p.returncode == 0:
         print("TOWR found a trajectory")
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
@@ -142,7 +156,7 @@ def _run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[1.0,0,0.21])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[1.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
