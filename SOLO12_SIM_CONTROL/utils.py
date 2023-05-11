@@ -161,6 +161,15 @@ def towr_transform(robot, traj):
     return trajectory_2_world_frame(robot, traj)
 
 def norm(v1, v2):
+    """return L2 norm of two vectors
+
+    Args:
+        v1 (_type_): 1st n-d vector 
+        v2 (_type_): 2nd n-d vector
+
+    Returns:
+        _type_: L2 norm
+    """
     l2 = 0.0
     for i, j in zip(v1, v2):
         l2 += (i - j)**2
@@ -168,6 +177,16 @@ def norm(v1, v2):
 
 
 def nearestPoint(point, file):
+    """Finds the nearest near neighoring csv row corresponding to the
+       desired input point (robot COM)
+
+    Args:
+        point (_type_): robot CoM
+        file (_type_): trajectory file
+
+    Returns:
+        _type_: truncated csv file starting at input point
+    """
     csv_file = csv.reader(file, delimiter=',')
     l2 = math.inf
     start_idx = 0
@@ -181,3 +200,25 @@ def nearestPoint(point, file):
     for _ in range(0, start_idx):
         next(csv_file)
     return csv_file
+
+def percentage_look_ahead(file, percent=0.5):
+    """Looks aheads of desired percentage into the trajectory
+
+    Args:
+        file (_type_): trajectory csv file
+        percent (float, optional): start percentage in trajectory. Defaults to 0.5.
+    """
+    p = 0
+    reader = csv.reader(file)
+    no_lines= len(list(reader))
+    file.seek(0)
+    while (p < percent):
+        p += float(1/(no_lines))
+        next(reader)
+    return reader
+
+def zero_filter(x, tol=1e-4):
+    for i, val in enumerate(x):
+        if abs(val) < tol:
+            x[i] = 0
+    return x

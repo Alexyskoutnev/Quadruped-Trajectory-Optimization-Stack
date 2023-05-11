@@ -16,5 +16,5 @@ NUM_TIME_STEPS : 10000
 HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : True
-stance_period : 100
+stance_period : 10
 
