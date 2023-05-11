@@ -135,7 +135,8 @@ def simulation():
                 if global_cfg.RUN.update:
                     mutex.acquire()
                     print("Reading updated CSV")
-                    reader = nearestPoint(ROBOT.state['COM'], open(TOWR, 'r', newline=''))
+                    # reader = nearestPoint(ROBOT.state['COM'], open(TOWR, 'r', newline=''))
+                    reader = open(TOWR, 'r', newline='')
                     mutex.release()
                     global_cfg.RUN.update = False 
                 EE_POSE = np.array([float(x) for x in next(reader)])
@@ -171,6 +172,7 @@ def simulation():
                     ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
                 elif ROBOT.mode == 'torque':
                     ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
+                global_cfg.RUN.step += 1
             p.stepSimulation()
             _global_update(ROBOT, ROBOT.state)
             ROBOT.time_step += 1

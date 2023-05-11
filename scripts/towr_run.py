@@ -13,6 +13,7 @@ import numpy as np
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter
+from SOLO12_SIM_CONTROL.mpc import MPC
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
@@ -22,7 +23,9 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4']
 
-CSV_FILE = "./data/traj/towr.csv"
+CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
+NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
+
 
 def strip(x):
     st = " "
@@ -47,7 +50,7 @@ def parse_scripts(scripts_dic, docker_id):
 def _state(p = 0.5):
     state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
              "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
-    with open(CSV_FILE, "r", newline='') as f:
+    with open(CURRENT_TRAJ_CSV_FILE, "r", newline='') as f:
         reader = percentage_look_ahead(f, p)
         row = next(reader)
         state["CoM"] = [float(_) for _ in row[0:3]]
@@ -69,7 +72,6 @@ def _step(args):
     args['-g'][2] = 0.24
     return args
 
-        
 def _plan(args):
     """
     Trajcetory plan towards the final goal
@@ -90,37 +92,37 @@ def _update(args, log):
     """
     step_size = args['step_size']
     _wait = False
+    test = True
+    mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE)
     while (True):
+            mpc.update()
             if not _wait:
-                args = _plan(args)
+                args = mpc.plan(args)
                 towr_runtime_0 = time.time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
                 p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
                 towr_runtime_1 = time.time()
                 print(f'TOWR time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
                 _wait = True
-            # if global_cfg.RUN._wait:
-            #     breakpoint()
-            #     global_cfg.ROBOT_CFG.last_POSE = global_cfg.ROBOT_CFG.linkWorldPosition
-            #     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-            #     p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
-            #     p = subprocess.run(shlex.split(scripts['copy']))
-            #     global_cfg.RUN._wait = False
             if p.returncode == 0:
                 _wait = False
-                #try to stich traj together
-
-
-                p = subprocess.run(shlex.split(scripts['data'])) #temp hold csv
-                print("norm ", norm(global_cfg.ROBOT_CFG.last_POSE, global_cfg.ROBOT_CFG.linkWorldPosition))
-                if norm(global_cfg.ROBOT_CFG.last_POSE, global_cfg.ROBOT_CFG.linkWorldPosition) > step_size:
-                    global_cfg.ROBOT_CFG.last_POSE = global_cfg.ROBOT_CFG.linkWorldPosition
-                    p = subprocess.run(shlex.split(scripts['copy_tmp'])) #copy trajectory to simulator data
-                    global_cfg.RUN.update = True
-                    while (not global_cfg.RUN.update):
+                p = subprocess.run(shlex.split(scripts['data'])) 
+                mpc.combine()
+                p = subprocess.run(shlex.split(scripts['copy_tmp']))
+                global_cfg.RUN.update = True
+                while (not global_cfg.RUN.update):
                         print("towr thread waiting")
             else:
                 print("Error in copying Towr Trajectory")
+
+            if test:
+                global_cfg.print_vars()
+                global_cfg.ROBOT_CFG.linkWorldPosition[2] += 0.01
+                global_cfg.RUN.step += 1
+                time.sleep(0.01)
+
+            
+
 
 def _cmd_args(args):
 
