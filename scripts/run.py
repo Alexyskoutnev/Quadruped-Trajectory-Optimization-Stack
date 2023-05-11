@@ -136,9 +136,10 @@ def simulation():
                     mutex.acquire()
                     print("Reading updated CSV")
                     # reader = nearestPoint(ROBOT.state['COM'], open(TOWR, 'r', newline=''))
-                    reader = open(TOWR, 'r', newline='')
+                    reader = csv.reader(open(TOWR, 'r', newline=''))
                     mutex.release()
                     global_cfg.RUN.update = False 
+                    global_cfg.RUN.step = 0
                 EE_POSE = np.array([float(x) for x in next(reader)])
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:

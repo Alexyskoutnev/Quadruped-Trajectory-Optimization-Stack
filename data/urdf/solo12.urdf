@@ -6,7 +6,7 @@
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="1.5"/>
-      <!-- <mass value="1.00"/>  -->
+      <!-- <mass value="5.0"/>  -->
       <!-- The base is extremely symmetrical. -->
       <inertia ixx="0.0212708" ixy="0.0447083" ixz="0.0609375" iyy="0.0" iyz="0.0" izz="0.0"/>
     </inertial>

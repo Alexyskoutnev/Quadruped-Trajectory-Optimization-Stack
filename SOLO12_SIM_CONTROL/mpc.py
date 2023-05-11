@@ -48,8 +48,11 @@ class MPC(object):
         diff_vec[2] = 0.0
         self.args['-g'] = list(global_pos + diff_vec)
         self.args['-g'][2] = 0.24
+        print("global pos ", global_pos)
+        print("goal ", goal)
+        print("diff ", diff_vec)
 
-    def _state(self, p=0.5):
+    def _state(self, p=0.75):
         state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
              "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
         with open(self.current_traj, "r", newline='') as f:

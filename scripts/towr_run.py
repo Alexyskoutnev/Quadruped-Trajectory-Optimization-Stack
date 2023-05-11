@@ -92,10 +92,11 @@ def _update(args, log):
     """
     step_size = args['step_size']
     _wait = False
-    test = True
+    test = False
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE)
     while (True):
             mpc.update()
+            global_cfg.print_vars()
             if not _wait:
                 args = mpc.plan(args)
                 towr_runtime_0 = time.time()
@@ -117,13 +118,11 @@ def _update(args, log):
 
             if test:
                 global_cfg.print_vars()
-                global_cfg.ROBOT_CFG.linkWorldPosition[2] += 0.01
-                global_cfg.RUN.step += 1
+                global_cfg.ROBOT_CFG.linkWorldPosition[0] += 0.01
+                global_cfg.RUN.step += 5
                 time.sleep(0.01)
 
             
-
-
 def _cmd_args(args):
 
     def _bracket_rm(s):
@@ -144,12 +143,13 @@ def _cmd_args(args):
 
 def _run(args):
     log = open("./logs/towr_log.out", "w")
-    towr_runtime_0 = time.time()
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
+    args = _step(args)
+    towr_runtime_0 = time.time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
-    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
+    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
     if p.returncode == 0:
         print("TOWR found a trajectory")
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
@@ -195,7 +195,7 @@ def test_mpc(args):
 
 
 if __name__ == "__main__":
-    test = True
+    test = False
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
@@ -212,7 +212,6 @@ if __name__ == "__main__":
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
             "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step}
-    
     if test:
         test_mpc(args)
     else:
