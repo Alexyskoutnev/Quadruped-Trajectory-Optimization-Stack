@@ -100,8 +100,18 @@ def _update(args, log):
 
     while (True):
             mpc.update()
-            # global_cfg.print_vars()
-            if not _wait:
+            if global_cfg.RUN._wait: #Hard Reset if robot is in stance configuration
+                args = _step(args)
+                towr_runtime_0 = time.time()
+                TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+                p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
+                towr_runtime_1 = time.time()
+                print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
+                if p.returncode == 0:
+                    print("TOWR found a trajectory")
+                    p = subprocess.run(shlex.split(scripts['copy']))
+                    global_cfg.RUN._wait = False
+            elif not _wait:
                 args = mpc.plan(args)
                 towr_runtime_0 = time.time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
@@ -109,8 +119,7 @@ def _update(args, log):
                 towr_runtime_1 = time.time()
                 print(f'TOWR time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
                 _wait = True
-            if p.returncode == 0:
-                # global_cfg.print_vars()
+            elif p.returncode == 0:
                 _wait = False
                 p = subprocess.run(shlex.split(scripts['data'])) 
                 mpc.combine()

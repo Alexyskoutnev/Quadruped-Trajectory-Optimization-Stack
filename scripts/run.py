@@ -140,8 +140,8 @@ def simulation():
                     global_cfg.RUN.update = False 
                     global_cfg.RUN.step = 0
                 EE_POSE = np.array([float(x) for x in next(reader)])
-                # print("Current Step ")
-                # print(EE_POSE)
+                print("Current Step ")
+                print(EE_POSE)
                 global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
@@ -149,9 +149,13 @@ def simulation():
                 global_cfg.RUN._wait = True
                 last_cnt = ROBOT.time_step
             if stance:
-                if ROBOT.time_step - last_cnt < sim_cfg['stance_period']:
+                if ROBOT.time_step - last_cnt < sim_cfg['stance_period'] or global_cfg.RUN._wait:
                     print("In Stance Position")
-                    ROBOT.setJointControl(ROBOT.jointidx['idx'], ROBOT.mode, ROBOT.q_init)
+                    jointTorques = ROBOT.default_stance_control(ROBOT.q_init, p.TORQUE_CONTROL)
+                    p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
+                    global_cfg.RUN._wait = True
+                    # p.stepSimulation()
+                    # ROBOT.setJointControl(ROBOT.jointidx['idx'], ROBOT.mode, ROBOT.q_init)
                 else:
                     stance = False
             else:
