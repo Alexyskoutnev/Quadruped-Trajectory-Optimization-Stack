@@ -19,7 +19,8 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
             'run': 'docker exec <id> ./towr-example',
             'info': 'docker ps -f ancestor=towr',
-            'data': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv'}
+            'data': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv',
+            'delete': 'rm ./data/traj/towr.csv'}
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4']
 
@@ -94,9 +95,12 @@ def _update(args, log):
     _wait = False
     test = False
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE)
+
+    i = 0
+
     while (True):
             mpc.update()
-            global_cfg.print_vars()
+            # global_cfg.print_vars()
             if not _wait:
                 args = mpc.plan(args)
                 towr_runtime_0 = time.time()
@@ -106,9 +110,11 @@ def _update(args, log):
                 print(f'TOWR time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
                 _wait = True
             if p.returncode == 0:
+                # global_cfg.print_vars()
                 _wait = False
                 p = subprocess.run(shlex.split(scripts['data'])) 
                 mpc.combine()
+                p = subprocess.run(shlex.split(scripts['delete']))
                 p = subprocess.run(shlex.split(scripts['copy_tmp']))
                 global_cfg.RUN.update = True
                 while (not global_cfg.RUN.update):
@@ -207,11 +213,12 @@ if __name__ == "__main__":
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
     parser.add_argument('-step', '--step', type=float, default=0.5)
+    parser.add_argument('-l', '--look', type=float, default=0.6)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
             "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
-            "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step}
+            "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look}
     if test:
         test_mpc(args)
     else:

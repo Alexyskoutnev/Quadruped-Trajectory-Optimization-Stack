@@ -134,13 +134,15 @@ def simulation():
             try:
                 if global_cfg.RUN.update:
                     mutex.acquire()
-                    print("Reading updated CSV")
-                    # reader = nearestPoint(ROBOT.state['COM'], open(TOWR, 'r', newline=''))
-                    reader = csv.reader(open(TOWR, 'r', newline=''))
+                    print("==========Reading updated CSV==========")
+                    reader = nearestPoint(global_cfg.ROBOT_CFG.last_POSE, open(TOWR, 'r', newline=''))
                     mutex.release()
                     global_cfg.RUN.update = False 
                     global_cfg.RUN.step = 0
                 EE_POSE = np.array([float(x) for x in next(reader)])
+                # print("Current Step ")
+                # print(EE_POSE)
+                global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
                 stance = True

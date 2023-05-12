@@ -1,4 +1,5 @@
 import csv
+import math
 
 import numpy as np
 import pandas as pd
@@ -18,9 +19,14 @@ class MPC(object):
     def combine(self):
         _old_traj = open(self.current_traj, "r")
         _new_traj = open(self.new_traj, "r")
-        self._truncate_csv(_old_traj)
+        self._truncate_csv(_old_traj, self.args['look_ahead'])
         df_old = pd.read_csv(self.current_traj_temp).to_numpy()
-        df_new = pd.read_csv(self.new_traj).to_numpy()
+        # print("DF_OLD ")
+        # print(pd.read_csv(self.current_traj_temp))
+        df_new = pd.read_csv(self.new_traj)
+        # print("DF_new ")
+        # print(df_new)
+        df_new = df_new.to_numpy()
         combined_df = np.concatenate((df_old, df_new), axis=0)
         combined_df = pd.DataFrame(combined_df)
         combined_df.to_csv(self.new_traj, index=False, header=None)
@@ -30,9 +36,10 @@ class MPC(object):
         """
         Trajcetory plan towards the final goal
         """
-        args = self._step()
-        _state_dic = self._state()
+        self._step()
+        _state_dic = self._state(self.args['look_ahead'])
         self.args['-s'] = _state_dic["CoM"]
+        self.args['-s_ang'] = _state_dic['orientation']
         self.args['-e1'] = _state_dic["FL_FOOT"]
         self.args['-e2'] = _state_dic["FR_FOOT"]
         self.args['-e3'] = _state_dic["HL_FOOT"]
@@ -52,7 +59,7 @@ class MPC(object):
         print("goal ", goal)
         print("diff ", diff_vec)
 
-    def _state(self, p=0.75):
+    def _state(self, p=0.60):
         state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
              "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
         with open(self.current_traj, "r", newline='') as f:
@@ -72,11 +79,11 @@ class MPC(object):
         """
         self.cutoff_idx = global_cfg.RUN.step
 
-    def _truncate_csv(self, file):
+    def _truncate_csv(self, file, lookahead=None):
         df = pd.read_csv(file)
         num_row = len(df)
         start_idx = self.cutoff_idx
-        end_idx = num_row//2
+        end_idx = math.ceil(num_row * lookahead)
         _new_csv = df.iloc[start_idx:end_idx]
         _new_csv.to_csv(self.current_traj_temp, index=False)
 
