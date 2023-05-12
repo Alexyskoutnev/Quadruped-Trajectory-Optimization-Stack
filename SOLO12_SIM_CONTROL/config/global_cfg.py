@@ -16,7 +16,7 @@ def print_vars():
     print("Global POSITION: ",  ROBOT_CFG.linkWorldPosition)
     print("GLOBAL ORIENTATION: ", ROBOT_CFG.linkWorldPosition)
     print("LAST POSE: ", ROBOT_CFG.last_POSE)
-    print("ROBOT GOAL: ", ROBOT_CFG.last_POSE)
+    print("ROBOT GOAL: ", ROBOT_CFG.robot_goal)
     print("EE: ", ROBOT_CFG.EE)
 
     print("=========RUN GLOBAL VARS==========")

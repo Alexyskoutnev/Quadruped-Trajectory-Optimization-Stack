@@ -136,7 +136,7 @@ class SOLO12(object):
         v_mes[:, 0] = [state[1] for state in jointStates]
 
 
-        kp = 5.0
+        kp = 1.0
         kd = 0.01 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
         dt = 0.001
         cpt = self.time_step

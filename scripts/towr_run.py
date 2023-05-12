@@ -14,6 +14,7 @@ import numpy as np
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter
 from SOLO12_SIM_CONTROL.mpc import MPC
+from SOLO12_SIM_CONTROL.logger import Logger
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
@@ -115,7 +116,7 @@ def _update(args, log):
                 args = mpc.plan(args)
                 towr_runtime_0 = time.time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-                p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
+                p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
                 towr_runtime_1 = time.time()
                 print(f'TOWR time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
                 _wait = True
@@ -157,12 +158,12 @@ def _cmd_args(args):
     return _cmd
 
 def _run(args):
-    log = open("./logs/towr_log.out", "w")
+    log = Logger("./logs", "towr_log")
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
     args = _step(args)
     towr_runtime_0 = time.time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
+    p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
     if p.returncode == 0:
@@ -178,7 +179,7 @@ def _run(args):
         print("Error input trajectory cmds")
         print("running default commamd")
         TOWR_SCRIPT = shlex.split(args['scripts']['run'] + "-g 0.5 0.0 0.21 -s 0.0 0.0 0.21")
-        p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
+        p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
         if p.returncode == 0:
             print("TOWR found a trajectory with default cmd")
             p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data

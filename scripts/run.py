@@ -19,6 +19,7 @@ from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, tow
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
+from SOLO12_SIM_CONTROL.logger import Logger
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
@@ -65,6 +66,7 @@ def keypress():
             break
 
 def simulation():
+    log = Logger("./logs", "simulation_log")
     global key_press_init_phase
     Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'])
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
@@ -140,14 +142,19 @@ def simulation():
                     global_cfg.RUN.update = False 
                     global_cfg.RUN.step = 0
                 EE_POSE = np.array([float(x) for x in next(reader)])
-                print("Current Step ")
-                print(EE_POSE)
                 global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
                 stance = True
                 global_cfg.RUN._wait = True
                 last_cnt = ROBOT.time_step
+            
+            ## Logging ##
+            log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
+            log.write(f"Global POS -> {global_cfg.ROBOT_CFG.linkWorldPosition}\n")
+            log.write(f"=========Global Vars=========\n")
+            log.write(f"{global_cfg.print_vars()}")
+
             if stance:
                 if ROBOT.time_step - last_cnt < sim_cfg['stance_period'] or global_cfg.RUN._wait:
                     print("In Stance Position")
