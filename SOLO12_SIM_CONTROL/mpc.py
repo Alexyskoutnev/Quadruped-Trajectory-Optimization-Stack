@@ -17,20 +17,16 @@ class MPC(object):
         self.cutoff_idx = 0
     
     def combine(self):
+        """Combines the old and new csv trajectories together
+        """
         _old_traj = open(self.current_traj, "r")
         _new_traj = open(self.new_traj, "r")
         self._truncate_csv(_old_traj, self.args['look_ahead'])
         df_old = pd.read_csv(self.current_traj_temp).to_numpy()
-        # print("DF_OLD ")
-        # print(pd.read_csv(self.current_traj_temp))
-        df_new = pd.read_csv(self.new_traj)
-        # print("DF_new ")
-        # print(df_new)
-        df_new = df_new.to_numpy()
+        df_new = pd.read_csv(self.new_traj).to_numpy()
         combined_df = np.concatenate((df_old, df_new), axis=0)
         combined_df = pd.DataFrame(combined_df)
         combined_df.to_csv(self.new_traj, index=False, header=None)
-
 
     def plan(self, args):
         """
@@ -47,7 +43,14 @@ class MPC(object):
         print("ARRGS", self.args)
         return self.args
 
+    def update(self):
+        """Updates the state of the MPC loop
+        """
+        self.cutoff_idx = global_cfg.RUN.step
+
     def _step(self):
+        """Updates step vector toward robot's goal depending on the stepping size
+        """
         step_size = self.args['step_size'] #try implementing in config-file
         global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
         goal = global_cfg.ROBOT_CFG.robot_goal
@@ -55,11 +58,16 @@ class MPC(object):
         diff_vec[2] = 0.0
         self.args['-g'] = list(global_pos + diff_vec)
         self.args['-g'][2] = 0.24
-        print("global pos ", global_pos)
-        print("goal ", goal)
-        print("diff ", diff_vec)
 
     def _state(self, p=0.60):
+        """Returns the updated robot state back to the optimizer
+
+        Args:
+            p (float, optional): Percentage to look-ahead in trajectory. Defaults to 0.60.
+
+        Returns:
+            _type_: robot state
+        """
         state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
              "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
         with open(self.current_traj, "r", newline='') as f:
@@ -74,12 +82,13 @@ class MPC(object):
         state = {key: zero_filter(value) for key, value in state.items()}
         return state
 
-    def update(self):
-        """Updates the state of the MPC loop
-        """
-        self.cutoff_idx = global_cfg.RUN.step
+    def _truncate_csv(self, file : object, lookahead=0.60):
+        """Predicts where robot is in simulation and truncates old trajectory points
 
-    def _truncate_csv(self, file, lookahead=None):
+        Args:
+            file (_type_): csv trajectory file
+            lookahead (float): upper bound cutoff for old trajectory
+        """
         df = pd.read_csv(file)
         num_row = len(df)
         start_idx = self.cutoff_idx

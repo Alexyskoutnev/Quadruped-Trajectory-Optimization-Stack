@@ -175,7 +175,6 @@ class Gait(object):
         self.gaitTraj['FL_FOOT']['D'][1] = step_coord[4]
         self.gaitTraj['FL_FOOT']['D'][2] = step_coord[5]
 
-
         #Front-right
         step_coord = self.stepTrajectory(self.t + offset[1], velocity, angle, angle_velocity, step_stance_ratio, 'FR_FOOT')
         self.gaitTraj['FR_FOOT']['P'][0] = step_coord[0]
@@ -203,67 +202,5 @@ class Gait(object):
         self.gaitTraj['HR_FOOT']['D'][1] = step_coord[4]
         self.gaitTraj['HR_FOOT']['D'][2] = step_coord[5]
         self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj)
+
         return self.gaitTraj, True
-
-
-
-
-        
-if __name__ == "__main__":
-    # pass
-    # print("in Gait")
-    # itr = 10000
-    # t = np.linspace(0, 1, itr)
-    # velocity = 1
-    # X_FL_FOOT = list()
-    # Y_FL_FOOT = list()
-    # Z_FL_FOOT = list()
-    # X_FR_FOOT = list()
-    # Y_FR_FOOT = list()
-    # Z_FR_FOOT = list()
-    # X_HL_FOOT = list()
-    # Y_HL_FOOT = list()
-    # Z_HL_FOOT = list()
-    # X_HR_FOOT = list()
-    # Y_HR_FOOT = list()
-    # Z_HR_FOOT = list()
-    # URDF = "./data/urdf/solo12.urdf"
-    # config = "./data/config/solo12.yml"
-    # cfg = yaml.safe_load(open(config, 'r'))
-    # # py_client = p.connect(p.GUI)
-    # py_client = p.connect(p.DIRECT)
-    # p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    # p.setGravity(0,0,0)
-    # p.setTimeStep(0.001) 
-    # ROBOT = SOLO12(py_client, URDF, cfg)
-    
-    # gait = Gait(ROBOT)
-    # angle = 30
-    # offsets = np.array([0.5, 0.0, 0.0, 0.5])
-    # angle_velocity = 0.0
-    # T = 1.0
-    # step_ratio = 0.5
-    # while(True):
-    #     # breakpoint()
-    #     gait_traj = gait.runTrajectory(velocity, angle, angle_velocity, offsets, T, step_ratio)
-    #     if gait_traj is not None:
-    #         X_FL_FOOT.append(gait_traj['FL_FOOT'][0])
-    #         Y_FL_FOOT.append(gait_traj['FL_FOOT'][1])
-    #         Z_FL_FOOT.append(gait_traj['FL_FOOT'][2])
-    #         X_FR_FOOT.append(gait_traj['FR_FOOT'][0])
-    #         Y_FR_FOOT.append(gait_traj['FR_FOOT'][1])
-    #         Z_FR_FOOT.append(gait_traj['HL_FOOT'][2])
-    #         X_HL_FOOT.append(gait_traj['HL_FOOT'][0])
-    #         Y_HL_FOOT.append(gait_traj['HL_FOOT'][1])
-    #         Z_HL_FOOT.append(gait_traj['HL_FOOT'][2])
-    #         X_HR_FOOT.append(gait_traj['HR_FOOT'][0])
-    #         Y_HR_FOOT.append(gait_traj['HR_FOOT'][1])
-    #         Z_HR_FOOT.append(gait_traj['HR_FOOT'][2])
-    #     else:
-    #         continue
-    #     if gait.cntTraj == itr:
-    #         break
-    # breakpoint()
-    # plt.plot(t, Z_FL_FOOT)
-    # plt.show()
-    pass

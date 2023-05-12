@@ -153,7 +153,7 @@ def simulation():
             log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
             log.write(f"Global POS -> {global_cfg.ROBOT_CFG.linkWorldPosition}\n")
             log.write(f"=========Global Vars=========\n")
-            log.write(f"{global_cfg.print_vars()}")
+            log.write(f"{global_cfg.print_vars()}\n")
 
             if stance:
                 if ROBOT.time_step - last_cnt < sim_cfg['stance_period'] or global_cfg.RUN._wait:

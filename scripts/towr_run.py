@@ -28,7 +28,6 @@ _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4']
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
 
-
 def strip(x):
     st = " "
     for s in x:
@@ -85,7 +84,6 @@ def _plan(args):
     args['-e2'] = _state_dic["FR_FOOT"]
     args['-e3'] = _state_dic["HL_FOOT"]
     args['-e4'] = _state_dic["HR_FOOT"]
-    print("ARRGS", args)
     return args
 
 def _update(args, log):
@@ -96,9 +94,6 @@ def _update(args, log):
     _wait = False
     test = False
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE)
-
-    i = 0
-
     while (True):
             mpc.update()
             if global_cfg.RUN._wait: #Hard Reset if robot is in stance configuration
@@ -207,8 +202,6 @@ def test_mpc(args):
             # run.simulation()
         else: 
             print("Error in copying Towr Trajectory")
-
-
 
 if __name__ == "__main__":
     test = False
