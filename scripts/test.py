@@ -64,13 +64,13 @@ def keypress():
 def swtich(timestep):
     FL, FR, HL, HR = False, False, False, False
     balance = True
-    if timestep > 250 and timestep < 500:
+    if timestep > 300 and timestep < 500:
         balance = False
-    elif timestep >= 750 and timestep < 1000:
+    elif timestep >= 800 and timestep < 1000:
         balance = False
-    elif timestep >= 1250 and timestep < 1500:
+    elif timestep >= 1300 and timestep < 1500:
         balance = False
-    elif timestep >= 1750 and timestep < 2000:
+    elif timestep >= 1800 and timestep < 2000:
         balance = False
     if timestep > 0 and timestep < 500:
         FL = True
@@ -120,9 +120,11 @@ def simulation():
                     "HL_FOOT": {"P": [-0.2, 0.15, -0.05], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.05], "D": np.zeros(3)}})
         lift_pos_back = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.20], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.15, -0.20], "D": np.zeros(3)}, 
                         "HL_FOOT": {"P": [-0.2, 0.15, -0.20], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.20], "D": np.zeros(3)}})
-        lift_pos_inner = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.10, -0.24], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.20, -0.10, -0.24], "D": np.zeros(3)}, 
+        lift_pos_inner_front = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.21, 0.09, -0.24], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.21, -0.09, -0.24], "D": np.zeros(3)}, 
                     "HL_FOOT": {"P": [-0.2, 0.25, -0.24], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.25, -0.24], "D": np.zeros(3)}})
-        stand_pos = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.20], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.15, -0.24], "D": np.zeros(3)}, 
+        lift_pos_inner_back = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.25, -0.24], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.20, -0.25, -0.24], "D": np.zeros(3)}, 
+                    "HL_FOOT": {"P": [-0.21, 0.09, -0.24], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.21, -0.09, -0.24], "D": np.zeros(3)}})
+        stand_pos = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.24], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.15, -0.24], "D": np.zeros(3)}, 
                         "HL_FOOT": {"P": [-0.2, 0.15, -0.24], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.24], "D": np.zeros(3)}})
         if sim_cfg['mode'] == "hold_leg":
             FL, FR, HL, HR, balance  = swtich(ROBOT.time_step)
@@ -135,9 +137,6 @@ def simulation():
                 print("Flipping Leg {HL}")
             elif HR:
                 print("Flipping Leg {HR}")
-            
-            
-            
             joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(stand_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
             joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(stand_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
             joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(stand_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
@@ -147,51 +146,26 @@ def simulation():
             q_init['FR_FOOT']['P'] = ROBOT.q_init[3:6]
             q_init['HL_FOOT']['P'] = ROBOT.q_init[6:9]
             q_init['HR_FOOT']['P'] = ROBOT.q_init[9:12]
-
             if FL:
-                if balance:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_inner['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_inner['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_back['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                # else:
-                #     joint_ang_FL, joint_vel_FL, joint_toq_FL = q_init['FL_FOOT'], np.zeros(3), np.zeros(3)
-                #     joint_ang_FR, joint_vel_FR, joint_toq_FR = q_init['FR_FOOT'], np.zeros(3), np.zeros(3)
-                #     joint_ang_HL, joint_vel_HL, joint_toq_HL = q_init['HL_FOOT'], np.zeros(3), np.zeros(3)
-                #     joint_ang_HR, joint_vel_HR, joint_toq_HR = q_init['HR_FOOT'], np.zeros(3), np.zeros(3)
+                joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
+                joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_inner_front['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
+                joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_inner_front['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
+                joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_back['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
             elif FR:
-                if balance:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_inner['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_back['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_inner['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                else:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(q_init['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(q_init['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(q_init['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(q_init['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
+                joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_inner_front['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
+                joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
+                joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_back['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
+                joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_inner_front['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
             elif HL:
-                if balance:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(stand_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_back['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(stand_pos['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                else:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(stand_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_back['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(stand_pos['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
+                joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_inner_back['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
+                joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_back['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
+                joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
+                joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_inner_back['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
             elif HR:
-                if balance:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_back['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(stand_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(stand_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                else:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_back['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(stand_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(stand_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
+                joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_back['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
+                joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_inner_back['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
+                joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_inner_back['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
+                joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
             if not balance:
                 ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, q_init['FL_FOOT']['P'])
                 ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, q_init['FR_FOOT']['P'])
