@@ -1,6 +1,6 @@
 # mode : "bezier"
 # mode : "towr"
-mode : "hold_leg"
+mode : "balance"
 # mode : "visual_track"
 # mode : "testing"
 # enviroment : "testing"

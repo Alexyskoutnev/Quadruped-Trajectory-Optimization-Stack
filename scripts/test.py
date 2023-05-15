@@ -15,7 +15,7 @@ import numpy as np
 
 #project
 from SOLO12_SIM_CONTROL.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint, trajectory_2_world_frame, create_cmd
+from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint, trajectory_2_world_frame, create_cmd, combine
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
@@ -27,8 +27,7 @@ config = "./data/config/solo12.yml"
 config_sim = "./data/config/simulation.yml"
 cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
-TOWR = "./data/traj/towr.csv"
-TRACK = "./data/traj/traj_thirdparty/jointStates.csv"
+DATA = "./data/traj/balance.csv"
 HZ = sim_cfg['HZ']
 
 # global keypressed
@@ -61,7 +60,7 @@ def keypress():
             key_press_init_phase = False
             break
 
-def swtich(timestep):
+def switch(timestep):
     FL, FR, HL, HR = False, False, False, False
     balance = True
     if timestep > 300 and timestep < 500:
@@ -103,6 +102,13 @@ def simulation():
     init_phase = sim_cfg['stance_phase']
     keypress_io = Thread(target=keypress)
     stance = False
+
+
+    if sim_cfg['mode'] == "balance":
+        file = open(DATA, 'w')
+        writer = csv.writer(file)
+        
+
     FL, FR, HL, HR = False, False, False, False,
     if init_phase:
         keypress_io.start()
@@ -126,8 +132,8 @@ def simulation():
                     "HL_FOOT": {"P": [-0.21, 0.09, -0.24], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.21, -0.09, -0.24], "D": np.zeros(3)}})
         stand_pos = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.24], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.15, -0.24], "D": np.zeros(3)}, 
                         "HL_FOOT": {"P": [-0.2, 0.15, -0.24], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.24], "D": np.zeros(3)}})
-        if sim_cfg['mode'] == "hold_leg":
-            FL, FR, HL, HR, balance  = swtich(ROBOT.time_step)
+        if sim_cfg['mode'] == "balance":
+            FL, FR, HL, HR, balance  = switch(ROBOT.time_step)
             print(f"timestep {ROBOT.time_step}, balance : {balance}")
             if FL:
                 print("Flipping Leg {FL}")
@@ -146,7 +152,12 @@ def simulation():
             q_init['FR_FOOT']['P'] = ROBOT.q_init[3:6]
             q_init['HL_FOOT']['P'] = ROBOT.q_init[6:9]
             q_init['HR_FOOT']['P'] = ROBOT.q_init[9:12]
-            if FL:
+            if not balance:
+                joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.q_init, np.zeros(3), np.zeros(3)
+                joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.q_init, np.zeros(3), np.zeros(3)
+                joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.q_init, np.zeros(3), np.zeros(3)
+                joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.q_init, np.zeros(3), np.zeros(3)
+            elif FL:
                 joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
                 joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_inner_front['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
                 joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_inner_front['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
@@ -176,12 +187,17 @@ def simulation():
                 ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joint_ang_FR[3:6])
                 ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joint_ang_HL[6:9])
                 ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joint_ang_HR[9:12])
+            joint_ang = combine(tuple(joint_ang_FL), tuple(joint_ang_FR), tuple(joint_ang_HL), tuple(joint_ang_HR))
+            if ROBOT.mode == 'P':
+                    joint_vel = np.zeros(12)
+                    joint_toq = np.zeros(12)
+            csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
+            writer.writerow(csv_entry)
             p.stepSimulation()
             ROBOT.time_step += 1
             if ROBOT.time_step >= 2000:
+                break
                 ROBOT.time_step = 0
-
-
     p.disconnect()
 
 
