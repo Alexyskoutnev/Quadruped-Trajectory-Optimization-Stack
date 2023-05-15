@@ -15,7 +15,7 @@ import numpy as np
 
 #project
 from SOLO12_SIM_CONTROL.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint, trajectory_2_world_frame
+from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint, trajectory_2_world_frame, create_cmd
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
@@ -103,17 +103,6 @@ def simulation():
     init_phase = sim_cfg['stance_phase']
     keypress_io = Thread(target=keypress)
     stance = False
-    # flip_pos = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.25, 0.25], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.25, 0.25], "D": np.zeros(3)}, 
-    #                 "HL_FOOT": {"P": [-0.2, 0.25, 0.25], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.25, 0.25], "D": np.zeros(3)}})
-    lift_pos = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.05], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.15, -0.05], "D": np.zeros(3)}, 
-                    "HL_FOOT": {"P": [-0.2, 0.15, -0.05], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.05], "D": np.zeros(3)}})
-    lift_pos_back = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.20], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.22, -0.13, -0.22], "D": np.zeros(3)}, 
-                    "HL_FOOT": {"P": [-0.18, 0.18, -0.22], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.20], "D": np.zeros(3)}})
-    lift_pos_inner = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.20], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.15, -0.20], "D": np.zeros(3)}, 
-                    "HL_FOOT": {"P": [-0.2, 0.15, -0.20], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.20], "D": np.zeros(3)}})
-    stand_pos = trajectory_2_world_frame(ROBOT, {"FL_FOOT": {"P": [0.2, 0.15, -0.20], "D": np.zeros(3)}, "FR_FOOT": {"P": [0.2, -0.15, -0.24], "D": np.zeros(3)}, 
-                    "HL_FOOT": {"P": [-0.2, 0.15, -0.24], "D": np.zeros(3)}, "HR_FOOT": {"P": [-0.2, -0.15, -0.24], "D": np.zeros(3)}})
-    # breakpoint()
     FL, FR, HL, HR = False, False, False, False,
     if init_phase:
         keypress_io.start()
@@ -153,7 +142,11 @@ def simulation():
             joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(stand_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
             joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(stand_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
             joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(stand_pos['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-
+            q_init = create_cmd()
+            q_init['FL_FOOT']['P'] = ROBOT.q_init[0:3]
+            q_init['FR_FOOT']['P'] = ROBOT.q_init[3:6]
+            q_init['HL_FOOT']['P'] = ROBOT.q_init[6:9]
+            q_init['HR_FOOT']['P'] = ROBOT.q_init[9:12]
 
             if FL:
                 if balance:
@@ -161,12 +154,11 @@ def simulation():
                     joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_inner['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
                     joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_inner['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
                     joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_back['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                else:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos_inner['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_inner['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_back['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-
+                # else:
+                #     joint_ang_FL, joint_vel_FL, joint_toq_FL = q_init['FL_FOOT'], np.zeros(3), np.zeros(3)
+                #     joint_ang_FR, joint_vel_FR, joint_toq_FR = q_init['FR_FOOT'], np.zeros(3), np.zeros(3)
+                #     joint_ang_HL, joint_vel_HL, joint_toq_HL = q_init['HL_FOOT'], np.zeros(3), np.zeros(3)
+                #     joint_ang_HR, joint_vel_HR, joint_toq_HR = q_init['HR_FOOT'], np.zeros(3), np.zeros(3)
             elif FR:
                 if balance:
                     joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_inner['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
@@ -174,10 +166,10 @@ def simulation():
                     joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_back['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
                     joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_inner['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
                 else:
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(lift_pos_inner['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(lift_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(lift_pos_back['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos_inner['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
+                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(q_init['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
+                    joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(q_init['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
+                    joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(q_init['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
+                    joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(q_init['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
             elif HL:
                 if balance:
                     joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(stand_pos['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
@@ -200,19 +192,22 @@ def simulation():
                     joint_ang_FR, joint_vel_FR, joint_toq_FR = ROBOT.control(stand_pos['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
                     joint_ang_HL, joint_vel_HL, joint_toq_HL = ROBOT.control(stand_pos['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
                     joint_ang_HR, joint_vel_HR, joint_toq_HR = ROBOT.control(lift_pos['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-            # breakpoint()
-            # breakpoint()
-
-            ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
-            ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joint_ang_FR[3:6])
-            ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joint_ang_HL[6:9])
-            ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joint_ang_HR[9:12])
+            if not balance:
+                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, q_init['FL_FOOT']['P'])
+                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, q_init['FR_FOOT']['P'])
+                ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, q_init['HL_FOOT']['P'])
+                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, q_init['HR_FOOT']['P'])
+            else:
+                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joint_ang_FR[3:6])
+                ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joint_ang_HL[6:9])
+                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joint_ang_HR[9:12])
             p.stepSimulation()
             ROBOT.time_step += 1
             if ROBOT.time_step >= 2000:
                 ROBOT.time_step = 0
 
-            # time.sleep(0.01)
+
     p.disconnect()
 
 
