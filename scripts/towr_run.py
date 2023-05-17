@@ -48,7 +48,7 @@ def parse_scripts(scripts_dic, docker_id):
         scripts_dic[script_name] = script.replace("<id>", docker_id)
     return scripts_dic
 
-def _state(p = 0.5):
+def _state(p = 0.6):
     state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
              "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
     with open(CURRENT_TRAJ_CSV_FILE, "r", newline='') as f:
@@ -69,6 +69,13 @@ def _step(args):
     goal = global_cfg.ROBOT_CFG.robot_goal
     diff_vec = np.clip(goal - global_pos, -step_size, step_size)
     diff_vec[2] = 0.0
+    args['-s'] = [0, 0, 0.24]
+    # args['-s'][2] = 0.24
+    args['-s_ang'] = global_cfg.ROBOT_CFG.linkWorldOrientation
+    args['-e1'] = global_cfg.ROBOT_CFG.EE['FL_FOOT']
+    args['-e2'] = global_cfg.ROBOT_CFG.EE['FR_FOOT']
+    args['-e3'] = global_cfg.ROBOT_CFG.EE['HL_FOOT']
+    args['-e4'] = global_cfg.ROBOT_CFG.EE['HR_FOOT']
     args['-g'] = list(global_pos + diff_vec)
     args['-g'][2] = 0.24
     return args
@@ -96,17 +103,24 @@ def _update(args, log):
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE)
     while (True):
             mpc.update()
+            print(f"Towr_run -> {global_cfg.RUN._wait}")
             if global_cfg.RUN._wait: #Hard Reset if robot is in stance configuration
+                # breakpoint()
+                print("=============HARD RESET=============")
+                log.write("=============HARD RESET=============")
                 args = _step(args)
                 towr_runtime_0 = time.time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-                p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
+                p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
                 towr_runtime_1 = time.time()
                 print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
                 if p.returncode == 0:
                     print("TOWR found a trajectory")
                     p = subprocess.run(shlex.split(scripts['copy']))
                     global_cfg.RUN._wait = False
+                    global_cfg.RUN.update = True
+                    while (not global_cfg.RUN.update):
+                            print("towr thread waiting")
             elif not _wait:
                 args = mpc.plan(args)
                 towr_runtime_0 = time.time()
@@ -155,9 +169,11 @@ def _cmd_args(args):
 def _run(args):
     log = Logger("./logs", "towr_log")
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
+    
     args = _step(args)
     towr_runtime_0 = time.time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    breakpoint()
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')

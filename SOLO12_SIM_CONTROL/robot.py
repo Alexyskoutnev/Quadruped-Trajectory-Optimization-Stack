@@ -61,10 +61,11 @@ class SOLO12(object):
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         elif sim_cfg['mode'] == "towr":
             self.shiftZ = 0.05
+            self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
+                     'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         else:
-            self.shiftZ = 0.05
-        self.shift = {'FL_FOOT': np.zeros(3), 'FR_FOOT': np.zeros(3),
-                     'HL_FOOT': np.zeros(3), 'HR_FOOT': np.zeros(3)}
+            self.shift = {'FL_FOOT': np.zeros(3), 'FR_FOOT': np.zeros(3),
+                        'HL_FOOT': np.zeros(3), 'HR_FOOT': np.zeros(3)}
         
         
         #initial robot pose and configuration
