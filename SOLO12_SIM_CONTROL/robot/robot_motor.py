@@ -6,12 +6,12 @@
 import numpy as np
 
 class MOTOR(object):
-    NUM_MOTORS = 12
-    VOLTAGE_CLIPPING = 50
-    OBSERVED_TORQUE_LIMIT = 5.7
-    MOTOR_VOLTAGE = 16.0
-    MOTOR_RESISTANCE = 0.186
-    MOTOR_TORQUE_CONSTANT = 0.0954
+    NUM_MOTORS = 12 
+    VOLTAGE_CLIPPING = 50 #based on A1 robot
+    OBSERVED_TORQUE_LIMIT = 5.7 #based on A1 robot
+    MOTOR_VOLTAGE = 16.0 #based on A1 robot
+    MOTOR_RESISTANCE = 0.186 #based on A1 robot
+    MOTOR_TORQUE_CONSTANT = 0.025 #based on solo12 robot
     MOTOR_VISCOUS_DAMPING = 0
     MOTOR_SPEED_LIMIT = MOTOR_VOLTAGE / (MOTOR_VISCOUS_DAMPING +
                                         MOTOR_TORQUE_CONSTANT)
@@ -19,8 +19,6 @@ class MOTOR(object):
     MOTOR_POS_UB = 2.5
 
 class MotorModel(object):
-
-
     def __init__(self, kp=1.2, kd=0, motor_mode=None) -> None:
         """_summary_
 
@@ -33,7 +31,6 @@ class MotorModel(object):
         self._kd = kd
         self._strength_ratio = [1.0] * MOTOR.NUM_MOTORS
 
-
     def set_motor_gains(self, kp, kd):
         """Set the motor postional and derivative gains
 
@@ -44,8 +41,7 @@ class MotorModel(object):
         self._kp = kp
         self._kd = kd
 
-
-    def convert_to_torque(self, motor_cmd, motor_ang, motor_vel):
+    def convert_to_torque(self, motor_ang_cmd, motor_ang, motor_vel):
         """Convert the motor position signal to torque
 
         Args:
@@ -55,7 +51,7 @@ class MotorModel(object):
         """
         kp = self._kp
         kd = self._kd
-        pwm = np.clip(-1 * kp  * (motor_ang - motor_cmd) - kd * motor_vel, -1, 1)
+        pwm = np.clip(-1 * kp  * (motor_ang - motor_ang_cmd) - kd * (motor_vel), -1, 1)
         return self._convert_to_torque_from_pwm(pwm)
 
     def _convert_to_torque_from_pwm(self, pwm):

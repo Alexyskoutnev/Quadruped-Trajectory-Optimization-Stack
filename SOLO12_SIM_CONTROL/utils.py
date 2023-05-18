@@ -5,9 +5,32 @@ import csv
 
 from scipy.spatial.transform import Rotation
 
-def create_cmd():
-    return {"FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
+def create_cmd(q_ang=None, q_vel=None):
+    cmd = {"FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
+    if q_ang is not None:
+        assert(len(q_ang) == 12)
+        for i in range(4):
+            if i == 0:
+                cmd['FL_FOOT']['P'] = q_ang[0:3]
+            elif i == 1:
+                cmd['FR_FOOT']['P'] = q_ang[3:6]
+            elif i == 2:
+                cmd['HL_FOOT']['P'] = q_ang[6:9]
+            elif i == 3:
+                cmd['HR_FOOT']['P'] = q_ang[9:12]
+    if q_vel is not None:
+        assert(len(q_vel) == 12)
+        for i in range(4):
+            if i == 0:
+                cmd['FL_FOOT']['D'] = q_ang[0:3]
+            elif i == 1:
+                cmd['FR_FOOT']['D'] = q_ang[3:6]
+            elif i == 2:
+                cmd['HL_FOOT']['D'] = q_ang[6:9]
+            elif i == 3:
+                cmd['HR_FOOT']['D'] = q_ang[9:12]
+    return cmd
 
 def create_cmd_pose():
     return {"COM": np.zeros(6), "FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},

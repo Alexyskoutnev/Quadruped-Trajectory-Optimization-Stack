@@ -101,8 +101,8 @@ def simulation():
     
     while (key_press_init_phase):
         if init_phase and key_press_init_phase:
-                jointTorques = ROBOT.default_stance_control(ROBOT.q_init, p.TORQUE_CONTROL)
-                p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
+                _, _, joint_toq = ROBOT.default_stance_control()
+                p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
     for i in range (10000):
         if sim_cfg['mode'] == "bezier":
@@ -159,9 +159,8 @@ def simulation():
             log.write(f"{global_cfg.print_vars(log.log)}\n")
 
             if global_cfg.RUN._wait:
-                # print("In Stance Position")
-                jointTorques = ROBOT.default_stance_control(ROBOT.q_init, p.TORQUE_CONTROL)
-                p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=jointTorques)
+                _, _, joint_toq = ROBOT.default_stance_control(ROBOT.q_init, p.TORQUE_CONTROL)
+                p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
             else:
                 joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(towr['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
                 if ROBOT.mode == 'P' or ROBOT.mode == 'PD':

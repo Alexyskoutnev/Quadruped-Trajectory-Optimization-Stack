@@ -6,7 +6,7 @@ mode : "bezier"
 # enviroment : "testing"
 enviroment : "plane"
 py_interface : True
-fix-base : True
+fix-base : False
 velocity: 0.5
 angle_velocity : 0.0
 angle : 0.0

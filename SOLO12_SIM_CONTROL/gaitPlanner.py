@@ -2,7 +2,6 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 import yaml 
 import pybullet as p
 import pybullet_data

@@ -1,10 +1,9 @@
 import time
 
-
 import pybullet as p
 import numpy as np
 
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr
+from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
 
 def links_to_id(robot):
@@ -51,7 +50,6 @@ class SOLO12(object):
         self.modes = {"P": p.POSITION_CONTROL, "PD": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
         self.mode = config['mode']
         self.sim_cfg = sim_cfg
-        
         self.tfBaseMtx = transformation_inv(transformation_mtx(self.CoM_states()['linkWorldPosition'], self.CoM_states()['linkWorldOrientation']))
         self.EE_WORLD = {"FL_W_POSE": base_frame_tf(self.tfBaseMtx, self.get_endeffector_pose()['FL_FOOT']['linkWorldPosition']), "FR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['FR_FOOT']['linkWorldPosition']),
                                     "HL_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HL_FOOT']['linkWorldPosition']), "HR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HR_FOOT']['linkWorldPosition'])}
@@ -66,18 +64,14 @@ class SOLO12(object):
         else:
             self.shift = {'FL_FOOT': np.zeros(3), 'FR_FOOT': np.zeros(3),
                         'HL_FOOT': np.zeros(3), 'HR_FOOT': np.zeros(3)}
-        
-        
         #initial robot pose and configuration
         for i in self.jointidx['idx']:
             p.resetJointState(self.robot, i, self.q_init16[i])
-
         #reset default controller
         p.setJointMotorControlArray(self.robot, jointIndices=self.jointidx['idx'],
                                       controlMode=p.VELOCITY_CONTROL,
                                       targetVelocities= [0.0 for m in self.jointidx['idx']],
                                       forces= [0.0 for m in self.jointidx['idx']])
-        
         self._kp = config['kp']
         self._kd = config['kd']
         self._motor = MotorModel(self._kp, self._kd)
@@ -109,13 +103,21 @@ class SOLO12(object):
         elif 'torque' == controlMode:
             p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_pose)
 
-        
     def get_endeffector_pose(self):
         EE1, EE2, EE3, EE4 = p.getLinkStates(self.robot,  self.EE_index.values())
         return {"FL_FOOT": link_info(EE1), "FR_FOOT": link_info(EE2), "HL_FOOT": link_info(EE3), "HR_FOOT": link_info(EE4)}
     
-
     def control(self, cmd, index, mode="P"):
+        """_summary_
+
+        Args:
+            cmd (_type_): _description_
+            index (_type_): _description_
+            mode (str, optional): _description_. Defaults to "P".
+
+        Returns:
+            _type_: _description_
+        """
         q_cmd = None
         q_vel = None
         q_toq = None
@@ -127,48 +129,29 @@ class SOLO12(object):
             q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
-    # def inv_dynamics(self, cmd, index):
-
-    #     q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
-    #     _q_cmd = np.array(q_cmd).reshape((12, 1))
-    #     _q_vel = np.array(q_vel).reshape((12, 1))
-
-    #     q_mes = np.zeros((12, 1))
-    #     v_mes = np.zeros((12, 1))
-
-
+    # def _inv_dynamics_multi(self, cmds, indices):
+    #     q_cmd, q_vel = self.inv_kinematics(cmds, indices, mode = "PD")
+    #     q_cmd = np.array(q_cmd).reshape(12)
+    #     q_vel = np.array(q_vel).reshape(12)
+    #     q_mes = np.zeros(12)
+    #     v_mes = np.zeros(12)
     #     jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
-    #     q_mes[:, 0] = [state[0] for state in jointStates]
-    #     v_mes[:, 0] = [state[1] for state in jointStates]
+    #     q_mes[:] = [state[0] for state in jointStates]
+    #     v_mes[:] = [state[1] for state in jointStates]
+    #     q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+    #     return q_cmd, q_vel, q_toq
 
-
-    #     kp = 1.0
-    #     kd = 0.01 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
-    #     dt = 0.001
-    #     cpt = self.time_step
-    #     t1 = 5
-
-        
-    #     ev = dt * cpt
-    #     A3 = 2 * (q_mes - _q_cmd) / t1**3
-    #     A2 = (-3/2) * t1 * A3
-    #     q_des = q_mes + A2*(ev**2) + A3*(ev**3)
-    #     v_des = 2*A2*ev + 3*A3*(ev**2)
-    #     jointTorques = kp * (_q_cmd - q_mes) + kd * (_q_vel - v_mes)
-    #     t_max = 3.0
-    #     jointTorques[jointTorques > t_max] = t_max
-    #     jointTorques[jointTorques < -t_max] = -t_max    
-
-    #     return q_cmd, q_vel, jointTorques.reshape(12)
 
     def inv_dynamics(self, cmd, index):
         """Inverse dynamics controller based on joint angle and velocity commands 
            to produced motor torque commands.
         Args:
-            cmd (_type_): 3d desired position
-            index (_type_): joint indicies to control
+            cmd (array): 3d desired position
+            index (int): joint indicies to control
         Returns:
-            _type_: _description_
+            q_cmd (np.array): desired joints angle for low-level controller 
+            q_vel (np.array): desired joint velocities for low-level controller
+            q_toq (np.array): desired feedforward torques for low-level contller
         """
         q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
         q_cmd = np.array(q_cmd).reshape(12)
@@ -183,10 +166,12 @@ class SOLO12(object):
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
         assert(len(indices) == 4)
+        breakpoint()
         joint_position = np.zeros(12)
         joint_velocity = np.zeros(12)
         idx_2_EE = {3 : "FL_FOOT", 7: "FR_FOOT", 11: "HL_FOOT", 15: "HR_FOOT"}
         for idx in indices:
+            breakpoint()
             if idx_2_EE[idx] == "FL_FOOT":
                 joint_position[0:3] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][0:3]
             elif idx_2_EE[idx] == "FR_FOOT":
@@ -195,7 +180,7 @@ class SOLO12(object):
                 joint_position[6:9] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][6:9]
             elif idx_2_EE[idx] == "HR_FOOT":
                 joint_position[9:12] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][9:12]
-        self._joint_ang = joint_position #More accurate update ??
+        self._joint_ang = joint_position
         return joint_position
 
     def inv_kinematics(self, cmd, index, mode = 'P'):
@@ -237,31 +222,22 @@ class SOLO12(object):
         self._joint_vel = joint_velocity
         return joint_position, joint_velocity
 
-    def default_stance_control(self, q_cmd, control=p.TORQUE_CONTROL):
-
-        q_mes = np.zeros((12, 1))
-        v_mes = np.zeros((12, 1))
+    def default_stance_control(self):
+        """Robot default stance standing still
+        Returns:
+            q_cmd (np.array): Stance joint angles
+            q_vel (np.array): Stance joint velocities
+            q_toq (np.array): Stance motor torques
+        """
+        q_cmd = self.q_init
+        q_vel = np.zeros(12)
+        q_mes = np.zeros(12)
+        v_mes = np.zeros(12)
         jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
-        q_mes[:, 0] = [state[0] for state in jointStates]
-        v_mes[:, 0] = [state[1] for state in jointStates]
-        kp = 5.0
-        kd = 0.10 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
-        dt = 0.001
-        cpt = self.time_step
-        t1 = 4
-
-        if control == p.TORQUE_CONTROL:
-                ev = dt * cpt
-                A3 = 2 * (q_mes - q_cmd.reshape((12, 1))) / t1**3
-                A2 = (-3/2) * t1 * A3
-                q_des = q_mes + A2*(ev**2) + A3*(ev**3)
-                v_des = 2*A2*ev + 3*A3*(ev**2)
-                jointTorques = kp * (q_cmd.reshape((12, 1)) - q_mes) + kd * (v_des - v_mes)
-                t_max = 2.5
-                jointTorques[jointTorques > t_max] = t_max
-                jointTorques[jointTorques < -t_max] = -t_max
-
-        return jointTorques
+        q_mes[:] = [state[0] for state in jointStates]
+        v_mes[:] = [state[1] for state in jointStates]
+        q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+        return q_cmd, q_vel, q_toq
 
             
 
