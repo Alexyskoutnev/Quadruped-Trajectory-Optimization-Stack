@@ -5,7 +5,7 @@ import pybullet_data
 from scipy.spatial.transform import Rotation
 import yaml
 
-from SOLO12_SIM_CONTROL.robot import SOLO12
+from SOLO12_SIM_CONTROL.robot.robot import SOLO12
 
 
 config = "./data/config/solo12.yml"

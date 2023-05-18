@@ -5,6 +5,7 @@ import pybullet as p
 import numpy as np
 
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr
+from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
 
 def links_to_id(robot):
     _link_name_to_index = {p.getBodyInfo(robot)[0].decode('UTF-8'):-1,}
@@ -29,7 +30,6 @@ def base_frame_tf(mtx, pt):
     vec = np.concatenate((np.array([pt[0]]), np.array([pt[1]]),np.array([pt[2]]), np.ones(1)))
     tf_vec = mtx @ vec
     return tf_vec[:3]
-
 
 def shift_z(v, shift):
     v[2] += shift
@@ -78,8 +78,9 @@ class SOLO12(object):
                                       targetVelocities= [0.0 for m in self.jointidx['idx']],
                                       forces= [0.0 for m in self.jointidx['idx']])
         
-        self.kp = config['kp']
-        self.kd = config['kd']
+        self._kp = config['kp']
+        self._kd = config['kd']
+        self._motor = MotorModel(self._kp, self._kd)
         self._joint_ang = None
         self._joint_vel = None
         self._joint_toq = None
@@ -103,7 +104,7 @@ class SOLO12(object):
         if 'P' == controlMode or 'PD' == controlMode:
             # maxForces = np.ones(len(jointsInx))*5
             maxForces = np.ones(len(jointsInx))*2
-            posGains = np.ones(len(jointsInx))*self.kp
+            posGains = np.ones(len(jointsInx))*self._kp
             p.setJointMotorControlArray(self.robot, jointsInx, self.modes['P'], cmd_pose, positionGains=posGains)
         elif 'torque' == controlMode:
             p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_pose)
@@ -126,129 +127,60 @@ class SOLO12(object):
             q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
-    def inv_dynamics(self, cmd, index):
+    # def inv_dynamics(self, cmd, index):
 
-        q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
-        _q_cmd = np.array(q_cmd).reshape((12, 1))
-        _q_vel = np.array(q_vel).reshape((12, 1))
-
-        q_mes = np.zeros((12, 1))
-        v_mes = np.zeros((12, 1))
-
-
-        jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
-        q_mes[:, 0] = [state[0] for state in jointStates]
-        v_mes[:, 0] = [state[1] for state in jointStates]
-
-
-        kp = 1.0
-        kd = 0.01 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
-        dt = 0.001
-        cpt = self.time_step
-        t1 = 5
-
-        
-        ev = dt * cpt
-        A3 = 2 * (q_mes - _q_cmd) / t1**3
-        A2 = (-3/2) * t1 * A3
-        q_des = q_mes + A2*(ev**2) + A3*(ev**3)
-        v_des = 2*A2*ev + 3*A3*(ev**2)
-        jointTorques = kp * (_q_cmd - q_mes) + kd * (_q_vel - v_mes)
-        t_max = 3.0
-        jointTorques[jointTorques > t_max] = t_max
-        jointTorques[jointTorques < -t_max] = -t_max    
-
-        return q_cmd, q_vel, jointTorques.reshape(12)
-
-    # def invDyanamics(self, cmd, index, kp = 1.0, kd = 1.0):
-    #     jointmap = {3: "FL", 7: "FR", 11: "BL", 15: "BR"}
-    #     # jointindices = self.jointidx[jointmap[index]]
-    #     jointindices = self.jointidx["idx"]
-    #     numJoints = len(jointindices)
     #     q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
+    #     _q_cmd = np.array(q_cmd).reshape((12, 1))
+    #     _q_vel = np.array(q_vel).reshape((12, 1))
+
+    #     q_mes = np.zeros((12, 1))
+    #     v_mes = np.zeros((12, 1))
+
+
+    #     jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
+    #     q_mes[:, 0] = [state[0] for state in jointStates]
+    #     v_mes[:, 0] = [state[1] for state in jointStates]
+
+
+    #     kp = 1.0
+    #     kd = 0.01 * np.array([[1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3, 1.0, 0.3, 0.3]]).transpose()
+    #     dt = 0.001
+    #     cpt = self.time_step
+    #     t1 = 5
+
         
-    #     q1 = []
-    #     qdot1 = []
-    #     zeroAcceleration = []
+    #     ev = dt * cpt
+    #     A3 = 2 * (q_mes - _q_cmd) / t1**3
+    #     A2 = (-3/2) * t1 * A3
+    #     q_des = q_mes + A2*(ev**2) + A3*(ev**3)
+    #     v_des = 2*A2*ev + 3*A3*(ev**2)
+    #     jointTorques = kp * (_q_cmd - q_mes) + kd * (_q_vel - v_mes)
+    #     t_max = 3.0
+    #     jointTorques[jointTorques > t_max] = t_max
+    #     jointTorques[jointTorques < -t_max] = -t_max    
 
+    #     return q_cmd, q_vel, jointTorques.reshape(12)
 
-
-    #     # curPos, curOrn = p.getBasePositionAndOrientation(self.robot)
-    #     # q1 = [curPos[0], curPos[1], curPos[2], curOrn[0], curOrn[1], curOrn[2], curOrn[3]]
-    #     # baseLinVel, baseAngVel = p.getBaseVelocity(self.robot)
-    #     # qdot1 = [baseLinVel[0], baseLinVel[1], baseLinVel[2], baseAngVel[0], baseAngVel[1], baseAngVel[2], 0]
-    #     # q_err = [0, 0, 0, 0, 0, 0, 0]
-    #     # qIndex = 7
-    #     # qdotIndex = 7
-    #     # zeroAccelerations = [0, 0, 0, 0, 0, 0, 0]
-    #     for i in range(numJoints):
-    #         jointStates = p.getJointStateMultiDof(self.robot, jointindices[i])
-    #         q1.append(jointStates[0])
-    #         qdot1.append(jointStates[1])
-    #         zeroAcceleration.append(0)
-
-    #     q = np.array(q1)
-    #     qdot = np.array(qdot1)
-    #     qdes = np.array(q_cmd)
-    #     qdotdes = np.array(q_vel)
-
-    #     q_err = qdes - q
-    #     q_dot_err = qdotdes - qdot
-
-    #     Kp = np.diagflat(kp)
-    #     Kd = np.diagflat(kd)
-
-    #     p_term = kp * (q_err - q)
-    #     d_term = kd * (q_dot_err - qdot)
-
-    #     breakpoint()
-
-    #     q_ = [q[0] for q in q1]
-
-    #     M = np.array(p.calculateMassMatrix(self.robot, q_))
-
-    #     q1 = [q[0] for q in q1] 
-    #     q1 += [0.0] * 4
-    #     q1[3] = 0
-    #     q1[7] = 0
-    #     q1[11] = 0
-    #     q1[15] = 0
-    #     # qdot1 = [q[0] for q in [0.1]*1]
-    #     qdot1 = [0.1] * 16
-    #     qdot1[3] = 0
-    #     qdot1[7] = 0
-    #     qdot1[11] = 0
-    #     qdot1[15] = 0
-
-    #     zeroAcceleration = [0.0] * 16
+    def inv_dynamics(self, cmd, index):
+        """Inverse dynamics controller based on joint angle and velocity commands 
+           to produced motor torque commands.
+        Args:
+            cmd (_type_): 3d desired position
+            index (_type_): joint indicies to control
+        Returns:
+            _type_: _description_
+        """
+        q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
+        q_cmd = np.array(q_cmd).reshape(12)
+        q_vel = np.array(q_vel).reshape(12)
+        q_mes = np.zeros(12)
+        v_mes = np.zeros(12)
+        jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
+        q_mes[:] = [state[0] for state in jointStates]
+        v_mes[:] = [state[1] for state in jointStates]
+        q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+        return q_cmd, q_vel, q_toq
         
-        
-    #     breakpoint()
-        
-    #     G = p.calculateInverseDynamics(self.robot, q1, qdot1, zeroAcceleration)
-        
-
-    #     breakpoint()
-
-
-    #         # js = p.getJointStateMultiDof(self.robot, jointindices[i])
-    #         # jointPos = js[0]
-    #         # jointVel = js[1]
-    #         # q1 += jointPos
-    #         # if len(js[0]) == 1:
-    #         #     desiredPos = q_cmd[jointindices[i]]
-    #         #     qdiff = desiredPos - jointPos[0]
-    #         #     q_err.append(qdiff)
-    #         #     zeroAccelerations.append(0.)
-    #         #     qdot1 += jointVel
-    #         #     qIndex += 1
-    #         #     qdotIndex += 1
-            
-    #     breakpoint()
-
-
-    #     # q_cmd, q_vel, q_tor = None, None, None
-    #     return q_cmd, q_vel, q_tor
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
         assert(len(indices) == 4)
         joint_position = np.zeros(12)

@@ -116,6 +116,7 @@ def _update(args, log):
                 print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
                 if p.returncode == 0:
                     print("TOWR found a trajectory")
+                    p = subprocess.run(shlex.split(scripts['delete']))
                     p = subprocess.run(shlex.split(scripts['copy']))
                     global_cfg.RUN._wait = False
                     global_cfg.RUN.update = True
@@ -222,7 +223,7 @@ def test_mpc(args):
 if __name__ == "__main__":
     test = False
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[2.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)

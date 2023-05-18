@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #project
-from SOLO12_SIM_CONTROL.robot import SOLO12
+from SOLO12_SIM_CONTROL.robot.robot import SOLO12
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.simulation import Simulation

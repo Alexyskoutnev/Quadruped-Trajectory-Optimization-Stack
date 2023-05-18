@@ -1,12 +1,12 @@
-# mode : "bezier"
-mode : "towr"
+mode : "bezier"
+# mode : "towr"
 # mode : "balance"
 # mode : "visual_track"
 # mode : "testing"
 # enviroment : "testing"
 enviroment : "plane"
 py_interface : True
-fix-base : False
+fix-base : True
 velocity: 0.5
 angle_velocity : 0.0
 angle : 0.0

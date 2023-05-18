@@ -14,7 +14,7 @@ import yaml
 import numpy as np
 
 #project
-from SOLO12_SIM_CONTROL.robot import SOLO12
+from SOLO12_SIM_CONTROL.robot.robot import SOLO12
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
