@@ -105,7 +105,6 @@ def _update(args, log):
             mpc.update()
             print(f"Towr_run -> {global_cfg.RUN._wait}")
             if global_cfg.RUN._wait: #Hard Reset if robot is in stance configuration
-                # breakpoint()
                 print("=============HARD RESET=============")
                 log.write("=============HARD RESET=============")
                 args = _step(args)
@@ -174,7 +173,6 @@ def _run(args):
     args = _step(args)
     towr_runtime_0 = time.time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    breakpoint()
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')

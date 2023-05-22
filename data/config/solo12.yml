@@ -5,8 +5,8 @@
   start_pos : [0,0,0.25]
   start_ang : [0.0, 0.0, 0.0, 1.0]
   t_max : 5.0
-  # mode : "P" #position control
-  mode : "torque"
+  mode : "P" #position control
+  # mode : "torque"
   # mode : 'PD' #position-velocity control
   endeffector_count: 4
   mass: 1.16115091
@@ -16,7 +16,7 @@
   iyy: 0.01938108
   iyz: 0.0
   izz: 0.02476124
-  # kp : 0.5 #values for p-control
-  # kd : 0.01 #values for p-control
-  kp : 5.0 #Good values for torque control
-  kd : 0.05 #Good values for torque control
+  kp : 1.0 #values for p-control
+  kd : 0.01 #values for p-control
+  # kp : 5.0 #Good values for torque control
+  # kd : 0.05 #Good values for torque control

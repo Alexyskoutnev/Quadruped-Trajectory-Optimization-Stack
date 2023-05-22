@@ -15,7 +15,7 @@ import numpy as np
 
 #project
 from SOLO12_SIM_CONTROL.robot.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint
+from SOLO12_SIM_CONTROL.utils import *
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
@@ -29,6 +29,7 @@ cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 TOWR = "./data/traj/towr.csv"
 TRACK = "./data/traj/traj_thirdparty/jointStates.csv"
+TRACK_imitation = "./data/traj/dance.csv"
 HZ = sim_cfg['HZ']
 
 # global keypressed
@@ -87,6 +88,9 @@ def simulation():
     elif sim_cfg['mode'] == "track":
         csv_file = open(TRACK, 'r', newline='')
         reader =csv.reader(csv_file, delimiter=' ')
+    elif sim_cfg['mode'] == "track_imitation":
+        csv_file = open(TRACK_imitation, 'r', newline='')
+        reader =csv.reader(csv_file, delimiter=',')
 
     offsets = np.array([0.5, 0.0, 0.0, 0.5])
     trot_2_stance_ratio = 0.5
@@ -188,7 +192,7 @@ def simulation():
             ROBOT.time_step += 1
         elif sim_cfg['mode'] == "track":
             try:
-                joints = np.array([float(x) for x in next(reader)])[1:]
+                joints = np.array([float(x) for x in next(reader)])[3:]
             except StopIteration:
                 break
             revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
@@ -213,6 +217,38 @@ def simulation():
                 p.resetJointState(ROBOT.robot, joint_indx, joint_ang)
             p.stepSimulation()
             ROBOT.time_step += 1
+
+        elif sim_cfg['mode'] == "track_imitation":
+            try:
+                ee_pose = np.array([float(x) for x in next(reader)])[3:]
+            except StopIteration:
+                break
+            cmd = trajectory_2_world_frame(ROBOT,create_cmd(ee_pose))
+            time.sleep(0.01)
+            joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(cmd['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
+            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
+            elif ROBOT.mode == 'torque':
+                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_toq_FL[0:3])
+            joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(cmd['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
+            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
+            elif ROBOT.mode == 'torque':
+                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_toq_FR[3:6])
+            joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(cmd['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
+            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
+            elif ROBOT.mode == 'torque':
+                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_toq_HL[6:9])
+            joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(cmd['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
+            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
+                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
+            elif ROBOT.mode == 'torque':
+                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
+            global_cfg.RUN.step += 1  
+            p.stepSimulation()
+            ROBOT.time_step += 1
+
     p.disconnect()
 
 
