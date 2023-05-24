@@ -55,6 +55,9 @@ def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.EE['FR_FOOT'] = list(kwargs['FR_FOOT'])
     global_cfg.ROBOT_CFG.EE['HL_FOOT'] = list(kwargs['HL_FOOT'])
     global_cfg.ROBOT_CFG.EE['HR_FOOT'] = list(kwargs['HR_FOOT'])
+    global_cfg.ROBOT_CFG.runtime = ROBOT.time
+    global_cfg.RUN.step += 1
+    global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 
 def keypress():
     global key_press_init_phase
@@ -108,7 +111,7 @@ def simulation():
                 _, _, joint_toq = ROBOT.default_stance_control()
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
-    for i in range (10000):
+    for i in range (100000):
         if sim_cfg['mode'] == "bezier":
             if sim_cfg['py_interface']:
                 pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
@@ -136,24 +139,32 @@ def simulation():
 
             p.stepSimulation()
             ROBOT.time_step += 1
+
         elif sim_cfg['mode'] == "towr":
             try:
-                if global_cfg.RUN.update:
+                if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
+                    # print("============WAIT STATE============")
+                    # print(f'i: {i}')
+                    time.sleep(0.001)
+                    continue
+                elif global_cfg.RUN._update:
+                    print("============UPDATE STATE============")
                     mutex.acquire()
                     print("==========Reading updated CSV==========")
-                    reader = nearestPoint(global_cfg.ROBOT_CFG.last_POSE, open(TOWR, 'r', newline=''))
+                    # reader = nearestPoint(global_cfg.ROBOT_CFG.last_POSE, open(TOWR, 'r', newline=''))
+                    reader = csv.reader(open(TOWR, 'r', newline=''))
                     mutex.release()
-                    global_cfg.RUN.update = False 
+                    global_cfg.RUN._update = False 
                     global_cfg.RUN.step = 0
-                EE_POSE = np.array([float(x) for x in next(reader)])
+                    # breakpoint()
+                EE_POSE = np.array([float(x) for x in next(reader)])[1:]
+                # print(f"EE-> {EE_POSE}")
                 global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                 global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
-                # print("stance ->")
                 log.write("==========STANCE==========")
-                global_cfg.RUN._wait = True
-                last_cnt = ROBOT.time_step
+                global_cfg.RUN._stance = True
             
             ## Logging ##
             log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
@@ -162,7 +173,7 @@ def simulation():
             log.write(f"=========Global Vars=========\n")
             log.write(f"{global_cfg.print_vars(log.log)}\n")
 
-            if global_cfg.RUN._wait:
+            if global_cfg.RUN._stance:
                 _, _, joint_toq = ROBOT.default_stance_control(ROBOT.q_init, p.TORQUE_CONTROL)
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
             else:
@@ -186,10 +197,10 @@ def simulation():
                     ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
                 elif ROBOT.mode == 'torque':
                     ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
-                global_cfg.RUN.step += 1
+
             p.stepSimulation()
-            _global_update(ROBOT, ROBOT.state)
             ROBOT.time_step += 1
+            _global_update(ROBOT, ROBOT.state)
         elif sim_cfg['mode'] == "track":
             try:
                 joints = np.array([float(x) for x in next(reader)])[3:]
@@ -224,7 +235,6 @@ def simulation():
             except StopIteration:
                 break
             cmd = trajectory_2_world_frame(ROBOT,create_cmd(ee_pose))
-            time.sleep(0.01)
             joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(cmd['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
             if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
                 ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])

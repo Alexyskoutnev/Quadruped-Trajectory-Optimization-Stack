@@ -5,7 +5,7 @@ import subprocess
 import shlex
 import argparse
 import copy
-from threading import Thread
+from threading import Thread, Lock
 import csv
 
 import run
@@ -13,7 +13,7 @@ import numpy as np
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter
-from SOLO12_SIM_CONTROL.mpc import MPC
+from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
 from SOLO12_SIM_CONTROL.logger import Logger
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
@@ -23,10 +23,12 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'data': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv',
             'delete': 'rm ./data/traj/towr.csv'}
 
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4']
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t']
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
+
+lock = Lock()
 
 def strip(x):
     st = " "
@@ -93,59 +95,42 @@ def _plan(args):
     args['-e4'] = _state_dic["HR_FOOT"]
     return args
 
+def mpc_update_thread(mpc):
+    while True:
+        print("update")
+        mpc.update()
+
+
 def _update(args, log):
     """
     Threaded towr trajectory update function
     """
-    step_size = args['step_size']
     _wait = False
-    test = False
-    mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE)
+    mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
+
+    # mpc_update_th = MPC_THREAD(mpc)
+    # mpc_update_th.start()
+
     while (True):
             mpc.update()
-            print(f"Towr_run -> {global_cfg.RUN._wait}")
-            if global_cfg.RUN._wait: #Hard Reset if robot is in stance configuration
-                print("=============HARD RESET=============")
-                log.write("=============HARD RESET=============")
-                args = _step(args)
-                towr_runtime_0 = time.time()
-                TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-                p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-                towr_runtime_1 = time.time()
-                print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
-                if p.returncode == 0:
-                    print("TOWR found a trajectory")
-                    p = subprocess.run(shlex.split(scripts['delete']))
-                    p = subprocess.run(shlex.split(scripts['copy']))
-                    global_cfg.RUN._wait = False
-                    global_cfg.RUN.update = True
-                    while (not global_cfg.RUN.update):
-                            print("towr thread waiting")
-            elif not _wait:
-                args = mpc.plan(args)
-                towr_runtime_0 = time.time()
-                TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-                p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-                towr_runtime_1 = time.time()
-                print(f'TOWR time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
-                _wait = True
-            elif p.returncode == 0:
+            args = mpc.plan(args)
+            towr_runtime_0 = time.time()
+            TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+            print(f'TOWR Execution time: {time.time() - towr_runtime_0:.03f} seconds')
+            p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+            if p_status.returncode == 0:
+                global_cfg.RUN._wait = True
                 _wait = False
                 p = subprocess.run(shlex.split(scripts['data'])) 
+                mpc.update()
                 mpc.combine()
-                p = subprocess.run(shlex.split(scripts['delete']))
                 p = subprocess.run(shlex.split(scripts['copy_tmp']))
-                global_cfg.RUN.update = True
-                while (not global_cfg.RUN.update):
-                        print("towr thread waiting")
+                global_cfg.RUN._update = True
+                global_cfg.RUN._wait = False
+                while (not global_cfg.RUN._update):
+                            print("towr thread waiting")
             else:
-                print("Error in copying Towr Trajectory")
-
-            if test:
-                global_cfg.print_vars()
-                global_cfg.ROBOT_CFG.linkWorldPosition[0] += 0.01
-                global_cfg.RUN.step += 5
-                time.sleep(0.01)
+                print("Error in finding next Trajectory")
 
             
 def _cmd_args(args):
@@ -169,13 +154,12 @@ def _cmd_args(args):
 def _run(args):
     log = Logger("./logs", "towr_log")
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
-    
     args = _step(args)
-    towr_runtime_0 = time.time()
+    towr_runtime_0 = time.process_time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-    towr_runtime_1 = time.time()
-    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
+    towr_runtime_1 = time.process_time()
+    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
     if p.returncode == 0:
         print("TOWR found a trajectory")
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
@@ -214,7 +198,7 @@ def test_mpc(args):
         if p.returncode == 0:
             towr_thread = Thread(target=_update, args=(args, log))
             towr_thread.start()
-            # run.simulation()
+            run.simulation()
         else: 
             print("Error in copying Towr Trajectory")
 
@@ -231,7 +215,7 @@ if __name__ == "__main__":
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
     parser.add_argument('-step', '--step', type=float, default=0.5)
-    parser.add_argument('-l', '--look', type=float, default=0.6)
+    parser.add_argument('-l', '--look', type=float, default=600)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,

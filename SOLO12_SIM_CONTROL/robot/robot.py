@@ -78,6 +78,7 @@ class SOLO12(object):
         self._joint_ang = None
         self._joint_vel = None
         self._joint_toq = None
+        self._time_step = config['timestep']
 
     def CoM_states(self):
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
@@ -93,6 +94,19 @@ class SOLO12(object):
     @property
     def jointangles(self):
         return self._joint_ang
+
+    @property
+    def jointstate(self):
+        return {'q_cmd': self._joint_ang, "q_vel": self._joint_vel, "q_toq": self._joint_toq}
+
+    @property
+    def time(self):
+        """Internal run time for robot based on simulation frequency
+
+        Returns:
+            float: runtime since start of simulation
+        """
+        return self.time_step * self._time_step
 
     def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_f=None):
         if 'P' == controlMode or 'PD' == controlMode:
@@ -162,16 +176,15 @@ class SOLO12(object):
         q_mes[:] = [state[0] for state in jointStates]
         v_mes[:] = [state[1] for state in jointStates]
         q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+        self._joint_toq = q_toq
         return q_cmd, q_vel, q_toq
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
         assert(len(indices) == 4)
-        breakpoint()
         joint_position = np.zeros(12)
         joint_velocity = np.zeros(12)
         idx_2_EE = {3 : "FL_FOOT", 7: "FR_FOOT", 11: "HL_FOOT", 15: "HR_FOOT"}
         for idx in indices:
-            breakpoint()
             if idx_2_EE[idx] == "FL_FOOT":
                 joint_position[0:3] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][0:3]
             elif idx_2_EE[idx] == "FR_FOOT":

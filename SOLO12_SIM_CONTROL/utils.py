@@ -241,6 +241,18 @@ def percentage_look_ahead(file, percent=0.5):
         next(reader)
     return reader
 
+def look_ahead(file, start_time=0.0, timesteps=600, decimal_roundoff=2):
+    reader = csv.reader(file)
+    stop_idx = 0
+    while (True):
+        t = next(reader)[0]
+        stop_idx += 1
+        if start_time == round(float(t), ndigits=decimal_roundoff): #Think of a more robust way to check start times??
+            break
+    for i in range(timesteps - 1):
+        next(reader)
+    return reader, stop_idx
+
 def zero_filter(x, tol=1e-4):
     for i, val in enumerate(x):
         if abs(val) < tol:
