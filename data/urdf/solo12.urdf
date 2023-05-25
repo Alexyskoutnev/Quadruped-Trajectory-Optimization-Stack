@@ -32,7 +32,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.0"/>
+      <lateral_friction value="1.5"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -206,7 +206,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.0"/>
+      <lateral_friction value="1.5"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -380,7 +380,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.0"/>
+      <lateral_friction value="1.5"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -554,7 +554,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.0"/>
+      <lateral_friction value="1.5"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -728,7 +728,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.0"/>
+      <lateral_friction value="1.5"/>
       <restitution value="0.5"/>
     </contact>
   </link>
