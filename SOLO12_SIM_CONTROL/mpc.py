@@ -74,6 +74,7 @@ class MPC(object):
         """
         self.cutoff_idx = int(global_cfg.RUN.step)
         self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
+        self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
 
     def update_timestep(self):
         """Update the timestep by one time unit
@@ -86,6 +87,7 @@ class MPC(object):
         """
         step_size = self.args['step_size']
         global_pos = np.array(CoM)
+        z_height = global_pos[2]
         goal = global_cfg.ROBOT_CFG.robot_goal
         diff_vec = np.clip(goal - global_pos, -step_size, step_size)
         diff_vec[2] = 0.0

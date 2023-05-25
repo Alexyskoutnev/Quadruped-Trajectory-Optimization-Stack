@@ -142,22 +142,16 @@ def simulation():
         elif sim_cfg['mode'] == "towr":
             try:
                 if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
-                    # print("============WAIT STATE============")
-                    # print(f'i: {i}')
                     time.sleep(0.001)
                     continue
                 elif global_cfg.RUN._update:
                     print("============UPDATE STATE============")
                     mutex.acquire()
-                    print("==========Reading updated CSV==========")
-                    # reader = nearestPoint(global_cfg.ROBOT_CFG.last_POSE, open(TOWR, 'r', newline=''))
                     reader = csv.reader(open(TOWR, 'r', newline=''))
                     mutex.release()
                     global_cfg.RUN._update = False 
                     global_cfg.RUN.step = 0
-                    # breakpoint()
                 EE_POSE = np.array([float(x) for x in next(reader)])[1:]
-                # print(f"EE-> {EE_POSE}")
                 global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                 global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                 towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
@@ -173,7 +167,7 @@ def simulation():
             log.write(f"{global_cfg.print_vars(log.log)}\n")
 
             if global_cfg.RUN._stance:
-                _, _, joint_toq = ROBOT.default_stance_control(ROBOT.q_init, p.TORQUE_CONTROL)
+                _, _, joint_toq = ROBOT.default_stance_control()
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
             else:
                 joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(towr['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)

@@ -109,15 +109,20 @@ def _update(args, log):
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     while (True):
             mpc.update()
-            if not _wait:
+            time.sleep(0.01)
+            if mpc.goal_diff < 0.05:
+                print("Robot reach the goal!")
+                global_cfg.RUN._stance = True
+                global_cfg.RUN._wait = False
+                global_cfg.RUN._update = False
+            elif not _wait:
                 args = mpc.plan(args)
                 towr_runtime_0 = time.process_time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-                towr_runtime_1 = time.process_time()
-                print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:.03f} seconds')
                 p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+                towr_runtime_1 = time.process_time()
+                print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:0.3f} seconds')
                 _wait = True
-
             elif p_status.returncode == 0 and mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
                 p = subprocess.run(shlex.split(scripts['data'])) 
@@ -202,7 +207,7 @@ def test_mpc(args):
 if __name__ == "__main__":
     test = False
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[2.0,0,0.24])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[1.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
