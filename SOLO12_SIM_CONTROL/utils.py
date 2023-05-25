@@ -99,6 +99,12 @@ def transformation_inv(M):
     mtx[:,3][:3]= R_inv_t
     return mtx
 
+def transformation_multi(M, v):
+    if type(v) is list:
+        v = np.array(v + [1])
+    result = (M @ v)[0:3]
+    return result
+
 def euler_to_quaternion(yaw, pitch, roll):
         qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
@@ -247,7 +253,7 @@ def look_ahead(file, start_time=0.0, timesteps=600, decimal_roundoff=2):
     while (True):
         t = next(reader)[0]
         stop_idx += 1
-        if start_time == round(float(t), ndigits=decimal_roundoff): #Think of a more robust way to check start times??
+        if start_time <= round(float(t), ndigits=decimal_roundoff): #Think of a more robust way to check start times??
             break
     for i in range(timesteps - 1):
         next(reader)

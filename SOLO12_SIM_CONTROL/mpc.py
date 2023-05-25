@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
-from SOLO12_SIM_CONTROL.utils import zero_filter, percentage_look_ahead, look_ahead
+from SOLO12_SIM_CONTROL.utils import *
 
 
 class MPC_THREAD(threading.Thread):
@@ -32,6 +32,7 @@ class MPC(object):
         self.lookahead = lookahead if lookahead else 600
         self.next_traj_step = 0
         self.hz = hz
+        self.decimal_precision = math.log10(hz)
     
     def combine(self):
         """Combines the old and new csv trajectories together
@@ -46,6 +47,7 @@ class MPC(object):
         combined_df = np.concatenate((df_old, df_new), axis=0)
         combined_df = pd.DataFrame(combined_df)
         combined_df.to_csv(self.new_traj, index=False, header=None)
+        # breakpoint()
         # print("current RUN STEP2-> ", self.cutoff_idx)
         # print("current runtime2-> ",  self.last_timestep)
         # print(f"Combined time -> {time.process_time() - time_combine}")
@@ -63,15 +65,38 @@ class MPC(object):
         Returns:
             self.args (dic) : input argument to Towr script
         """
-        self._step()
+       
         _state_dic = self._state()
         self.args['-s'] = _state_dic["CoM"]
         self.args['-s_ang'] = _state_dic['orientation']
+        # breakpoint()
+        # T_body = transformation_inv(transformation_mtx(_state_dic["CoM"], global_cfg.ROBOT_CFG.linkWorldOrientation))
+        # breakpoint()
         self.args['-e1'] = _state_dic["FL_FOOT"]
+        self.args['-e1'][2] = 0
         self.args['-e2'] = _state_dic["FR_FOOT"]
+        self.args['-e2'][2] = 0
         self.args['-e3'] = _state_dic["HL_FOOT"]
+        self.args['-e3'][2] = 0
         self.args['-e4'] = _state_dic["HR_FOOT"]
+        self.args['-e4'][2] = 0
+        # self.args['-n'] = 't'
+        # args['-e1'][2] = _state_dic["FL_FOOT"][2]
+        # self.args['-e1'] = list(transformation_multi(T_body, _state_dic["FL_FOOT"]))
+        # args['-e1'][2] = _state_dic["FL_FOOT"][2]
+        # self.args['-e2'] = list(transformation_multi(T_body, _state_dic["FR_FOOT"]))
+        # args['-e2'][2] = _state_dic["FR_FOOT"][2]
+        # self.args['-e3'] = list(transformation_multi(T_body, _state_dic["HL_FOOT"]))
+        # args['-e3'][2] = _state_dic["HL_FOOT"][2]
+        # self.args['-e4'] = list(transformation_multi(T_body, _state_dic["HR_FOOT"]))
+        # args['-e4'][2] = _state_dic["HR_FOOT"][2]
+        # breakpoint()
+        # self.args['-e1'] = _state_dic["FL_FOOT"]
+        # self.args['-e2'] = _state_dic["FR_FOOT"]
+        # self.args['-e3'] = _state_dic["HL_FOOT"]
+        # self.args['-e4'] = _state_dic["HR_FOOT"]
         self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
+        self._step(_state_dic["CoM"])
         print("ARRGS", self.args)
         return self.args
 
@@ -79,20 +104,20 @@ class MPC(object):
         """
         Updates the state of the MPC loop
         """
-        self.cutoff_idx = global_cfg.RUN.step
-        self.last_timestep = global_cfg.ROBOT_CFG.runtime
+        self.cutoff_idx = int(global_cfg.RUN.step)
+        self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
 
     def update_timestep(self):
         """Update the timestep by one time unit
         """
         self.last_timestep += 1/self.hz
 
-    def _step(self):
+    def _step(self, CoM):
         """
         Updates step vector toward robot's goal depending on the stepping size
         """
         step_size = self.args['step_size']
-        global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
+        global_pos = np.array(CoM)
         goal = global_cfg.ROBOT_CFG.robot_goal
         diff_vec = np.clip(goal - global_pos, -step_size, step_size)
         diff_vec[2] = 0.0
@@ -111,9 +136,9 @@ class MPC(object):
         state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
              "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
         with open(self.current_traj, "r", newline='') as f:
-            # global_cfg.RUN._wait = True
-            # breakpoint()
-            # global_cfg.RUN._wait = False
+            print(f"=============NEXT SEARCH QUERY [{self.last_timestep}]=============")
+            print(f"=============OLD TRAJ START INDEX QUERY [{self.cutoff_idx}]=============")
+            print(f"=============OLD TRAJ END INDEX QUERY [{self.next_traj_step}]=============")
             reader, step = look_ahead(f, self.last_timestep, self.lookahead)
             row = next(reader)[1:]
             state["CoM"] = [float(_) for _ in row[0:3]]

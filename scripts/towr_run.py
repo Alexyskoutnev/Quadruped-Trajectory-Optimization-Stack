@@ -12,7 +12,7 @@ import run
 import numpy as np
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
-from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter
+from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter, transformation_mtx, transformation_inv, transformation_multi
 from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
 from SOLO12_SIM_CONTROL.logger import Logger
 
@@ -74,10 +74,10 @@ def _step(args):
     args['-s'] = [0, 0, 0.24]
     # args['-s'][2] = 0.24
     args['-s_ang'] = global_cfg.ROBOT_CFG.linkWorldOrientation
-    args['-e1'] = global_cfg.ROBOT_CFG.EE['FL_FOOT']
-    args['-e2'] = global_cfg.ROBOT_CFG.EE['FR_FOOT']
-    args['-e3'] = global_cfg.ROBOT_CFG.EE['HL_FOOT']
-    args['-e4'] = global_cfg.ROBOT_CFG.EE['HR_FOOT']
+    args['-e1'] = list(global_cfg.ROBOT_CFG.EE['FL_FOOT'])
+    args['-e2'] = list(global_cfg.ROBOT_CFG.EE['FR_FOOT'])
+    args['-e3'] = list(global_cfg.ROBOT_CFG.EE['HL_FOOT'])
+    args['-e4'] = list(global_cfg.ROBOT_CFG.EE['HR_FOOT'])
     args['-g'] = list(global_pos + diff_vec)
     args['-g'][2] = 0.24
     return args
@@ -114,9 +114,11 @@ def _update(args, log):
     while (True):
             mpc.update()
             args = mpc.plan(args)
-            towr_runtime_0 = time.time()
+            towr_runtime_0 = time.process_time()
             TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-            print(f'TOWR Execution time: {time.time() - towr_runtime_0:.03f} seconds')
+            # breakpoint()
+            towr_runtime_1 = time.process_time()
+            print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:.03f} seconds')
             p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
             if p_status.returncode == 0:
                 global_cfg.RUN._wait = True
@@ -159,7 +161,7 @@ def _run(args):
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.process_time()
-    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:.3f} seconds')
+    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:0.3f} seconds')
     if p.returncode == 0:
         print("TOWR found a trajectory")
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
@@ -215,7 +217,7 @@ if __name__ == "__main__":
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
     parser.add_argument('-step', '--step', type=float, default=0.5)
-    parser.add_argument('-l', '--look', type=float, default=600)
+    parser.add_argument('-l', '--look', type=float, default=750)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,

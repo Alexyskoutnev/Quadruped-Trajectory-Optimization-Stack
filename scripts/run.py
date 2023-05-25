@@ -111,7 +111,7 @@ def simulation():
                 _, _, joint_toq = ROBOT.default_stance_control()
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
-    for i in range (100000):
+    for i in range (1000000):
         if sim_cfg['mode'] == "bezier":
             if sim_cfg['py_interface']:
                 pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
@@ -136,7 +136,6 @@ def simulation():
                 ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
             elif ROBOT.mode == 'torque':
                 ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
-
             p.stepSimulation()
             ROBOT.time_step += 1
 
