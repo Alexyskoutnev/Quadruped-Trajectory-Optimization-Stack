@@ -107,33 +107,28 @@ def _update(args, log):
     """
     _wait = False
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
-
-    # mpc_update_th = MPC_THREAD(mpc)
-    # mpc_update_th.start()
-
     while (True):
             mpc.update()
-            args = mpc.plan(args)
-            towr_runtime_0 = time.process_time()
-            TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-            # breakpoint()
-            towr_runtime_1 = time.process_time()
-            print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:.03f} seconds')
-            p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-            if p_status.returncode == 0:
+            if not _wait:
+                args = mpc.plan(args)
+                towr_runtime_0 = time.process_time()
+                TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+                towr_runtime_1 = time.process_time()
+                print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:.03f} seconds')
+                p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+                _wait = True
+
+            elif p_status.returncode == 0 and mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
-                _wait = False
                 p = subprocess.run(shlex.split(scripts['data'])) 
                 mpc.update()
                 mpc.combine()
                 p = subprocess.run(shlex.split(scripts['copy_tmp']))
                 global_cfg.RUN._update = True
                 global_cfg.RUN._wait = False
+                _wait = False
                 while (not global_cfg.RUN._update):
                             print("towr thread waiting")
-            else:
-                print("Error in finding next Trajectory")
-
             
 def _cmd_args(args):
 
@@ -217,12 +212,14 @@ if __name__ == "__main__":
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
     parser.add_argument('-step', '--step', type=float, default=0.5)
+    parser.add_argument('-forced_steps', '--f_steps', type=int, default=550)
     parser.add_argument('-l', '--look', type=float, default=750)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
             "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
-            "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look}
+            "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
+            "f_steps": p_args.f_steps}
     if test:
         test_mpc(args)
     else:

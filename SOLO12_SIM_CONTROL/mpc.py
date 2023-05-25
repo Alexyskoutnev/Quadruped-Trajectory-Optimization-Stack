@@ -40,21 +40,11 @@ class MPC(object):
         time_combine = time.process_time()
         _old_traj = open(self.current_traj, "r")
         _new_traj = open(self.new_traj, "r")
-        # print("current RUN STEP1-> ", self.cutoff_idx)
-        # print("current runtime1-> ",  self.last_timestep)
         df_old = self._truncate_csv(_old_traj).to_numpy()
         df_new = pd.read_csv(self.new_traj).to_numpy()
         combined_df = np.concatenate((df_old, df_new), axis=0)
         combined_df = pd.DataFrame(combined_df)
         combined_df.to_csv(self.new_traj, index=False, header=None)
-        # breakpoint()
-        # print("current RUN STEP2-> ", self.cutoff_idx)
-        # print("current runtime2-> ",  self.last_timestep)
-        # print(f"Combined time -> {time.process_time() - time_combine}")
-        
-        
-        
-        # breakpoint()
 
     def plan(self, args):
         """
@@ -69,32 +59,10 @@ class MPC(object):
         _state_dic = self._state()
         self.args['-s'] = _state_dic["CoM"]
         self.args['-s_ang'] = _state_dic['orientation']
-        # breakpoint()
-        # T_body = transformation_inv(transformation_mtx(_state_dic["CoM"], global_cfg.ROBOT_CFG.linkWorldOrientation))
-        # breakpoint()
         self.args['-e1'] = _state_dic["FL_FOOT"]
-        self.args['-e1'][2] = 0
         self.args['-e2'] = _state_dic["FR_FOOT"]
-        self.args['-e2'][2] = 0
         self.args['-e3'] = _state_dic["HL_FOOT"]
-        self.args['-e3'][2] = 0
         self.args['-e4'] = _state_dic["HR_FOOT"]
-        self.args['-e4'][2] = 0
-        # self.args['-n'] = 't'
-        # args['-e1'][2] = _state_dic["FL_FOOT"][2]
-        # self.args['-e1'] = list(transformation_multi(T_body, _state_dic["FL_FOOT"]))
-        # args['-e1'][2] = _state_dic["FL_FOOT"][2]
-        # self.args['-e2'] = list(transformation_multi(T_body, _state_dic["FR_FOOT"]))
-        # args['-e2'][2] = _state_dic["FR_FOOT"][2]
-        # self.args['-e3'] = list(transformation_multi(T_body, _state_dic["HL_FOOT"]))
-        # args['-e3'][2] = _state_dic["HL_FOOT"][2]
-        # self.args['-e4'] = list(transformation_multi(T_body, _state_dic["HR_FOOT"]))
-        # args['-e4'][2] = _state_dic["HR_FOOT"][2]
-        # breakpoint()
-        # self.args['-e1'] = _state_dic["FL_FOOT"]
-        # self.args['-e2'] = _state_dic["FR_FOOT"]
-        # self.args['-e3'] = _state_dic["HL_FOOT"]
-        # self.args['-e4'] = _state_dic["HR_FOOT"]
         self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
         self._step(_state_dic["CoM"])
         print("ARRGS", self.args)
@@ -159,7 +127,10 @@ class MPC(object):
             lookahead (float): upper bound cutoff for old trajectory
         """
         df = pd.read_csv(file)
-        start_idx = self.cutoff_idx - 1
+        if self.cutoff_idx <= 0:
+            start_idx = self.cutoff_idx = 0
+        else:
+            start_idx = self.cutoff_idx - 1
         end_idx = self.next_traj_step
         _new_csv = df.iloc[start_idx:end_idx]
         return _new_csv
