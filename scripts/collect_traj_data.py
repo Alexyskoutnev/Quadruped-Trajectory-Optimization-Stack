@@ -43,11 +43,11 @@ def plot(t, *joints):
         plt.close()
     # plt.show()
 
-def update_file_name(file, cfg):
-    step_period = str(cfg['step_period'])
-    velocity = str(cfg['velocity'])
-    HZ = str(cfg['HZ'])
-    file_name = file + "_velocity_" + velocity + "_step_period_" + step_period + "_HZ_" + HZ + ".csv"
+def update_file_name(file, cfg, sim_cfg):
+    step_period = str(sim_cfg['step_period'])
+    velocity = str(sim_cfg['velocity'])
+    MODE = str(cfg['mode'])
+    file_name = file + "_velocity_" + velocity + "_step_period_" + step_period + "_cmode_" + MODE + ".csv"
     return file_name
 
 if __name__ == "__main__":
@@ -62,13 +62,13 @@ if __name__ == "__main__":
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
-        FILE = update_file_name(TRAJ, sim_cfg)
+        FILE = update_file_name(TRAJ, cfg, sim_cfg)
     if sim_cfg['mode'] == 'bezier':
         _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
         offsets = np.array(cfg['offsets'])
         trot_2_stance_ratio = cfg['trot_2_stance_ratio']
         velocity, angle, angle_velocity, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
-        FILE = update_file_name(BEZIER, sim_cfg)
+        FILE = update_file_name(BEZIER, cfg, sim_cfg)
 
     with open(FILE, 'w', newline='') as file:
         writer = csv.writer(file) 
@@ -83,7 +83,6 @@ if __name__ == "__main__":
                         joint_vel = np.zeros(12)
                         joint_toq = np.zeros(12)
                     elif ROBOT.mode == 'PD':
-                        joint_vel = combine(tuple(joint_vel_FL), tuple(joints_vel_FR), tuple(joints_vel_HL), tuple(joints_vel_HR))
                         joint_toq = np.zeros(12)
                     elif ROBOT.mode == "torque":
                         pass

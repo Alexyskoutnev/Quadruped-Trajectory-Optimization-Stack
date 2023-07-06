@@ -6,7 +6,7 @@ mode : "bezier"
 # mode : "track_imitation"
 # enviroment : "testing"
 enviroment : "plane"
-py_interface : False
+py_interface : True
 fix-base : False
 velocity: 1.0
 angle_velocity : 0.0
