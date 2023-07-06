@@ -29,7 +29,7 @@ cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 TOWR = "./data/traj/towr.csv"
 TRACK = "./data/traj/traj_thirdparty/jointStates.csv"
-TRACK_imitation = "./data/traj/dance.csv"
+TRACK_imitation = "./data/traj/testing_gait.csv"
 HZ = sim_cfg['HZ']
 
 # global keypressed
@@ -60,6 +60,8 @@ def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 
 def keypress():
+    """thread to handle keyboard I/O
+    """
     global key_press_init_phase
     while True:
         print("Press q to exit")
@@ -70,17 +72,18 @@ def keypress():
             break
 
 def simulation():
+    """Main simulation interface that runs the bullet engine
+    
+    """
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
     Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'])
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
-    if sim_cfg['py_interface']:
-        pybullet_interface = PybulletInterface()
-        pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
-    elif sim_cfg['enviroment'] == "testing":
-        velocity, angle_velocity , angle, stepPeriod = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_per_sec']
+    """============SIM-CONFIGURATION============"""
+    if sim_cfg['enviroment'] == "testing":
+        velocity, angle_velocity , angle, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_per_sec']
     if sim_cfg['mode'] == "towr" or sim_cfg['mode'] == "visual_track":
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
@@ -93,13 +96,17 @@ def simulation():
         reader =csv.reader(csv_file, delimiter=' ')
     elif sim_cfg['mode'] == "track_imitation":
         csv_file = open(TRACK_imitation, 'r', newline='')
-        reader =csv.reader(csv_file, delimiter=',')
-
-    offsets = np.array([0.5, 0.0, 0.0, 0.5])
-    trot_2_stance_ratio = 0.5
+        reader = csv.reader(csv_file, delimiter=',')
+    elif sim_cfg['mode'] == 'bezier':
+        offsets = np.array(cfg['offsets'])
+        trot_2_stance_ratio = cfg['trot_2_stance_ratio']
+        velocity, angle, angle_velocity, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
+    if sim_cfg['py_interface']:
+        pybullet_interface = PybulletInterface()
+        pos, angle, velocity, angle_velocity , angle, step_period = pybullet_interface.robostates(ROBOT.robot)
+    """=========================================="""
     cmd = np.zeros((12, 1))
     keypress_io = Thread(target=keypress)
-    stance = False
     if init_phase:
         keypress_io.start()
         key_press_init_phase = True
@@ -111,31 +118,15 @@ def simulation():
                 _, _, joint_toq = ROBOT.default_stance_control()
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
+
     for i in range (1000000):
+        
         if sim_cfg['mode'] == "bezier":
             if sim_cfg['py_interface']:
-                pos, angle, velocity, angle_velocity , angle,  stepPeriod = pybullet_interface.robostates(ROBOT.robot)
-            gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, stepPeriod, trot_2_stance_ratio)
-            joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(gait_traj['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
-            elif ROBOT.mode == 'torque':
-                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_toq_FL[0:3])
-            joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(gait_traj['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
-            elif ROBOT.mode == 'torque':
-                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_toq_FR[3:6])
-            joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(gait_traj['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
-            elif ROBOT.mode == 'torque':
-                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_toq_HL[6:9])
-            joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(gait_traj['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
-            elif ROBOT.mode == 'torque':
-                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
+                pos, angle, velocity, angle_velocity , angle,  step_period = pybullet_interface.robostates(ROBOT.robot)
+            gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio)
+            joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+            ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
             p.stepSimulation()
             ROBOT.time_step += 1
 

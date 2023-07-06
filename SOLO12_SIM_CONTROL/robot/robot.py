@@ -44,7 +44,7 @@ class SOLO12(object):
         self.q_init = np.array(config['q_init'])
         self.q_init16 = q_init_16_arr(self.q_init)
         self.EE = {'FL_FOOT': None, 'FR_FOOT': None, "HL_FOOT": None, "HR_FOOT": None}
-        self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15}
+        self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15, 'all': (3, 7, 11, 15)}
         self.time_step = 0
         self.t_max = config['t_max']
         self.modes = {"P": p.POSITION_CONTROL, "PD": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
@@ -108,29 +108,59 @@ class SOLO12(object):
         """
         return self.time_step * self._time_step
 
-    def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_f=None):
+    def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_toq=None):
+        """Function to interface with joint state for the bullet engine
+
+        Args:
+            jointsInx (list[int]): the joints in effect in the bullet simulator
+            controlMode (string): the control scheme to use
+            cmd_pose (tuple(floats)): desired joint state
+            cmd_vel (tuple(floats)): desired joint velocity state. Defaults to None.
+            cmd_toq (tuple(floats)): desired torque state. Defaults to None.
+        """
         if 'P' == controlMode or 'PD' == controlMode:
-            # maxForces = np.ones(len(jointsInx))*5
-            maxForces = np.ones(len(jointsInx))*2
             posGains = np.ones(len(jointsInx))*self._kp
             p.setJointMotorControlArray(self.robot, jointsInx, self.modes['P'], cmd_pose, positionGains=posGains)
+        elif 'PD' == controlMode:
+            posGains = np.ones(len(jointsInx))*self._kp
+            velGains = np.ones(len(jointsInx))*self._kd
+            p.setJointMotorControlArray(self.robot, jointsInx, self.modes['PD'], cmd_pose, cmd_vel, positionGains=posGains, velocityGains=velGains)
         elif 'torque' == controlMode:
-            p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_pose)
+            p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_toq)
 
-    def get_endeffector_pose(self):
-        EE1, EE2, EE3, EE4 = p.getLinkStates(self.robot,  self.EE_index.values())
-        return {"FL_FOOT": link_info(EE1), "FR_FOOT": link_info(EE2), "HL_FOOT": link_info(EE3), "HR_FOOT": link_info(EE4)}
-    
-    def control(self, cmd, index, mode="P"):
+    def set_joint_control_multi(self, indices, controlMode, cmd_q, cmd_vel=None, cmd_toq=None):
         """_summary_
 
         Args:
-            cmd (_type_): _description_
-            index (_type_): _description_
-            mode (str, optional): _description_. Defaults to "P".
+            jointsInx (_type_): _description_
+            controlMode (_type_): _description_
+            cmd_pose (_type_): _description_
+            cmd_vel (_type_, optional): _description_. Defaults to None.
+            cmd_f (_type_, optional): _description_. Defaults to None.
+        """
+        for i in range(0, 12, 3):
+            idx = indices[i:i+3]
+            q_cmd_temp = cmd_q[i:i+3]
+            vel_cmd_temp = cmd_vel[i:i+3]
+            toq_cmd_temp = cmd_toq[i:i+3]
+            self.setJointControl(idx, controlMode, q_cmd_temp, vel_cmd_temp, toq_cmd_temp)
+
+    def get_endeffector_pose(self):
+        EE1, EE2, EE3, EE4 = p.getLinkStates(self.robot,  self.EE_index['all'])
+        return {"FL_FOOT": link_info(EE1), "FR_FOOT": link_info(EE2), "HL_FOOT": link_info(EE3), "HR_FOOT": link_info(EE4)}
+    
+    def control(self, cmd, index, mode="P"):
+        """Function that receives desired command in a particular control mode and
+           returns the resulting joint position, joint velocity, and joint torque
+           for each endeffector
+
+        Args:
+            cmd (dict): dict of desired position, vel, toq of each endeffector
+            index (int): the index of the endeffector
+            mode (str, optional): The control scheme of the robot. Defaults to "P".
 
         Returns:
-            _type_: _description_
+            tuple(np.array): returns a tuple of realized joint angle, joint velocity, and joint torques
         """
         q_cmd = None
         q_vel = None
@@ -143,18 +173,31 @@ class SOLO12(object):
             q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
-    # def _inv_dynamics_multi(self, cmds, indices):
-    #     q_cmd, q_vel = self.inv_kinematics(cmds, indices, mode = "PD")
-    #     q_cmd = np.array(q_cmd).reshape(12)
-    #     q_vel = np.array(q_vel).reshape(12)
-    #     q_mes = np.zeros(12)
-    #     v_mes = np.zeros(12)
-    #     jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
-    #     q_mes[:] = [state[0] for state in jointStates]
-    #     v_mes[:] = [state[1] for state in jointStates]
-    #     q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
-    #     return q_cmd, q_vel, q_toq
+    def control_multi(self, cmds, indices, mode="P"):
+        """Helper function to find the control outputs for each end-effector
 
+        Args:
+            cmds (dict): dict of each endeffector ["FL_FOOT", "FR_FOOT", "HL_FOOT", "HR_FOOT"] desired command
+            indices (list): list of index position of each endeffector
+            mode (str, optional): the control mode of the robot ['P', 'PD', 'torque']. Defaults to "P".
+
+        Returns:
+            tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
+        """
+        q_cmd = np.zeros(12)
+        q_vel = np.zeros(12)
+        q_toq = np.zeros(12)
+        i = 0
+        for cmd, idx in zip(cmds.values(), indices):
+            q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
+            if (q_cmd_temp is not None):
+                q_cmd[i:i+3] = q_cmd_temp[i:i+3]
+            if (q_vel_temp is not None):
+                q_vel[i:i+3] = q_vel_temp[i:i+3]
+            if (q_toq_temp is not None):
+                q_toq[i:i+3] = q_toq_temp[i:i+3]
+            i += 3
+        return q_cmd, q_vel, q_toq
 
     def inv_dynamics(self, cmd, index):
         """Inverse dynamics controller based on joint angle and velocity commands 

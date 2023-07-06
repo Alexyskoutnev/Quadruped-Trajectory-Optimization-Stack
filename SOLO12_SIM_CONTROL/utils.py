@@ -9,7 +9,7 @@ def create_cmd(q_ang=None, q_vel=None):
     cmd = {"FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
     if q_ang is not None:
-        assert(len(q_ang) == 12)
+        assert(len(q_ang) >= 12)
         for i in range(4):
             if i == 0:
                 cmd['FL_FOOT']['P'] = q_ang[0:3]
