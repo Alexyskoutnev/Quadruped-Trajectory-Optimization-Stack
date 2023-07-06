@@ -8,6 +8,6 @@ docker run -it solo12
 ```
 conda create --name soloSim python=3.10
 conda activate soloSim
-conda install pybullet
+conda install -c conda-forge pybullet
 pip3 install -e .
 ```
