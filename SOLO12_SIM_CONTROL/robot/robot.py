@@ -7,6 +7,14 @@ from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, con
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
 
 def links_to_id(robot):
+    """Helper function to retrieve the joint info of a robot into a dictionary
+
+    Args:
+        robot (pybullet obj): pybullet robot object
+
+    Returns:
+        dict: dictionary filled with corresponding link name and id
+    """
     _link_name_to_index = {p.getBodyInfo(robot)[0].decode('UTF-8'):-1,}
     for _id in range(p.getNumJoints(robot)):
         _name = p.getJointInfo(robot, _id)[12].decode('UTF-8')
@@ -26,11 +34,29 @@ def q_init_16_arr(q_init):
     return q_init_new
 
 def base_frame_tf(mtx, pt):
+    """Helper function to transform a vec from one frame to another
+
+    Args:
+        mtx (np.array): transformation matrix
+        pt (np.array): position vector
+
+    Returns:
+        np.array: transformed position vector 
+    """
     vec = np.concatenate((np.array([pt[0]]), np.array([pt[1]]),np.array([pt[2]]), np.ones(1)))
     tf_vec = mtx @ vec
     return tf_vec[:3]
 
 def shift_z(v, shift):
+    """Helper function to shift a 3-idx vec up or down by z-coord amount
+
+    Args:
+        v (np.array or list): 3d vec to shift
+        shift (float or int): scalar value to shift the z-coord
+
+    Returns:
+        np.array or list: resulting 3d vec from shift
+    """
     v[2] += shift
     return v
         
@@ -81,11 +107,21 @@ class SOLO12(object):
         self._time_step = config['timestep']
 
     def CoM_states(self):
+        """Returns the Center of mass and orientation of robot
+
+        Returns:
+            dict: The CoM and orientation of robot
+        """
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         return {"linkWorldPosition": CoM_pos, "linkWorldOrientation": CoM_angle}
 
     @property
     def state(self):
+        """Return the known state of the robot
+
+        Returns:
+            dict: return the current CoM, orientation, endeffector positions
+        """
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         EE = self.get_endeffector_pose()
         return {"COM": CoM_pos, "linkWorldOrientation": CoM_angle, "FL_FOOT": EE['FL_FOOT']['linkWorldPosition'], 
@@ -93,10 +129,20 @@ class SOLO12(object):
     
     @property
     def jointangles(self):
+        """The current joint angle of each motor
+
+        Returns:
+            np.array: 12-idx array of joint angles
+        """
         return self._joint_ang
 
     @property
     def jointstate(self):
+        """Returns the joint angle, velocity, and torque of each motor
+
+        Returns:
+            dict: 12-idx array of joint angle, joint velocity, and joint torque
+        """
         return {'q_cmd': self._joint_ang, "q_vel": self._joint_vel, "q_toq": self._joint_toq}
 
     @property
@@ -108,7 +154,7 @@ class SOLO12(object):
         """
         return self.time_step * self._time_step
 
-    def setJointControl(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_toq=None):
+    def set_joint_control(self, jointsInx, controlMode, cmd_pose, cmd_vel=None, cmd_toq=None):
         """Function to interface with joint state for the bullet engine
 
         Args:
@@ -129,23 +175,28 @@ class SOLO12(object):
             p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_toq)
 
     def set_joint_control_multi(self, indices, controlMode, cmd_q, cmd_vel=None, cmd_toq=None):
-        """_summary_
+        """Function to interface with joint states for the bullet engine
 
         Args:
-            jointsInx (_type_): _description_
-            controlMode (_type_): _description_
-            cmd_pose (_type_): _description_
-            cmd_vel (_type_, optional): _description_. Defaults to None.
-            cmd_f (_type_, optional): _description_. Defaults to None.
+            jointsInx (list[int]): the joints in effect in the bullet simulator
+            controlMode (string): the control scheme to use
+            cmd_pose (tuple(floats)): desired joint state
+            cmd_vel (tuple(floats)): desired joint velocity state. Defaults to None.
+            cmd_toq (tuple(floats)): desired torque state. Defaults to None.
         """
         for i in range(0, 12, 3):
             idx = indices[i:i+3]
             q_cmd_temp = cmd_q[i:i+3]
             vel_cmd_temp = cmd_vel[i:i+3]
             toq_cmd_temp = cmd_toq[i:i+3]
-            self.setJointControl(idx, controlMode, q_cmd_temp, vel_cmd_temp, toq_cmd_temp)
+            self.set_joint_control(idx, controlMode, q_cmd_temp, vel_cmd_temp, toq_cmd_temp)
 
     def get_endeffector_pose(self):
+        """Returns the current pose of each endeffector
+
+        Returns:
+            dict(np.array): The current 6d vec relating to the global position and orientation of each endeffector
+        """
         EE1, EE2, EE3, EE4 = p.getLinkStates(self.robot,  self.EE_index['all'])
         return {"FL_FOOT": link_info(EE1), "FR_FOOT": link_info(EE2), "HL_FOOT": link_info(EE3), "HR_FOOT": link_info(EE4)}
     
@@ -223,6 +274,17 @@ class SOLO12(object):
         return q_cmd, q_vel, q_toq
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
+        """Helper function that utilizes bullet inverse kinematics algorithm to find the optimal
+           joint position and joint velocity for multiple desired command
+
+        Args:
+            cmd (dict): dict filled with desired position, and velocity commands
+            index (int): the indices relating to the actuating joint
+            mode (str, optional): the control scheme used. Defaults to 'P'.
+
+        Returns:
+            tuple (float): returns the resulting joint positions and velocities from the inverse kinematics algorithm
+        """
         assert(len(indices) == 4)
         joint_position = np.zeros(12)
         joint_velocity = np.zeros(12)
@@ -240,6 +302,17 @@ class SOLO12(object):
         return joint_position
 
     def inv_kinematics(self, cmd, index, mode = 'P'):
+        """Helper function that utilizes bullet inverse kinematics algorithm to find the optimal
+           joint position and joint velocity for a single desired command
+
+        Args:
+            cmd (dict): dict filled with desired position, and velocity command
+            index (int): the index relating to the actuating joint
+            mode (str, optional): the control scheme used. Defaults to 'P'.
+
+        Returns:
+            tuple (float): returns the resulting joint position and velocity from the inverse kinematics algorithm
+        """
         joint_position = None
         joint_velocity = None
         if mode == 'P':
@@ -280,6 +353,7 @@ class SOLO12(object):
 
     def default_stance_control(self):
         """Robot default stance standing still
+
         Returns:
             q_cmd (np.array): Stance joint angles
             q_vel (np.array): Stance joint velocities
