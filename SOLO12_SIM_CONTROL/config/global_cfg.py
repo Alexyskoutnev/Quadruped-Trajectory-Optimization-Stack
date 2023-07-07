@@ -16,6 +16,7 @@ class RUN:
     _wait = False
     _stance = False
     TOWR_POS = [0, 0, 0]
+    _run_update_thread = True
 
 def print_vars(stream = sys.__stdout__):
     sys.stdout = stream

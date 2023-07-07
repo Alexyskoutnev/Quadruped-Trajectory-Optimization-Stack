@@ -9,6 +9,7 @@ from threading import Thread, Lock
 import csv
 
 import run
+import collect_towr_data
 import numpy as np
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
@@ -107,7 +108,7 @@ def _update(args, log):
     """
     _wait = False
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
-    while (True):
+    while (global_cfg.RUN._run_update_thread):
             mpc.update()
             time.sleep(0.01)
             if mpc.goal_diff < 0.05:
@@ -168,7 +169,10 @@ def _run(args):
         if p.returncode == 0:
             towr_thread = Thread(target=_update, args=(args, log))
             towr_thread.start()
-            run.simulation()
+            if args.get('record'):
+                run.simulation(args)
+            else:
+                run.simulation()
         else: 
             print("Error in copying Towr Trajectory")
     else:
@@ -219,12 +223,13 @@ if __name__ == "__main__":
     parser.add_argument('-step', '--step', type=float, default=0.5)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=550)
     parser.add_argument('-l', '--look', type=float, default=750)
+    parser.add_argument('-r', '--record', type=bool, default=False)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
             "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
-            "f_steps": p_args.f_steps}
+            "f_steps": p_args.f_steps, "record": p_args.record}
     if test:
         test_mpc(args)
     else:

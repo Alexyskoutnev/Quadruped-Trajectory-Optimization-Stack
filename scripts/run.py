@@ -25,9 +25,11 @@ import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"
 config_sim = "./data/config/simulation.yml"
+config_sim_record= "./data/config/simulation_towr_record.yml"
 cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 TOWR = "./data/traj/towr.csv"
+TOWR_TRAJ = "./data/traj/towr_traj"
 TRACK = "./data/traj/traj_thirdparty/jointStates.csv"
 TRACK_imitation = "./data/traj/testing_gait.csv"
 HZ = sim_cfg['HZ']
@@ -35,6 +37,13 @@ HZ = sim_cfg['HZ']
 # global keypressed
 key_press_init_phase = True
 mutex = Lock()
+
+def update_file_name(file, cfg, sim_cfg):
+    step_period = str(sim_cfg['step_period'])
+    velocity = str(sim_cfg['velocity'])
+    MODE = str(cfg['mode'])
+    file_name = file +  "_cmode_" + MODE + ".csv"
+    return file_name
 
 
 def setup_enviroment():
@@ -71,7 +80,7 @@ def keypress():
             key_press_init_phase = False
             break
 
-def simulation():
+def simulation(args={}):
     """Main simulation interface that runs the bullet engine
     
     """
@@ -91,6 +100,13 @@ def simulation():
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
+        if args.get('record'):
+            # sim_cfg = yaml.safe_load(open(config_sim_record, 'r'))
+            FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
+            file = open(FILE, 'w', newline='')
+            writer = csv.writer(file) 
+            record_timestep = 0
+            
     elif sim_cfg['mode'] == "track":
         csv_file = open(TRACK, 'r', newline='')
         reader =csv.reader(csv_file, delimiter=' ')
@@ -120,7 +136,7 @@ def simulation():
                 p.stepSimulation()
 
     for i in range (1000000):
-        
+    
         if sim_cfg['mode'] == "bezier":
             if sim_cfg['py_interface']:
                 pos, angle, velocity, angle_velocity , angle,  step_period = pybullet_interface.robostates(ROBOT.robot)
@@ -150,12 +166,13 @@ def simulation():
                 log.write("==========STANCE==========")
                 global_cfg.RUN._stance = True
             
-            ## Logging ##
+            ##====================Logging====================##
             log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
             log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
             log.write(f"Global POS -> {global_cfg.ROBOT_CFG.linkWorldPosition}\n")
             log.write(f"=========Global Vars=========\n")
             log.write(f"{global_cfg.print_vars(log.log)}\n")
+            ##===============================================##
 
             if global_cfg.RUN._stance:
                 _, _, joint_toq = ROBOT.default_stance_control()
@@ -163,6 +180,15 @@ def simulation():
             else:
                 joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                 ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+
+                if args.get('record'):
+                    csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
+                    writer.writerow(csv_entry)
+                    record_timestep += 1
+                    if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
+                        global_cfg.RUN._run_update_thread = False
+                        break
+                    
 
             p.stepSimulation()
             ROBOT.time_step += 1

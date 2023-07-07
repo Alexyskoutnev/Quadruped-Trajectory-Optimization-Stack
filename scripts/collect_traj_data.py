@@ -4,6 +4,7 @@ import os
 import sys
 import math
 import csv
+from threading import Thread, Lock
 
 #third party
 import pybullet as p
@@ -14,11 +15,11 @@ import matplotlib.pyplot as plt
 
 #project
 from SOLO12_SIM_CONTROL.robot.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv
-from SOLO12_SIM_CONTROL.gaitPlanner import Gait
-from SOLO12_SIM_CONTROL.simulation import Simulation
-from SOLO12_SIM_CONTROL.utils import combine
+from SOLO12_SIM_CONTROL.utils import *
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
+from SOLO12_SIM_CONTROL.simulation import Simulation
+from SOLO12_SIM_CONTROL.logger import Logger
+import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 config = "./data/config/solo12.yml"
 config_sim = "./data/config/simulation_traj_record.yml"
@@ -33,6 +34,8 @@ BEZIER = "./data/traj/bezier"
 NUM_TIME_STEPS = sim_cfg['NUM_TIME_STEPS']
 TIMESTEPS = sim_cfg['TIMESTEPS']
 HZ = sim_cfg['HZ']
+
+mutex = Lock()
 
 def plot(t, *joints):
     str_ = {0: "FL", 1: "FR", 2: "HL", 3: "HL"}
@@ -50,76 +53,75 @@ def update_file_name(file, cfg, sim_cfg):
     file_name = file + "_velocity_" + velocity + "_step_period_" + step_period + "_cmode_" + MODE + ".csv"
     return file_name
 
-if __name__ == "__main__":
+def _global_update(ROBOT, kwargs):
+    global_cfg.ROBOT_CFG.robot = ROBOT
+    global_cfg.ROBOT_CFG.linkWorldPosition = list(kwargs['COM'])
+    global_cfg.ROBOT_CFG.linkWorldOrientation = list(p.getEulerFromQuaternion(kwargs['linkWorldOrientation']))
+    global_cfg.ROBOT_CFG.EE['FL_FOOT'] = list(kwargs['FL_FOOT'])
+    global_cfg.ROBOT_CFG.EE['FR_FOOT'] = list(kwargs['FR_FOOT'])
+    global_cfg.ROBOT_CFG.EE['HL_FOOT'] = list(kwargs['HL_FOOT'])
+    global_cfg.ROBOT_CFG.EE['HR_FOOT'] = list(kwargs['HR_FOOT'])
+    global_cfg.ROBOT_CFG.runtime = ROBOT.time
+    global_cfg.RUN.step += 1
+    global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
+
+def simulation():
     itr = 0
     Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'])
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
-    gait = Gait(ROBOT)
-    if sim_cfg['mode'] == "towr":
-        csv_file = open(TOWR, 'r', newline='')
-        reader = csv.reader(csv_file, delimiter=',')
-        NUM_TIME_STEPS = sum(1 for row in reader)
-        csv_file = open(TOWR, 'r', newline='')
-        reader = csv.reader(csv_file, delimiter=',')
-        _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
-        FILE = update_file_name(TRAJ, cfg, sim_cfg)
-    if sim_cfg['mode'] == 'bezier':
-        _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
-        offsets = np.array(cfg['offsets'])
-        trot_2_stance_ratio = cfg['trot_2_stance_ratio']
-        velocity, angle, angle_velocity, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
-        FILE = update_file_name(BEZIER, cfg, sim_cfg)
+    csv_file = open(TOWR, 'r', newline='')
+    reader = csv.reader(csv_file, delimiter=',')
+    NUM_TIME_STEPS = sum(1 for row in reader)
+    csv_file = open(TOWR, 'r', newline='')
+    reader = csv.reader(csv_file, delimiter=',')
+    _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
+    FILE = update_file_name(TRAJ, cfg, sim_cfg)
 
     with open(FILE, 'w', newline='') as file:
         writer = csv.writer(file) 
         while (itr < NUM_TIME_STEPS):
-            if sim_cfg['mode'] == "bezier":
-                gait_traj, updated = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio, HZ, mode = "sim")
-                if updated:
-                    gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio)
-                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+            with open(TOWR, 'r', newline='') as csv_file:
+                try:
+                    if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
+                        time.sleep(0.001)
+                        continue
+                    elif global_cfg.RUN._update:
+                        print("============UPDATE STATE============")
+                        mutex.acquire()
+                        reader = csv.reader(open(TOWR, 'r', newline=''))
+                        mutex.release()
+                        global_cfg.RUN._update = False 
+                        global_cfg.RUN.step = 0
+                    EE_POSE = np.array([float(x) for x in next(reader)])[1:]
+                    global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
+                    global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
+                    towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
+                except StopIteration:
+                    pass
+                    global_cfg.RUN._stance = True
+
+                if global_cfg.RUN._stance:
+                    _, _, joint_toq = ROBOT.default_stance_control()
+                    p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
+                else:
+                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                     ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-                    if ROBOT.mode == 'P':
-                        joint_vel = np.zeros(12)
-                        joint_toq = np.zeros(12)
-                    elif ROBOT.mode == 'PD':
-                        joint_toq = np.zeros(12)
-                    elif ROBOT.mode == "torque":
-                        pass
-                    csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
-                    assert(csv_entry.shape[0] == 36)
-                    writer.writerow(csv_entry)
-                    itr += 1
-                    p.stepSimulation()
+    
+                csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
+                writer.writerow(csv_entry)
+                itr += 1
+
+                p.stepSimulation()
                 ROBOT.time_step += 1
-            elif sim_cfg['mode'] == "towr":
-                with open(TOWR, 'r', newline='') as csv_file:
-                    try: 
-                        EE_POSE = [float(x) for x in next(reader)]
-                    except StopIteration:
-                        break
-                    towr = {"FL_FOOT": {'P' : EE_POSE[0:3], 'D': np.zeros(3)}, "FR_FOOT": {'P': EE_POSE[3:6], 'D': np.zeros(3)}, 
-                            "HL_FOOT": {'P': EE_POSE[6:9], 'D' : np.zeros(3)}, "HR_FOOT": {'P': EE_POSE[9:12], 'D': np.zeros(3)}}
-                    joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(towr['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
-                    joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(towr['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
-                    joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(towr['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
-                    joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(towr['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
-                    joint_ang = combine(joint_ang_FL, joints_ang_FR, joints_ang_HL, joints_ang_HR)
-                    if ROBOT.mode == 'P':
-                        joint_vel = np.zeros(12)
-                        joint_toq = np.zeros(12)
-                    elif ROBOT.mode == 'PD':
-                        joint_vel = combine(tuple(joint_vel_FL), tuple(joints_vel_FR), tuple(joints_vel_HL), tuple(joints_vel_HR))
-                        joint_toq = combine(joint_toq_FL, joints_toq_FR, joints_toq_HL, joints_toq_HR)
-                    csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
-                    writer.writerow(csv_entry)
-                    itr += 1
+                _global_update(ROBOT, ROBOT.state)
+
             if (itr % 1000 == 0):
                 print(f"Collected [{itr}] / [{NUM_TIME_STEPS}]")
+
+
     print("DONE")
     p.disconnect()
     file.close()
+
+if __name__ == "__main__":
+    pass
