@@ -145,7 +145,7 @@ def simulation():
                 EE_POSE = np.array([float(x) for x in next(reader)])[1:]
                 global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                 global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
-                towr = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
+                towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
             except StopIteration:
                 log.write("==========STANCE==========")
                 global_cfg.RUN._stance = True
@@ -161,90 +161,25 @@ def simulation():
                 _, _, joint_toq = ROBOT.default_stance_control()
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
             else:
-                joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(towr['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
-                elif ROBOT.mode == 'torque':
-                    ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_toq_FL[0:3])
-                joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(towr['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
-                elif ROBOT.mode == 'torque':
-                    ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_toq_FR[3:6])
-                joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(towr['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
-                elif ROBOT.mode == 'torque':
-                        ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_toq_HL[6:9])
-                joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(towr['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-                if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
-                elif ROBOT.mode == 'torque':
-                    ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
 
             p.stepSimulation()
             ROBOT.time_step += 1
             _global_update(ROBOT, ROBOT.state)
-        elif sim_cfg['mode'] == "track":
-            try:
-                joints = np.array([float(x) for x in next(reader)])[3:]
-            except StopIteration:
-                break
-            revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
-            maxForces = np.ones(12)*20
-            posGains = np.ones(12)*1.0
-            p.setJointMotorControlArray(ROBOT.robot, revoluteJointIndices, 
-                                    controlMode=p.POSITION_CONTROL, targetPositions=joints, forces=maxForces, positionGains=posGains)   
-            p.stepSimulation()
-            ROBOT.time_step += 1
-
-        elif sim_cfg['mode'] == "visual_track":
-            try: 
-                EE_POSE = np.array([float(x) for x in next(reader)])
-                cmd = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
-            except StopIteration:
-                break
-            joint_position = ROBOT.inv_kinematics_multi(cmd, ROBOT.fixjointidx['idx'])
-            revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
-            orientation = p.getQuaternionFromEuler(cmd['COM'][3:6]) #Need to update the orientation for the robot 
-            p.resetBasePositionAndOrientation(ROBOT.robot, cmd['COM'][0:3], orientation)
-            for joint_ang, joint_indx in zip(joint_position, revoluteJointIndices):
-                p.resetJointState(ROBOT.robot, joint_indx, joint_ang)
-            p.stepSimulation()
-            ROBOT.time_step += 1
 
         elif sim_cfg['mode'] == "track_imitation":
             try:
                 ee_pose = np.array([float(x) for x in next(reader)])[3:]
             except StopIteration:
                 break
-            cmd = trajectory_2_world_frame(ROBOT,create_cmd(ee_pose))
-            joint_ang_FL, joint_vel_FL, joint_toq_FL = ROBOT.control(cmd['FL_FOOT'], ROBOT.EE_index['FL_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_ang_FL[0:3])
-            elif ROBOT.mode == 'torque':
-                ROBOT.setJointControl(ROBOT.jointidx['FL'], ROBOT.mode, joint_toq_FL[0:3])
-            joints_ang_FR, joints_vel_FR, joints_toq_FR = ROBOT.control(cmd['FR_FOOT'], ROBOT.EE_index['FR_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_ang_FR[3:6])
-            elif ROBOT.mode == 'torque':
-                ROBOT.setJointControl(ROBOT.jointidx['FR'], ROBOT.mode, joints_toq_FR[3:6])
-            joints_ang_HL, joints_vel_HL, joints_toq_HL = ROBOT.control(cmd['HL_FOOT'], ROBOT.EE_index['HL_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_ang_HL[6:9])
-            elif ROBOT.mode == 'torque':
-                    ROBOT.setJointControl(ROBOT.jointidx['BL'], ROBOT.mode, joints_toq_HL[6:9])
-            joints_ang_HR, joints_vel_HR, joints_toq_HR = ROBOT.control(cmd['HR_FOOT'], ROBOT.EE_index['HR_FOOT'], mode=ROBOT.mode)
-            if ROBOT.mode == 'P' or ROBOT.mode == 'PD':
-                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_ang_HR[9:12])
-            elif ROBOT.mode == 'torque':
-                ROBOT.setJointControl(ROBOT.jointidx['BR'], ROBOT.mode, joints_toq_HR[9:12])
+            traj = trajectory_2_world_frame(ROBOT, create_cmd(ee_pose))
+            joint_ang, joint_vel, joint_toq = ROBOT.control_multi(traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+            ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
             global_cfg.RUN.step += 1  
             p.stepSimulation()
             ROBOT.time_step += 1
-
     p.disconnect()
-
 
 if __name__ == "__main__":
     simulation()

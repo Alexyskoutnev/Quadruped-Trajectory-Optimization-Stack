@@ -6,8 +6,8 @@
   start_ang : [0.0, 0.0, 0.0, 1.0]
   t_max : 5.0
   # mode : "P" #position control
-  # mode : "torque"
-  mode : 'PD' #position-velocity control
+  mode : "torque"
+  # mode : 'PD' #position-velocity control
   endeffector_count: 4
   mass: 1.16115091
   ixx: 0.00578574

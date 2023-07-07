@@ -121,7 +121,6 @@ def trajectory_2_world_frame(robot, traj):
             if mode == "D":
                 tf_mtx = transformation_mtx(np.zeros(3), config['linkWorldOrientation'])
             vec = np.concatenate((np.array([traj[link][mode][0] + robot.shift[link][0]]), np.array([traj[link][mode][1] + robot.shift[link][1]]), np.array([traj[link][mode][2] + robot.shift[link][2]]), np.ones(1)))
-            # breakpoint()
             tf_vec = tf_mtx @ vec
             traj[link][mode] = tf_vec[:3]
     return traj
@@ -187,7 +186,7 @@ def towr_transform(robot, traj):
             traj['HR_FOOT']['P'][0] =  traj['HR_FOOT']['P'][0] - traj['COM'][0:3][0]
             traj['HR_FOOT']['P'][1] =  traj['HR_FOOT']['P'][1] - traj['COM'][0:3][1]
             traj['HR_FOOT']['P'][2] = abs(traj['HR_FOOT']['P'][2])
-
+    del traj['COM']
     return trajectory_2_world_frame(robot, traj)
 
 def norm(v1, v2):
