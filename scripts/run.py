@@ -65,7 +65,10 @@ def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.EE['HL_FOOT'] = list(kwargs['HL_FOOT'])
     global_cfg.ROBOT_CFG.EE['HR_FOOT'] = list(kwargs['HR_FOOT'])
     global_cfg.ROBOT_CFG.runtime = ROBOT.time
-    global_cfg.RUN.step += 1
+    if sim_cfg['enviroment'] == "plane":
+        global_cfg.RUN.step += sim_cfg['skip_forward_idx']
+    elif sim_cfg['enviroment'] == "towr_no_gui":
+        global_cfg.RUN.step += 1
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 
 def keypress():
@@ -90,9 +93,11 @@ def simulation(args={}):
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
+    last_loop_time = time.time()
+    sim_step = 0
     """============SIM-CONFIGURATION============"""
     if sim_cfg['enviroment'] == "testing":
-        velocity, angle_velocity , angle, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_per_sec']
+        velocity, angle_velocity , angle, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
     if sim_cfg['mode'] == "towr" or sim_cfg['mode'] == "visual_track":
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
@@ -101,7 +106,6 @@ def simulation(args={}):
         reader = csv.reader(csv_file, delimiter=',')
         _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
         if args.get('record'):
-            # sim_cfg = yaml.safe_load(open(config_sim_record, 'r'))
             FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
             file = open(FILE, 'w', newline='')
             writer = csv.writer(file) 
@@ -130,81 +134,99 @@ def simulation(args={}):
         key_press_init_phase = False
     
     while (key_press_init_phase):
+        loop_time = time.time() - last_loop_time
         if init_phase and key_press_init_phase:
                 _, _, joint_toq = ROBOT.default_stance_control()
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
+        if loop_time > sim_cfg['TIMESTEPS'] and args.get('record'):
+            csv_entry = ROBOT.csv_entry
+            writer.writerow(csv_entry)
+            last_loop_time = time.time()
 
-    for i in range (1000000):
-    
-        if sim_cfg['mode'] == "bezier":
-            if sim_cfg['py_interface']:
-                pos, angle, velocity, angle_velocity , angle,  step_period = pybullet_interface.robostates(ROBOT.robot)
-            gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio)
-            joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
-            ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-            p.stepSimulation()
-            ROBOT.time_step += 1
-
-        elif sim_cfg['mode'] == "towr":
-            try:
-                if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
-                    time.sleep(0.001)
-                    continue
-                elif global_cfg.RUN._update:
-                    print("============UPDATE STATE============")
-                    mutex.acquire()
-                    reader = csv.reader(open(TOWR, 'r', newline=''))
-                    mutex.release()
-                    global_cfg.RUN._update = False 
-                    global_cfg.RUN.step = 0
-                EE_POSE = np.array([float(x) for x in next(reader)])[1:]
-                global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
-                global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
-                towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
-            except StopIteration:
-                log.write("==========STANCE==========")
-                global_cfg.RUN._stance = True
-            
-            ##====================Logging====================##
-            log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
-            log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
-            log.write(f"Global POS -> {global_cfg.ROBOT_CFG.linkWorldPosition}\n")
-            log.write(f"=========Global Vars=========\n")
-            log.write(f"{global_cfg.print_vars(log.log)}\n")
-            ##===============================================##
-
-            if global_cfg.RUN._stance:
-                _, _, joint_toq = ROBOT.default_stance_control()
-                p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
-            else:
-                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+    while (sim_step < sim_cfg["NUM_TIME_STEPS"]):
+        loop_time = time.time() - last_loop_time
+        time_loop = time.time()
+        if loop_time > sim_cfg['TIMESTEPS']:
+            if sim_cfg['mode'] == "bezier":
+                if sim_cfg['py_interface']:
+                    pos, angle, velocity, angle_velocity , angle,  step_period = pybullet_interface.robostates(ROBOT.robot)
+                gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio)
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                 ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                p.stepSimulation()
+                ROBOT.time_step += 1
+
+            elif sim_cfg['mode'] == "towr":
+                try:
+                    if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
+                        time.sleep(0.001)
+                        continue
+                    elif global_cfg.RUN._update:
+                        print("============UPDATE STATE============")
+                        mutex.acquire()
+                        reader = csv.reader(open(TOWR, 'r', newline=''))
+                        mutex.release()
+                        global_cfg.RUN._update = False 
+                        global_cfg.RUN.step = 0
+                    if sim_cfg['enviroment'] == "plane":
+                        for _ in range(sim_cfg['skip_forward_idx']):
+                            next(reader)
+                    EE_POSE = np.array([float(x) for x in next(reader)])[1:]
+                    global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
+                    global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
+                    towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
+                except StopIteration:
+                    log.write("==========STANCE==========")
+                    global_cfg.RUN._stance = True
+                
+                ##====================Logging====================##
+                log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
+                log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
+                log.write(f"Global POS -> {global_cfg.ROBOT_CFG.linkWorldPosition}\n")
+                log.write(f"=========Global Vars=========\n")
+                log.write(f"{global_cfg.print_vars(log.log)}\n")
+                ##===============================================##
+
+                if global_cfg.RUN._stance:
+                    _, _, joint_toq = ROBOT.default_stance_control()
+                    p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
+                else:
+                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                    ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
 
                 if args.get('record'):
-                    csv_entry = np.hstack([joint_ang, joint_vel, joint_toq])
+                    csv_entry = ROBOT.csv_entry
                     writer.writerow(csv_entry)
                     record_timestep += 1
                     if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
                         global_cfg.RUN._run_update_thread = False
                         break
-                    
+                        
 
-            p.stepSimulation()
-            ROBOT.time_step += 1
-            _global_update(ROBOT, ROBOT.state)
+                p.stepSimulation()
+                ROBOT.time_step += 1
+                _global_update(ROBOT, ROBOT.state)
 
-        elif sim_cfg['mode'] == "track_imitation":
-            try:
-                ee_pose = np.array([float(x) for x in next(reader)])[3:]
-            except StopIteration:
-                break
-            traj = trajectory_2_world_frame(ROBOT, create_cmd(ee_pose))
-            joint_ang, joint_vel, joint_toq = ROBOT.control_multi(traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
-            ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-            global_cfg.RUN.step += 1  
-            p.stepSimulation()
-            ROBOT.time_step += 1
+            elif sim_cfg['mode'] == "track_imitation":
+                try:
+                    ee_pose = np.array([float(x) for x in next(reader)])[3:]
+                except StopIteration:
+                    break
+                traj = trajectory_2_world_frame(ROBOT, create_cmd(ee_pose))
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                global_cfg.RUN.step += 1  
+                p.stepSimulation()
+                ROBOT.time_step += 1
+
+            last_loop_time = time.time()
+            sim_step += 1
+            # print(f"runtime: {time.time() - time_loop}")
+        else:
+            continue
+
+        
     p.disconnect()
 
 if __name__ == "__main__":

@@ -246,7 +246,7 @@ def percentage_look_ahead(file, percent=0.5):
         next(reader)
     return reader
 
-def look_ahead(file, start_time=0.0, timesteps=600, decimal_roundoff=2):
+def look_ahead(file, start_time=0.0, timesteps=6000, decimal_roundoff=3):
     reader = csv.reader(file)
     stop_idx = 0
     while (True):

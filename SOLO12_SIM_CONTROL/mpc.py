@@ -22,14 +22,14 @@ class MPC_THREAD(threading.Thread):
 
 class MPC(object):
 
-    def __init__(self, args, current_traj, new_traj, lookahead=None, hz=100) -> None:
+    def __init__(self, args, current_traj, new_traj, lookahead=None, hz=1000) -> None:
         self.args = args
         self.current_traj = current_traj
         self.current_traj_temp = "/tmp/towr_old_temp.csv"
         self.new_traj = new_traj
         self.cutoff_idx = 0
         self.last_timestep = 0.0
-        self.lookahead = lookahead if lookahead else 600
+        self.lookahead = lookahead if lookahead else 6000
         self.next_traj_step = 0
         self.hz = hz
         self.decimal_precision = math.log10(hz)

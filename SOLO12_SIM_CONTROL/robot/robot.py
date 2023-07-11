@@ -128,6 +128,14 @@ class SOLO12(object):
                 "FR_FOOT": EE['FR_FOOT']['linkWorldPosition'], "HL_FOOT": EE['HL_FOOT']['linkWorldPosition'], "HR_FOOT": EE['HR_FOOT']['linkWorldPosition']}
     
     @property
+    def csv_entry(self):
+        # breakpoint()
+        csv_entry = np.hstack([self._joint_ang, self._joint_vel, self._joint_toq])
+        # breakpoint()
+        return csv_entry
+        
+
+    @property
     def jointangles(self):
         """The current joint angle of each motor
 
@@ -248,6 +256,9 @@ class SOLO12(object):
             if (q_toq_temp is not None):
                 q_toq[i:i+3] = q_toq_temp[i:i+3]
             i += 3
+        self._joint_ang = q_cmd
+        self._joint_vel = q_vel
+        self._joint_toq = q_toq
         return q_cmd, q_vel, q_toq
 
     def inv_dynamics(self, cmd, index):
@@ -270,7 +281,6 @@ class SOLO12(object):
         q_mes[:] = [state[0] for state in jointStates]
         v_mes[:] = [state[1] for state in jointStates]
         q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
-        self._joint_toq = q_toq
         return q_cmd, q_vel, q_toq
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
@@ -367,6 +377,9 @@ class SOLO12(object):
         q_mes[:] = [state[0] for state in jointStates]
         v_mes[:] = [state[1] for state in jointStates]
         q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+        self._joint_ang = q_cmd
+        self._joint_vel = q_vel
+        self._joint_toq = q_toq
         return q_cmd, q_vel, q_toq
 
             

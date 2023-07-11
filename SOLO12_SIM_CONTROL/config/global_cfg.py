@@ -12,7 +12,7 @@ class ROBOT_CFG:
 
 class RUN:
     step = 0
-    _update = False
+    _update = True
     _wait = False
     _stance = False
     TOWR_POS = [0, 0, 0]
