@@ -180,6 +180,8 @@ def simulation(args={}):
                     log.write("==========STANCE==========")
                     global_cfg.RUN._stance = True
                 
+
+
                 ##====================Logging====================##
                 log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
                 log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
@@ -202,7 +204,10 @@ def simulation(args={}):
                     if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
                         global_cfg.RUN._run_update_thread = False
                         break
-                        
+                
+                print("STATE +++ ", ROBOT.state)
+                # print("CMD ->" , towr_traj)
+                # breakpoint()
 
                 p.stepSimulation()
                 ROBOT.time_step += 1

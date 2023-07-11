@@ -57,6 +57,8 @@ def shift_z(v, shift):
     Returns:
         np.array or list: resulting 3d vec from shift
     """
+    v[0] = 0
+    v[1] = 0
     v[2] += shift
     return v
         
@@ -65,7 +67,7 @@ class SOLO12(object):
         self.config = config
         self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=fixed)
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
-        self.fixjointidx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
+        self.fixjointidqx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
         self.links = links_to_id(self.robot)
         self.q_init = np.array(config['q_init'])
         self.q_init16 = q_init_16_arr(self.q_init)
@@ -85,6 +87,7 @@ class SOLO12(object):
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         elif sim_cfg['mode'] == "towr":
             self.shiftZ = 0.075
+            # self.shiftZ = 0.00
             self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         else:

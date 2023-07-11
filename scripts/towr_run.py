@@ -51,6 +51,14 @@ def parse_scripts(scripts_dic, docker_id):
         scripts_dic[script_name] = script.replace("<id>", docker_id)
     return scripts_dic
 
+def start_config(args):
+    args['-s'] = [0, 0, 0.251]
+    args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
+    args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
+    args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
+    args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
+    args['-s_ang'] = [0, 0, 0]
+
 def _state(p = 0.6):
     state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
              "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
@@ -67,18 +75,12 @@ def _state(p = 0.6):
     return state
 
 def _step(args):
+    start_config(args)
     step_size = args['step_size'] #try implementing in config-file
     global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
     goal = global_cfg.ROBOT_CFG.robot_goal
     diff_vec = np.clip(goal - global_pos, -step_size, step_size)
     diff_vec[2] = 0.0
-    args['-s'] = [0, 0, 0.24]
-    # args['-s'][2] = 0.24
-    args['-s_ang'] = global_cfg.ROBOT_CFG.linkWorldOrientation
-    args['-e1'] = list(global_cfg.ROBOT_CFG.EE['FL_FOOT'])
-    args['-e2'] = list(global_cfg.ROBOT_CFG.EE['FR_FOOT'])
-    args['-e3'] = list(global_cfg.ROBOT_CFG.EE['HL_FOOT'])
-    args['-e4'] = list(global_cfg.ROBOT_CFG.EE['HR_FOOT'])
     args['-g'] = list(global_pos + diff_vec)
     args['-g'][2] = 0.24
     return args
@@ -110,7 +112,7 @@ def _update(args, log):
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     while (global_cfg.RUN._run_update_thread):
             mpc.update()
-            time.sleep(0.01)
+            time.sleep(0.001)
             if mpc.goal_diff < 0.05:
                 print("Robot reach the goal!")
                 global_cfg.RUN._stance = True
@@ -160,6 +162,7 @@ def _run(args):
     args = _step(args)
     towr_runtime_0 = time.process_time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    # breakpoint()
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.process_time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:0.3f} seconds')

@@ -186,8 +186,12 @@ def towr_transform(robot, traj):
             traj['HR_FOOT']['P'][0] =  traj['HR_FOOT']['P'][0] - traj['COM'][0:3][0]
             traj['HR_FOOT']['P'][1] =  traj['HR_FOOT']['P'][1] - traj['COM'][0:3][1]
             traj['HR_FOOT']['P'][2] = abs(traj['HR_FOOT']['P'][2])
+    # breakpoint()
+    print(f"TRAJ without transfer -> {traj}")
+    print(f"TRAJ with transfer -> {trajectory_2_world_frame(robot, traj)}")
     del traj['COM']
-    return trajectory_2_world_frame(robot, traj)
+    return traj
+    # return trajectory_2_world_frame(robot, traj)
 
 def norm(v1, v2):
     """return L2 norm of two vectors

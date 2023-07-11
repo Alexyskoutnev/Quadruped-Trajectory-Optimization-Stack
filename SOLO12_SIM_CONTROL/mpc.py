@@ -77,7 +77,8 @@ class MPC(object):
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
 
     def update_timestep(self):
-        """Update the timestep by one time unit
+        """
+        Update the timestep by one time unit
         """
         self.last_timestep += 1/self.hz
 
