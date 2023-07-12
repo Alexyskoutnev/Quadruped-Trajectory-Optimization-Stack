@@ -200,6 +200,6 @@ class Gait(object):
         self.gaitTraj['HR_FOOT']['D'][0] = step_coord[3]
         self.gaitTraj['HR_FOOT']['D'][1] = step_coord[4]
         self.gaitTraj['HR_FOOT']['D'][2] = step_coord[5]
-        self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj)
+        self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj, shift_bezier=True)
 
         return self.gaitTraj, True

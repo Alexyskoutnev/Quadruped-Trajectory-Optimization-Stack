@@ -78,7 +78,7 @@ def combine(*vectors):
 
 def transformation_mtx(t, R):
     mtx = np.eye(4)
-    if type(R) == list:
+    if type(R) == list or type(R) == np.ndarray:
         r = Rotation.from_euler('xyz', [R[0], R[1], R[2]])
         R = r.as_matrix()
         mtx[0:3,0:3] = R
@@ -112,23 +112,47 @@ def euler_to_quaternion(yaw, pitch, roll):
         qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         return [qx, qy, qz, qw]
     
-def trajectory_2_world_frame(robot, traj):
-    config = robot.CoM_states()
+def trajectory_2_world_frame(robot, traj, shift_bezier=False):
+    """Helper function to transform from base frame to global frame 
+       of pybullet enviroment. 
+
+    Args:
+        robot (_type_): _description_
+        traj (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    config = robot.CoM_states() #Query the state of robot in global frame
     for link in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
         for mode in ("P", "D"):
             if mode == "P":
                 tf_mtx = transformation_mtx(config['linkWorldPosition'], config['linkWorldOrientation'])
             if mode == "D":
                 tf_mtx = transformation_mtx(np.zeros(3), config['linkWorldOrientation'])
-            vec = np.concatenate((np.array([traj[link][mode][0] + robot.shift[link][0]]), np.array([traj[link][mode][1] + robot.shift[link][1]]), np.array([traj[link][mode][2] + robot.shift[link][2]]), np.ones(1)))
+            
+            if shift_bezier:
+                vec = np.concatenate((np.array([traj[link][mode][0] + robot.shift[link][0]]), 
+                                    np.array([traj[link][mode][1] + robot.shift[link][1]]),  
+                                    np.array([traj[link][mode][2] + robot.shift[link][2]]), 
+                                    np.ones(1)))
+            else:
+                vec = np.concatenate((np.array([traj[link][mode][0]]), 
+                                    np.array([traj[link][mode][1]]), 
+                                    np.array([traj[link][mode][2]]), 
+                                    np.ones(1)))
             tf_vec = tf_mtx @ vec
+            # if tf_vec[2] < 0:
+            #     breakpoint()
+            #     print(f"L [{link}] Below ground -> {tf_vec}")
+            #     tf_vec[2] = 0
+            #     print(f"L [{link}] Below ground -> {tf_vec}")
             traj[link][mode] = tf_vec[:3]
     return traj
     
 def tf_2_world_frame(traj, CoM):
     traj[0] = traj[0] - CoM['linkWorldPosition'][0]
     traj[1] = traj[1] - CoM['linkWorldPosition'][1]
-    # traj[2] = traj[2] - CoM[2]['linkWorldPosition']
     traj[2] = 0
     return traj
 
@@ -161,36 +185,28 @@ def convert12arr_2_16arr(arr):
     return arr16
 
 def towr_transform(robot, traj):
+    """Helper function to transform 'raw towr data' from world frame to 
+       base frame on robot. Then the base frame is converted back to world 
+       frame in Pybullet enviroment to help fix misalignment if towr trajectory runs
+       faster than what the simulator can track.
+       
+    Args:
+        robot (_type_): _description_
+        traj (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    sim_z_height = robot.CoM_states()['linkWorldPosition'][2]
+    CoM = traj['COM'][0:3]
+    tfMtx =  transformation_inv(transformation_mtx(CoM, traj['COM'][3:6]))
     for t in traj:
-        if t == 'FL_FOOT':
-            if traj['FL_FOOT']['P'][2] < 0 or math.isclose(traj['FL_FOOT']['P'][2], 0, rel_tol=1e-3):
-                traj['FL_FOOT']['P'][2] = 0
-            traj['FL_FOOT']['P'][0] =  traj['FL_FOOT']['P'][0] - traj['COM'][0:3][0]
-            traj['FL_FOOT']['P'][1] =  traj['FL_FOOT']['P'][1] - traj['COM'][0:3][1]
-            traj['FL_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
-        elif t == "FR_FOOT":
-            if traj['FR_FOOT']['P'][2] < 0 or math.isclose(traj['FR_FOOT']['P'][2], 0, rel_tol=1e-3):
-                traj['FR_FOOT']['P'][2] = 0
-            traj['FR_FOOT']['P'][0] =  traj['FR_FOOT']['P'][0] - traj['COM'][0:3][0]
-            traj['FR_FOOT']['P'][1] =  traj['FR_FOOT']['P'][1] - traj['COM'][0:3][1]
-            traj['FR_FOOT']['P'][2] = abs(traj['FR_FOOT']['P'][2])
-        elif t == "HL_FOOT":
-            if traj['HL_FOOT']['P'][2] < 0 or math.isclose(traj['HL_FOOT']['P'][2], 0, rel_tol = 1e-3):
-                traj['HL_FOOT']['P'][2] = 0
-            traj['HL_FOOT']['P'][0] =  traj['HL_FOOT']['P'][0] - traj['COM'][0:3][0]
-            traj['HL_FOOT']['P'][1] = traj['HL_FOOT']['P'][1] - traj['COM'][0:3][1]
-            traj['HL_FOOT']['P'][2] = abs(traj['HL_FOOT']['P'][2])
-        elif t == "HR_FOOT":
-            if traj['HR_FOOT']['P'][2] < 0 or math.isclose(traj['HR_FOOT']['P'][2], 0, rel_tol = 1e-3):
-                 traj['HR_FOOT']['P'][2] = 0
-            traj['HR_FOOT']['P'][0] =  traj['HR_FOOT']['P'][0] - traj['COM'][0:3][0]
-            traj['HR_FOOT']['P'][1] =  traj['HR_FOOT']['P'][1] - traj['COM'][0:3][1]
-            traj['HR_FOOT']['P'][2] = abs(traj['HR_FOOT']['P'][2])
-    # breakpoint()
-    print(f"TRAJ without transfer -> {traj}")
-    print(f"TRAJ with transfer -> {trajectory_2_world_frame(robot, traj)}")
+        if not t == 'COM':
+            vec = np.concatenate((traj[t]['P'], np.ones(1)))
+            t_vec = tfMtx @ vec
+            traj[t]['P'] = t_vec[0:3]
     del traj['COM']
-    return traj
+    return trajectory_2_world_frame(robot, traj)
     # return trajectory_2_world_frame(robot, traj)
 
 def norm(v1, v2):
