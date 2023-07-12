@@ -48,7 +48,7 @@ def base_frame_tf(mtx, pt):
     return tf_vec[:3]
 
 def shift_z(v, shift):
-    """Helper function to shift a 3-idx vec up or down by z-coord amount
+    """Helper function to shift bezier curve into fix position and adjust the z-axis variable
 
     Args:
         v (np.array or list): 3d vec to shift
@@ -57,8 +57,6 @@ def shift_z(v, shift):
     Returns:
         np.array or list: resulting 3d vec from shift
     """
-    v[0] = 0
-    v[1] = 0
     v[2] += shift
     return v
         
@@ -86,6 +84,7 @@ class SOLO12(object):
             self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         elif sim_cfg['mode'] == "towr":
+            # breakpoint()
             self.shiftZ = 0.075
             # self.shiftZ = 0.00
             self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
@@ -132,9 +131,7 @@ class SOLO12(object):
     
     @property
     def csv_entry(self):
-        # breakpoint()
         csv_entry = np.hstack([self._joint_ang, self._joint_vel, self._joint_toq])
-        # breakpoint()
         return csv_entry
         
 
@@ -283,7 +280,7 @@ class SOLO12(object):
         jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
         q_mes[:] = [state[0] for state in jointStates]
         v_mes[:] = [state[1] for state in jointStates]
-        q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+        q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes, q_vel)
         return q_cmd, q_vel, q_toq
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
@@ -379,7 +376,7 @@ class SOLO12(object):
         jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
         q_mes[:] = [state[0] for state in jointStates]
         v_mes[:] = [state[1] for state in jointStates]
-        q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+        q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes, np.zeros(12))
         self._joint_ang = q_cmd
         self._joint_vel = q_vel
         self._joint_toq = q_toq
