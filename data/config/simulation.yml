@@ -1,5 +1,5 @@
-mode : "bezier"
-# mode : "towr"
+# mode : "bezier"
+mode : "towr"
 # mode : "balance"
 # mode : "visual_track"
 # mode : "testing"

@@ -85,7 +85,7 @@ class SOLO12(object):
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         elif sim_cfg['mode'] == "towr":
             # breakpoint()
-            self.shiftZ = 0.075
+            self.shiftZ = 0.01
             # self.shiftZ = 0.00
             self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}

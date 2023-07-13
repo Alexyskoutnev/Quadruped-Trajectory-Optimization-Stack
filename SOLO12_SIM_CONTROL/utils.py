@@ -2,6 +2,7 @@ import pybullet as p
 import numpy as np
 import math
 import csv
+import copy
 
 from scipy.spatial.transform import Rotation
 
@@ -112,7 +113,7 @@ def euler_to_quaternion(yaw, pitch, roll):
         qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         return [qx, qy, qz, qw]
     
-def trajectory_2_world_frame(robot, traj, shift_bezier=False):
+def trajectory_2_world_frame(robot, traj, shift_bezier=False, shift_towr=False):
     """Helper function to transform from base frame to global frame 
        of pybullet enviroment. 
 
@@ -136,17 +137,40 @@ def trajectory_2_world_frame(robot, traj, shift_bezier=False):
                                     np.array([traj[link][mode][1] + robot.shift[link][1]]),  
                                     np.array([traj[link][mode][2] + robot.shift[link][2]]), 
                                     np.ones(1)))
+            elif shift_towr:
+                # breakpoint()
+                # vec = np.concatenate((np.array([traj[link][mode][0]]), 
+                #                     np.array([traj[link][mode][1]]),  
+                #                     np.array([traj[link][mode][2] + robot.shift[link][2]]), 
+                #                     np.ones(1)))
+                # breakpoint()
+                vec = np.concatenate((np.array([traj[link][mode][0]]), 
+                                    np.array([traj[link][mode][1]]),  
+                                    np.array([traj[link][mode][2] - 0.29]), 
+                                    np.ones(1)))
+                
+
+                
+                print(f"COM {config['linkWorldPosition']}\n")
+
+                print(f"VEC {vec} \n")
+                
             else:
                 vec = np.concatenate((np.array([traj[link][mode][0]]), 
                                     np.array([traj[link][mode][1]]), 
                                     np.array([traj[link][mode][2]]), 
                                     np.ones(1)))
             tf_vec = tf_mtx @ vec
-            # if tf_vec[2] < 0:
-            #     breakpoint()
-            #     print(f"L [{link}] Below ground -> {tf_vec}")
-            #     tf_vec[2] = 0
-            #     print(f"L [{link}] Below ground -> {tf_vec}")
+
+            if shift_towr:
+                if tf_vec[2] < 0:
+                    tf_vec[2] = -0.1
+
+            print(f"TF VEC {tf_vec}")
+            # if traj[link]['contact']:
+            #     tf_vec[2] = 0.0
+            
+            # breakpoint()
             traj[link][mode] = tf_vec[:3]
     return traj
     
@@ -184,7 +208,7 @@ def convert12arr_2_16arr(arr):
         idx += 1
     return arr16
 
-def towr_transform(robot, traj):
+def towr_transform(robot, traj, shift_towr=False):
     """Helper function to transform 'raw towr data' from world frame to 
        base frame on robot. Then the base frame is converted back to world 
        frame in Pybullet enviroment to help fix misalignment if towr trajectory runs
@@ -199,14 +223,29 @@ def towr_transform(robot, traj):
     """
     sim_z_height = robot.CoM_states()['linkWorldPosition'][2]
     CoM = traj['COM'][0:3]
+    original_traj = copy.deepcopy(traj)
+    # CoM[2] = sim_z_height
     tfMtx =  transformation_inv(transformation_mtx(CoM, traj['COM'][3:6]))
     for t in traj:
         if not t == 'COM':
-            vec = np.concatenate((traj[t]['P'], np.ones(1)))
-            t_vec = tfMtx @ vec
-            traj[t]['P'] = t_vec[0:3]
+            if shift_towr:
+                vec = np.concatenate((traj[t]['P'], np.ones(1)))
+                t_vec = tfMtx @ vec
+                traj[t]['P'] = np.concatenate((t_vec[0:2], np.array([vec[2]])))
+            else:
+                vec = np.concatenate((traj[t]['P'], np.ones(1)))
+                t_vec = tfMtx @ vec
+                traj[t]['P'] = t_vec[0:3]
+            
+            # if abs(original_traj[t]['P'][2]) < 1e-3:
+            #     traj[t]['contact'] = True
+            # else:
+            #     traj[t]['contact'] = False
+    # del traj['COM']
+    traj = trajectory_2_world_frame(robot, traj, shift_towr=shift_towr)
+    # del traj['contact']
     del traj['COM']
-    return trajectory_2_world_frame(robot, traj)
+    return traj
     # return trajectory_2_world_frame(robot, traj)
 
 def norm(v1, v2):
