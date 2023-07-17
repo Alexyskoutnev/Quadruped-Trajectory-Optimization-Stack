@@ -52,7 +52,7 @@ def parse_scripts(scripts_dic, docker_id):
     return scripts_dic
 
 def start_config(args):
-    args['-s'] = [0, 0, 0.251]
+    args['-s'] = [0, 0, 0.27]
     args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
     args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
     args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
@@ -162,7 +162,6 @@ def _run(args):
     args = _step(args)
     towr_runtime_0 = time.process_time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    # breakpoint()
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.process_time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:0.3f} seconds')
@@ -214,7 +213,7 @@ def test_mpc(args):
 if __name__ == "__main__":
     test = False
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.24])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.27])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)

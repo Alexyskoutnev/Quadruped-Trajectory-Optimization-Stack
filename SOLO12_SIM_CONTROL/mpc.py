@@ -93,7 +93,7 @@ class MPC(object):
         diff_vec = np.clip(goal - global_pos, -step_size, step_size)
         diff_vec[2] = 0.0
         self.args['-g'] = list(global_pos + diff_vec)
-        self.args['-g'][2] = 0.24
+        self.args['-g'][2] = 0.28
 
     def _state(self):
         """Returns the updated robot state back to the optimizer

@@ -175,7 +175,7 @@ def simulation(args={}):
                     EE_POSE = np.array([float(x) for x in next(reader)])[1:]
                     global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                     global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
-                    towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE), shift_towr=True)
+                    towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
                 except StopIteration:
                     log.write("==========STANCE==========")
                     global_cfg.RUN._stance = True
