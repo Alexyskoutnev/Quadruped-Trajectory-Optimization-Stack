@@ -243,6 +243,8 @@ class SOLO12(object):
         Returns:
             tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
         """
+        if cmds.get('COM') is not None:
+            del cmds['COM']
         q_cmd = np.zeros(12)
         q_vel = np.zeros(12)
         q_toq = np.zeros(12)

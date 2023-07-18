@@ -52,7 +52,7 @@ def parse_scripts(scripts_dic, docker_id):
     return scripts_dic
 
 def start_config(args):
-    args['-s'] = [0, 0, 0.27]
+    args['-s'] = [0, 0, 0.21]
     args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
     args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
     args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
@@ -82,7 +82,7 @@ def _step(args):
     diff_vec = np.clip(goal - global_pos, -step_size, step_size)
     diff_vec[2] = 0.0
     args['-g'] = list(global_pos + diff_vec)
-    args['-g'][2] = 0.24
+    args['-g'][2] = 0.21
     return args
 
 def _plan(args):
@@ -210,10 +210,25 @@ def test_mpc(args):
         else: 
             print("Error in copying Towr Trajectory")
 
+def test_mpc_single_loop(args):
+    log = open("./logs/towr_log.out", "w")
+    global_cfg.ROBOT_CFG.robot_goal = args['-g']
+    args = _step(args)
+    towr_runtime_0 = time.time()
+    TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
+    towr_runtime_1 = time.time()
+    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
+    breakpoint()
+    if p.returncode == 0:
+        print("TOWR found a trajectory")
+        p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
+        run.simulation()
+
 if __name__ == "__main__":
-    test = False
+    test = True
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.27])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.28])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
@@ -233,6 +248,6 @@ if __name__ == "__main__":
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
             "f_steps": p_args.f_steps, "record": p_args.record}
     if test:
-        test_mpc(args)
+        test_mpc_single_loop(args)
     else:
         _run(args)

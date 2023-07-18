@@ -98,14 +98,14 @@ def simulation(args={}):
     """============SIM-CONFIGURATION============"""
     if sim_cfg['enviroment'] == "testing":
         velocity, angle_velocity , angle, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
-    if sim_cfg['mode'] == "towr" or sim_cfg['mode'] == "visual_track":
+    if sim_cfg['mode'] == "towr" or sim_cfg['mode'] == "visual_track" or sim_cfg['mode'] == "towr_track_no_contact":
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         NUM_TIME_STEPS = sum(1 for row in reader)
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
-        if args.get('record'):
+        if args.get('record') or sim_cfg.get('record'):
             FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
             file = open(FILE, 'w', newline='')
             writer = csv.writer(file) 
@@ -199,19 +199,40 @@ def simulation(args={}):
 
                 if args.get('record'):
                     csv_entry = ROBOT.csv_entry
-                    writer.writerow(csv_entry)
-                    record_timestep += 1
+                    for i in range(10):
+                        writer.writerow(csv_entry)
+                        record_timestep += 1
                     if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
                         global_cfg.RUN._run_update_thread = False
                         break
-                
-                print("STATE +++ ", ROBOT.state)
-                # print("CMD ->" , towr_traj)
-                # breakpoint()
-
                 p.stepSimulation()
                 ROBOT.time_step += 1
                 _global_update(ROBOT, ROBOT.state)
+
+            elif sim_cfg['mode'] == "towr_track_no_contact":
+                try:
+                    if sim_cfg['skip_forward_idx'] > 1:
+                        for _ in range(sim_cfg['skip_forward_idx']):
+                                next(reader)
+                    traj = np.array([float(x) for x in next(reader)])
+                    time_step, cmds = traj[0], vec_to_cmd_pose(traj[1:])
+                    COM = cmds['COM']
+                except StopIteration:
+                    break
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(cmds, ROBOT.EE_index['all'], mode=ROBOT.mode)
+
+                # breakpoint()
+                if sim_cfg.get('record'):
+                    csv_entry = ROBOT.csv_entry
+                    writer.writerow(csv_entry)
+
+                for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
+                    p.resetJointState(ROBOT.robot, idx, q_ang), 
+                p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
+                p.stepSimulation()
+                print(f"Time [{time_step:.3f}] || COM [{[round(i, 3) for i in COM[0:3].tolist()]}]")
+                ROBOT.time_step += 1
+
 
             elif sim_cfg['mode'] == "track_imitation":
                 try:

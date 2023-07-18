@@ -146,8 +146,6 @@ def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_tra
                                     np.ones(1)))
             tf_vec = tf_mtx @ vec            
             traj[link][mode] = tf_vec[:3]
-    # breakpoint()
-    print(f"Diff in height -> {abs(config['linkWorldPosition'][2] - original_traj['COM'][2])}")
     return traj
     
 def tf_2_world_frame(traj, CoM):
@@ -201,20 +199,11 @@ def towr_transform(robot, traj, towr=True):
     CoM = traj['COM'][0:3]
     original_traj = copy.deepcopy(traj)
     tfMtx =  transformation_inv(transformation_mtx(CoM, traj['COM'][3:6]))
-    # tfMtx =  transformation_inv(transformation_mtx(CoM, np.zeros(3)))
     for t in traj:
         if not t == 'COM':
             vec = np.concatenate((traj[t]['P'], np.ones(1)))
             t_vec = tfMtx @ vec
             traj[t]['P'] = t_vec[0:3]
-            # if shift_towr:
-            #     vec = np.concatenate((traj[t]['P'], np.ones(1)))
-            #     t_vec = tfMtx @ vec
-            #     traj[t]['P'] = np.concatenate((t_vec[0:2], np.array([vec[2]])))
-            # else:
-            #     vec = np.concatenate((traj[t]['P'], np.ones(1)))
-            #     t_vec = tfMtx @ vec
-            #     traj[t]['P'] = t_vec[0:3]
     traj = trajectory_2_world_frame(robot, traj, towr=towr, original_traj=original_traj)
     del traj['COM']
     return traj

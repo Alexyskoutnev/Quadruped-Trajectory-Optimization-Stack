@@ -62,10 +62,12 @@ class Simulation(object):
         elif sim_config == "obstacles_stairs":
             pass
 
-        elif sim_config == "traj":
-            py_client = p.connect(p.DIRECT)
-            # py_client = p.connect(p.GUI)
-            p.setGravity(0,0,-10.0)
+        elif sim_config == "towr_track_no_contact":
+            py_client = p.connect(p.GUI)
+            p.setAdditionalSearchPath(pybullet_data.getDataPath())
+            p.setGravity(0,0,0)
+            p.loadURDF("plane.urdf")
+            
     
 
         return py_client
