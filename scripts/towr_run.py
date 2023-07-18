@@ -119,6 +119,8 @@ def _update(args, log):
                 global_cfg.RUN._wait = False
                 global_cfg.RUN._update = False
             elif not _wait:
+                # global_cfg.RUN._wait = True
+                # breakpoint()
                 args = mpc.plan(args)
                 towr_runtime_0 = time.process_time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
@@ -126,6 +128,8 @@ def _update(args, log):
                 towr_runtime_1 = time.process_time()
                 print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:0.3f} seconds')
                 _wait = True
+                # breakpoint()
+                # global_cfg.RUN._wait = False
             elif p_status.returncode == 0 and mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
                 p = subprocess.run(shlex.split(scripts['data'])) 
@@ -216,19 +220,22 @@ def test_mpc_single_loop(args):
     args = _step(args)
     towr_runtime_0 = time.time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    print(f"INPUT ARGS : {TOWR_SCRIPT}")
     p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
-    breakpoint()
+    
     if p.returncode == 0:
         print("TOWR found a trajectory")
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
         run.simulation()
+    else:
+        print("===============================NO SOLUTION===============================")
 
 if __name__ == "__main__":
-    test = True
+    test = False
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.28])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.25])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)

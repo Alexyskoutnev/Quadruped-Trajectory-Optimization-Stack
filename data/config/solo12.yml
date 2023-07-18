@@ -22,4 +22,4 @@
   # kd : 0.01 #values for p-control or pd-control
   kp : 5 #Good values for torque control
   kd : 0.01 #Good values for torque control
-  timestep: 0.01
+  timestep: 0.001

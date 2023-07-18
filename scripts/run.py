@@ -66,7 +66,7 @@ def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.EE['HR_FOOT'] = list(kwargs['HR_FOOT'])
     global_cfg.ROBOT_CFG.runtime = ROBOT.time
     if sim_cfg['enviroment'] == "plane":
-        global_cfg.RUN.step += sim_cfg['skip_forward_idx']
+        global_cfg.RUN.step += sim_cfg['skip_forward_idx'] + 1
     elif sim_cfg['enviroment'] == "towr_no_gui":
         global_cfg.RUN.step += 1
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
@@ -166,16 +166,19 @@ def simulation(args={}):
                         print("============UPDATE STATE============")
                         mutex.acquire()
                         reader = csv.reader(open(TOWR, 'r', newline=''))
-                        mutex.release()
                         global_cfg.RUN._update = False 
                         global_cfg.RUN.step = 0
-                    if sim_cfg['enviroment'] == "plane":
-                        for _ in range(sim_cfg['skip_forward_idx']):
-                            next(reader)
-                    EE_POSE = np.array([float(x) for x in next(reader)])[1:]
+                        mutex.release()
+                    
+                    traj = np.array([float(x) for x in next(reader)])
+                    time_step, EE_POSE = traj[0], traj[1:]
                     global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                     global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                     towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
+                    COM = EE_POSE[0:6]
+                    if sim_cfg['enviroment'] == "plane":
+                        for _ in range(sim_cfg['skip_forward_idx']):
+                            next(reader)
                 except StopIteration:
                     log.write("==========STANCE==========")
                     global_cfg.RUN._stance = True
@@ -193,6 +196,10 @@ def simulation(args={}):
                 if global_cfg.RUN._stance:
                     _, _, joint_toq = ROBOT.default_stance_control()
                     p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
+                if sim_cfg['base_stable']:
+                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                    ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                    p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
                 else:
                     joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                     ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
@@ -205,8 +212,14 @@ def simulation(args={}):
                     if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
                         global_cfg.RUN._run_update_thread = False
                         break
+                
+                if sim_cfg['skip_forward_idx'] > 1:
+                    for _ in range(sim_cfg['skip_forward_idx'] + 1):
+                        ROBOT.time_step += 1
+                else:
+                    ROBOT.time_step += 1
+
                 p.stepSimulation()
-                ROBOT.time_step += 1
                 _global_update(ROBOT, ROBOT.state)
 
             elif sim_cfg['mode'] == "towr_track_no_contact":
@@ -221,18 +234,17 @@ def simulation(args={}):
                     break
                 joint_ang, joint_vel, joint_toq = ROBOT.control_multi(cmds, ROBOT.EE_index['all'], mode=ROBOT.mode)
 
-                # breakpoint()
                 if sim_cfg.get('record'):
                     csv_entry = ROBOT.csv_entry
                     writer.writerow(csv_entry)
 
-                for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
-                    p.resetJointState(ROBOT.robot, idx, q_ang), 
+                # for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
+                #     p.resetJointState(ROBOT.robot, idx, q_ang), 
+                ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
                 p.stepSimulation()
                 print(f"Time [{time_step:.3f}] || COM [{[round(i, 3) for i in COM[0:3].tolist()]}]")
                 ROBOT.time_step += 1
-
 
             elif sim_cfg['mode'] == "track_imitation":
                 try:

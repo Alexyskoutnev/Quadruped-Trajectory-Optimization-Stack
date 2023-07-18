@@ -55,7 +55,6 @@ class MPC(object):
         Returns:
             self.args (dic) : input argument to Towr script
         """
-       
         _state_dic = self._state()
         self.args['-s'] = _state_dic["CoM"]
         self.args['-s_ang'] = _state_dic['orientation']
