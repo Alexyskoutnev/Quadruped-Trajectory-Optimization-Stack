@@ -11,6 +11,7 @@ class Simulation(object):
     def __init__(self, simulation_type, timestep=None):
         self._wall = "./data/urdf/wall.urdf"
         self._stairs = "./data/urdf/stair.urdf"
+        self._box = "./data/urdf/box.urdf"
         self.timestep = timestep
         self.p = self.setup(sim_config=simulation_type)
         
@@ -67,6 +68,14 @@ class Simulation(object):
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,0)
             p.loadURDF("plane.urdf")
+
+        elif sim_config == "towr_track_no_contact_box":
+            py_client = p.connect(p.GUI)
+            p.setAdditionalSearchPath(pybullet_data.getDataPath())
+            p.setGravity(0,0,0)
+            p.loadURDF("plane.urdf")
+            box1_pos, box1_rot = [0.35, 0, 0.05], Rotation.from_euler('xyz', [0, 0, 0], degrees=True).as_quat()
+            p.loadURDF(self._box, basePosition = box1_pos, baseOrientation = box1_rot, useFixedBase = 1)
 
         elif sim_config == "towr_track_no_contact_no_gui":
             py_client = p.connect(p.DIRECT)

@@ -206,9 +206,8 @@ def simulation(args={}):
 
                 if args.get('record'):
                     csv_entry = ROBOT.csv_entry
-                    for i in range(10):
-                        writer.writerow(csv_entry)
-                        record_timestep += 1
+                    writer.writerow(csv_entry)
+                    record_timestep += 1
                     if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
                         global_cfg.RUN._run_update_thread = False
                         break
@@ -236,11 +235,12 @@ def simulation(args={}):
 
                 if sim_cfg.get('record'):
                     csv_entry = ROBOT.csv_entry
-                    writer.writerow(csv_entry)
+                    for i in range(5):
+                        writer.writerow(csv_entry)
 
-                # for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
-                #     p.resetJointState(ROBOT.robot, idx, q_ang), 
-                ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
+                    p.resetJointState(ROBOT.robot, idx, q_ang), 
+                # ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
                 p.stepSimulation()
                 print(f"Time [{time_step:.3f}] || COM [{[round(i, 3) for i in COM[0:3].tolist()]}]")
@@ -260,7 +260,7 @@ def simulation(args={}):
 
             last_loop_time = time.time()
             sim_step += 1
-            # print(f"runtime: {time.time() - time_loop}")
+            print(f"runtime: {time.time() - time_loop}")
         else:
             continue
 
