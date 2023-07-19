@@ -1,5 +1,5 @@
 mode : "towr_track_no_contact"
-enviroment : "fixed_in_air"
+enviroment : "towr_track_no_contact_no_gui"
 py_interface : False
 fix-base : False
 NUM_TIME_STEPS : 10000

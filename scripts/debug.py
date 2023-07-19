@@ -128,10 +128,12 @@ def simulation(args={}):
                 print(f"Time [{time_step:.3f}] || COM [{[round(i, 3) for i in COM[0:3].tolist()]}]")
                 ROBOT.time_step += 1
                 sim_step += 1
+                # if sim_step == 1000:
+                #     TRACK_RECORD.plot_realized_vs_sim()
         else:
             continue
     
-    TRACK_RECORD.tracking_error()
+    TRACK_RECORD.plot_realized_vs_sim()
         
     p.disconnect()
 

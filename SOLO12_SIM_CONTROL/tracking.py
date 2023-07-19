@@ -1,5 +1,6 @@
 import numpy as np
 import pybullet
+import matplotlib.pyplot as plt
 from collections import namedtuple
 
 
@@ -24,6 +25,7 @@ class Tracking:
         self.FR_FOOT = {"realized": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.HL_FOOT = {"realized": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.HR_FOOT = {"realized": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
+        self.timeseries = np.linspace(0, 10, num_traj)
     
     def update(self, realized_cmd, timestep):
         sim_cmd = self.get_sim_cmd()
@@ -32,7 +34,6 @@ class Tracking:
         self._update()
         self.idx += 1
         
-
     def _update(self):
         for EE_NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
             r_x, r_y, r_z = self.traj['realized'][self.idx].position[EE_NAME]
@@ -79,17 +80,88 @@ class Tracking:
                 self.HR_FOOT['s_z'].append(s_z)
                 self.HR_FOOT['error'].append(error)
 
+    def plot_realized_vs_sim(self):
+        plt.figure(figsize=(10, 6))
+        plt.tight_layout()
+        plt.subplot(4, 3, 1)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.FL_FOOT['r_x'])], self.FL_FOOT['r_x'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.FL_FOOT['s_x'])], self.FL_FOOT['s_x'], label='sim', color='blue')
+        # plt.plot(self.timeseries[0:len(self.FL_FOOT['error'])], self.FL_FOOT['error'], label='error', color='red')
+        plt.grid(True)
+        plt.legend()
+        plt.title('FL X Position')
+        plt.subplot(4, 3, 2)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.FL_FOOT['r_y'])], self.FL_FOOT['r_y'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.FL_FOOT['s_y'])], self.FL_FOOT['s_y'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('FL Y Position')
+        plt.subplot(4, 3, 3)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.FL_FOOT['r_z'])], self.FL_FOOT['r_z'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.FL_FOOT['s_z'])], self.FL_FOOT['s_z'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('FL Z Position')
 
-    def tracking_error(self):
-        for opt, sim in zip(self.traj['realized'], self.traj['sim']):
-            # breakpoint()
-            pass
-            # metrics[]
-            # self.FL_FOOT['realized'] = 
+        plt.subplot(4, 3, 4)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.FR_FOOT['r_x'])], self.FR_FOOT['r_x'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.FR_FOOT['s_x'])], self.FR_FOOT['s_x'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('FR X Position')
+        plt.subplot(4, 3, 5)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.FR_FOOT['r_y'])], self.FR_FOOT['r_y'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.FR_FOOT['s_y'])], self.FR_FOOT['s_y'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('FR Y Position')
+        plt.subplot(4, 3, 6)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.FR_FOOT['r_z'])], self.FR_FOOT['r_z'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.FR_FOOT['s_z'])], self.FR_FOOT['s_z'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('FR Z Position')
 
-    
-    def plot(self):
-        pass
+        plt.subplot(4, 3, 7)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.HL_FOOT['r_x'])], self.HL_FOOT['r_x'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.HL_FOOT['s_x'])], self.HL_FOOT['s_x'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('HL X Position')
+        plt.subplot(4, 3, 8)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.HL_FOOT['r_y'])], self.HL_FOOT['r_y'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.HL_FOOT['s_y'])], self.HL_FOOT['s_y'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('HL Y Position')
+        plt.subplot(4, 3, 9)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.HL_FOOT['r_z'])], self.HL_FOOT['r_z'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.HL_FOOT['s_z'])], self.HL_FOOT['s_z'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('HL Z Position')
+
+
+        plt.subplot(4, 3, 10)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.HR_FOOT['r_x'])], self.HR_FOOT['r_x'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.HR_FOOT['s_x'])], self.HR_FOOT['s_x'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('HR X Position')
+        plt.subplot(4, 3, 11)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.HR_FOOT['r_y'])], self.HR_FOOT['r_y'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.HR_FOOT['s_y'])], self.HR_FOOT['s_y'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('HR Y Position')
+        plt.subplot(4, 3, 12)  # 2 rows, 2 columns, plot number 1
+        plt.plot(self.timeseries[0:len(self.HR_FOOT['r_z'])], self.HR_FOOT['r_z'], label='realized', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.HR_FOOT['s_z'])], self.HR_FOOT['s_z'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('HR Z Position')
+        plt.show()
+
 
     def get_sim_cmd(self):
         vec = self.robot.traj_vec
