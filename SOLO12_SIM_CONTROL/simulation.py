@@ -83,6 +83,11 @@ class Simulation(object):
             p.setGravity(0,0,0)
             p.loadURDF("plane.urdf")
             
+        elif sim_config == "fixed_in_air":
+            py_client = p.connect(p.GUI)
+            p.setAdditionalSearchPath(pybullet_data.getDataPath())
+            p.setGravity(0,0,0)
+            p.loadURDF("plane.urdf")
     
 
         return py_client

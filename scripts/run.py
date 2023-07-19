@@ -238,9 +238,9 @@ def simulation(args={}):
                     for i in range(5):
                         writer.writerow(csv_entry)
 
-                for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
-                    p.resetJointState(ROBOT.robot, idx, q_ang), 
-                # ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                # for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
+                #     p.resetJointState(ROBOT.robot, idx, q_ang), 
+                ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
                 p.stepSimulation()
                 print(f"Time [{time_step:.3f}] || COM [{[round(i, 3) for i in COM[0:3].tolist()]}]")

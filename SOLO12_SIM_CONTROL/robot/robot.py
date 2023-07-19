@@ -145,6 +145,17 @@ class SOLO12(object):
         return self._joint_ang
 
     @property
+    def traj_vec(self):
+        """Converts the robot's current endeffector global position values into 12D np.array
+
+        Returns:
+            np.array: numpy array of end effector positions
+        """
+        EE = self.get_endeffector_pose()
+        traj_vec = np.concatenate((EE['FL_FOOT']['linkWorldPosition'], EE['FR_FOOT']['linkWorldPosition'], EE['HL_FOOT']['linkWorldPosition'], EE['HR_FOOT']['linkWorldPosition']))
+        return traj_vec
+
+    @property
     def jointstate(self):
         """Returns the joint angle, velocity, and torque of each motor
 

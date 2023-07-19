@@ -1,0 +1,13 @@
+mode : "towr_track_no_contact"
+enviroment : "fixed_in_air"
+py_interface : False
+fix-base : False
+NUM_TIME_STEPS : 10000
+HZ : 1000
+TIMESTEPS : 0.001
+stance_phase : False
+stance_period : 10
+skip_forward_idx : 1
+record : True
+base_stable : False
+
