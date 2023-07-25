@@ -2,7 +2,7 @@
   robot: "SOLO12"
   joint_count: 12
   q_init : [0.008, 0.38, -0.845, -0.008, 0.38, -0.845, 0.0082, -0.38, 0.845, -0.082, -0.2805, 0.845]
-  start_pos : [0,0,0.34]
+  start_pos : [0,0,0.25]
   start_ang : [0.0, 0.0, 0.0, 1.0]
   t_max : 2.0
   # mode : "P" #position control
@@ -20,6 +20,6 @@
   offsets : [0.5, 0.0, 0.0, 0.5]
   # kp : 0.5 #values for p-control or pd-control
   # kd : 0.01 #values for p-control or pd-control
-  kp : 70 #Good values for torque control
-  kd : 0.3 #Good values for torque control
+  kp : 25  #Good values for torque control
+  kd : 0.10 #Good values for torque control
   timestep: 0.001

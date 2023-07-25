@@ -141,12 +141,11 @@ def simulation(args={}):
                 if newCmd:
                     joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                     ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-                    # p.resetBasePositionAndOrientation(ROBOT.robot, [0,0,0.24], p.getQuaternionFromEuler([0,0,0]))
                     p.stepSimulation()
-                    TRACK_RECORD.update(gait_traj, ROBOT.time_step)
                     print(f"Steps [{sim_step:.3f}]")
                     ROBOT.time_step += 1
                     sim_step += 1
+                    TRACK_RECORD.update(gait_traj, ROBOT.time_step)
                 
         else:
             continue

@@ -20,6 +20,7 @@ from SOLO12_SIM_CONTROL.gaitPlanner import Gait
 from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
 from SOLO12_SIM_CONTROL.logger import Logger
+from SOLO12_SIM_CONTROL.tracking import Tracking
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
@@ -121,6 +122,8 @@ def simulation(args={}):
         offsets = np.array(cfg['offsets'])
         trot_2_stance_ratio = cfg['trot_2_stance_ratio']
         velocity, angle, angle_velocity, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
+        NUM_TIME_STEPS = sim_cfg['NUM_TIME_STEPS']
+        TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
     if sim_cfg['py_interface']:
         pybullet_interface = PybulletInterface()
         pos, angle, velocity, angle_velocity , angle, step_period = pybullet_interface.robostates(ROBOT.robot)
@@ -156,6 +159,7 @@ def simulation(args={}):
                 ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 p.stepSimulation()
                 ROBOT.time_step += 1
+                TRACK_RECORD.update(gait_traj, ROBOT.time_step)
 
             elif sim_cfg['mode'] == "towr":
                 try:
@@ -264,7 +268,7 @@ def simulation(args={}):
         else:
             continue
 
-        
+    TRACK_RECORD.plot_realized_vs_sim()
     p.disconnect()
 
 if __name__ == "__main__":
