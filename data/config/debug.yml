@@ -1,5 +1,5 @@
-mode : "towr_track_no_contact"
-enviroment : "towr_track_no_contact_no_gui"
+mode : "bezier"
+enviroment : "plane"
 py_interface : False
 fix-base : False
 NUM_TIME_STEPS : 10000
@@ -10,4 +10,9 @@ stance_period : 10
 skip_forward_idx : 10
 record : True
 base_stable : False
+
+velocity : 0.5
+angle_velocity : 0.0
+angle : 0.0
+step_period : 0.5
 

@@ -20,6 +20,6 @@
   offsets : [0.5, 0.0, 0.0, 0.5]
   # kp : 0.5 #values for p-control or pd-control
   # kd : 0.01 #values for p-control or pd-control
-  kp : 30 #Good values for torque control
-  kd : 0.1 #Good values for torque control
+  kp : 70 #Good values for torque control
+  kd : 0.3 #Good values for torque control
   timestep: 0.001

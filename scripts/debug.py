@@ -23,6 +23,7 @@ from SOLO12_SIM_CONTROL.logger import Logger
 from SOLO12_SIM_CONTROL.tracking import Tracking
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
+
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12_debug.yml"
 config_sim = "./data/config/debug.yml"
@@ -80,6 +81,7 @@ def simulation(args={}):
     log = Logger("./logs", "simulation_log")
     Simulation(sim_cfg['enviroment'])
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
+    gait = Gait(ROBOT)
     last_loop_time = time.time()
     sim_step = 0
     """============SIM-CONFIGURATION============"""
@@ -97,6 +99,12 @@ def simulation(args={}):
             writer = csv.writer(file) 
             record_timestep = 0
             TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
+    elif sim_cfg['mode'] == "bezier":
+        offsets = np.array(cfg['offsets'])
+        trot_2_stance_ratio = cfg['trot_2_stance_ratio']
+        velocity, angle, angle_velocity, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
+        NUM_TIME_STEPS = sim_cfg['NUM_TIME_STEPS']
+        TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
 
     """=========================================="""
 
@@ -128,8 +136,18 @@ def simulation(args={}):
                 print(f"Time [{time_step:.3f}] || COM [{[round(i, 3) for i in COM[0:3].tolist()]}]")
                 ROBOT.time_step += 1
                 sim_step += 1
-                # if sim_step == 1000:
-                #     TRACK_RECORD.plot_realized_vs_sim()
+            if sim_cfg['mode'] == "bezier":
+                gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio)
+                if newCmd:
+                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                    ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                    # p.resetBasePositionAndOrientation(ROBOT.robot, [0,0,0.24], p.getQuaternionFromEuler([0,0,0]))
+                    p.stepSimulation()
+                    TRACK_RECORD.update(gait_traj, ROBOT.time_step)
+                    print(f"Steps [{sim_step:.3f}]")
+                    ROBOT.time_step += 1
+                    sim_step += 1
+                
         else:
             continue
     
