@@ -162,7 +162,6 @@ class Tracking:
         plt.title('HR Z Position')
         plt.show()
 
-
     def get_sim_cmd(self):
         vec = self.robot.traj_vec
         return vec_to_cmd(vec)
