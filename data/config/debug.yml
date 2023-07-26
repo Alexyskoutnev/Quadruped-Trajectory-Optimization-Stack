@@ -1,5 +1,5 @@
-mode : "bezier"
-enviroment : "plane"
+mode : "towr_track_no_contact"
+enviroment : "towr_track_no_contact_no_gui"
 py_interface : False
 fix-base : False
 NUM_TIME_STEPS : 400

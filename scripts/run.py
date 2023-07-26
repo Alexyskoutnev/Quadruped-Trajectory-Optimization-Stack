@@ -106,6 +106,8 @@ def simulation(args={}):
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
+        if sim_cfg.get('track'):
+            TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
         if args.get('record') or sim_cfg.get('record'):
             FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
             file = open(FILE, 'w', newline='')
@@ -123,7 +125,8 @@ def simulation(args={}):
         trot_2_stance_ratio = cfg['trot_2_stance_ratio']
         velocity, angle, angle_velocity, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
         NUM_TIME_STEPS = sim_cfg['NUM_TIME_STEPS']
-        TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
+        if sim_cfg.get('track'):
+            TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
     if sim_cfg['py_interface']:
         pybullet_interface = PybulletInterface()
         pos, angle, velocity, angle_velocity , angle, step_period = pybullet_interface.robostates(ROBOT.robot)
@@ -241,9 +244,9 @@ def simulation(args={}):
                     csv_entry = ROBOT.csv_entry
                     for i in range(5):
                         writer.writerow(csv_entry)
+                if sim_cfg.get('track'):
+                    TRACK_RECORD.update(cmds, ROBOT.time_step)
 
-                # for idx, q_ang, q_vel in zip(ROBOT.jointidx['idx'], joint_ang, joint_vel):
-                #     p.resetJointState(ROBOT.robot, idx, q_ang), 
                 ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
                 p.stepSimulation()
@@ -268,7 +271,7 @@ def simulation(args={}):
         else:
             continue
 
-    TRACK_RECORD.plot_realized_vs_sim()
+    TRACK_RECORD.plot()
     p.disconnect()
 
 if __name__ == "__main__":

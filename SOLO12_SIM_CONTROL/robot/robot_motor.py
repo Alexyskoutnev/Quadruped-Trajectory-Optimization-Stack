@@ -53,13 +53,8 @@ class MotorModel(object):
         kd = self._kd
         desired_motor_angle = motor_ang_cmd
         desired_motor_velocities = np.full(12, 0)
-        # breakpoint()
         motor_torque = -kp * (motor_ang - desired_motor_angle) - kd * (motor_vel - desired_motor_velocities)
         return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
-
-
-        # pwm = np.clip(-1 * kp  * (motor_ang - motor_ang_cmd) - kd * (motor_vel), -1, 1)
-        # return self._convert_to_torque_from_pwm(pwm)
 
     def _convert_to_torque_from_pwm(self, pwm):
         """converting a pwm signal to motor torque
