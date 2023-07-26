@@ -92,12 +92,12 @@ class Gait(object):
         for i in range(10): #Bezier Curve Computation
             swingX += bezier(t, i, X_pts[i])
             swingY += bezier(t, i, Y_pts[i])
-            swingZ += bezier(t, i, Z_pts[i])
+            swingZ += bezier(t, i, Z_pts[i]) / 2 
         
         for i in range(9): #Derivative Bezier Curve
             swingX_d += bezier_d_1(t, i, X_pts[i + 1], X_pts[i])
             swingY_d += bezier_d_1(t, i, Y_pts[i + 1], Y_pts[i])
-            swingZ_d += bezier_d_1(t, i, Z_pts[i + 1], Z_pts[i])
+            swingZ_d += bezier_d_1(t, i, Z_pts[i + 1], Z_pts[i]) / 2
         
         return swingX, swingY, swingZ, swingX_d, swingY_d, swingZ_d
 

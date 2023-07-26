@@ -2,7 +2,7 @@ mode : "towr_track_no_contact"
 enviroment : "towr_track_no_contact_no_gui"
 py_interface : False
 fix-base : False
-NUM_TIME_STEPS : 10000
+NUM_TIME_STEPS : 400
 HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : False
@@ -10,4 +10,9 @@ stance_period : 10
 skip_forward_idx : 1
 record : True
 base_stable : False
+
+velocity : 0.5
+angle_velocity : 0.0
+angle : 0.0
+step_period : 1.0
 

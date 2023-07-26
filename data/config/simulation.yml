@@ -13,21 +13,21 @@ mode : "towr_track_no_contact"
 # enviroment : "towr_track_no_contact"
 # enviroment : "towr_track_no_contact_box"
 # enviroment : "towr_track_no_contact_no_gui"
-# enviroment : "fixed_in_air"
+enviroment : "fixed_in_air"
 py_interface : False
-fix-base : False
+fix-base : True
 velocity: 1.0
 angle_velocity : 0.0
 angle : 0.0
-step_period : 0.3
+step_period : 1.0
 offsets : [0.5, 0.0, 0.0, 0.5]
 trot_2_stance_ratio : 0.5
 NUM_TIME_STEPS : 10000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_phase : False
+stance_phase : True
 stance_period : 10
 skip_forward_idx : 10
 record : True
-base_stable : False
-
+base_stable : True
+track : True
