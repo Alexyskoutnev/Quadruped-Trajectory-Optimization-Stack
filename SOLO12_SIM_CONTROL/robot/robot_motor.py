@@ -5,6 +5,7 @@
 
 import numpy as np
 
+
 class MOTOR(object):
     NUM_MOTORS = 12 
     VOLTAGE_CLIPPING = 50 #based on A1 robot
@@ -18,6 +19,14 @@ class MOTOR(object):
     MOTOR_POS_LB = 0.5
     MOTOR_POS_UB = 2.5
 
+    GAINS_REF = {"FL_HIP": 35, "FL_ELBOW": 25, "FL_ANKLE": 25, "FR_HIP": 35, "FR_ELBOW": 25, "FR_ANKLE": 25,
+         "HL_HIP": 35, "HL_ELBOW": 25, "HL_ANKLE": 25, "HR_HIP": 35, "HR_ELBOW": 25, "HR_ANKLE": 25}
+
+    GAINS_P = [GAINS_REF['FL_HIP'], GAINS_REF['FL_ELBOW'], GAINS_REF['FL_ANKLE'],
+         GAINS_REF['FR_HIP'], GAINS_REF['FR_ELBOW'], GAINS_REF['FR_ANKLE'],
+         GAINS_REF['HL_HIP'], GAINS_REF['HL_ELBOW'], GAINS_REF['HL_ANKLE'],
+         GAINS_REF['HR_HIP'], GAINS_REF['HR_ELBOW'], GAINS_REF['HR_ANKLE']]
+
 class MotorModel(object):
     def __init__(self, kp=1.2, kd=0, motor_mode=None) -> None:
         """_summary_
@@ -27,7 +36,7 @@ class MotorModel(object):
             kd (int, optional): _description_. Defaults to 0.
             motor_mode (_type_, optional): _description_. Defaults to None.
         """
-        self._kp = kp
+        self._kp = self.UPDATE_GAIT(kp)
         self._kd = kd
         self._strength_ratio = [1.0] * MOTOR.NUM_MOTORS
 
@@ -49,11 +58,11 @@ class MotorModel(object):
             motor_ang (_type_): _description_
             motor_vel (_type_): _description_
         """
-        kp = self._kp
+        kp = MOTOR.GAINS_P
         kd = self._kd
         desired_motor_angle = motor_ang_cmd
         desired_motor_velocities = np.full(12, 0)
-        motor_torque = -kp * (motor_ang - desired_motor_angle) - kd * (motor_vel - desired_motor_velocities)
+        motor_torque = -(kp * (motor_ang - desired_motor_angle)) - kd * (motor_vel - desired_motor_velocities)
         return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
 
     def _convert_to_torque_from_pwm(self, pwm):
@@ -67,6 +76,24 @@ class MotorModel(object):
                                   * MOTOR.MOTOR_VOLTAGE / MOTOR.MOTOR_RESISTANCE, 
                                   -MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
         return observed_torque
+
+    @classmethod
+    def UPDATE_GAIT(self, gain, hip_scale=2.0, knee_scale=1.0, ankle_scale=1.0):
+        gains = np.ones(MOTOR.NUM_MOTORS) * gain
+        for i in (0, 3, 6, 9):
+            gains[i] *= hip_scale
+        for i in (1, 4, 7, 10):
+            gains[i] *= knee_scale
+        for i in (2, 5, 8, 11):
+            gains[i] *= ankle_scale
+        return gains
+
+
+
+
+        
+
+
 
 
         

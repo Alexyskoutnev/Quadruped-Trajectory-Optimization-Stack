@@ -6,6 +6,7 @@ import numpy as np
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
 
+
 def links_to_id(robot):
     """Helper function to retrieve the joint info of a robot into a dictionary
 

@@ -150,7 +150,7 @@ def simulation(args={}):
         else:
             continue
     
-    TRACK_RECORD.plot_realized_vs_sim()
+    TRACK_RECORD.plot(plot_graph=False)
         
     p.disconnect()
 
