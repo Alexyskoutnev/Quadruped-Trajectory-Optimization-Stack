@@ -196,6 +196,7 @@ class Tracking:
         plt.legend()
         plt.title('HR X Error')
         plt.savefig(SAVE_FILE_ERROR)
+
         if plot_graph:
             plt.show()
 
@@ -204,7 +205,6 @@ class Tracking:
         self.plot_error(plot_graph)
         print(f"TOTAL ERROR -> [{self.total_error:.2f}]")
         
-
     def get_sim_cmd(self):
         vec = self.robot.traj_vec
         return vec_to_cmd(vec)

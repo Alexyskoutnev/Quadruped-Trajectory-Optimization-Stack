@@ -9,7 +9,7 @@ import numpy as np
 class MOTOR(object):
     NUM_MOTORS = 12 
     VOLTAGE_CLIPPING = 50 #based on A1 robot
-    OBSERVED_TORQUE_LIMIT = 2.0 #based on A1 robot
+    OBSERVED_TORQUE_LIMIT = 1.5 #based on A1 robot
     MOTOR_VOLTAGE = 16.0 #based on A1 robot
     MOTOR_RESISTANCE = 0.186 #based on A1 robot
     MOTOR_TORQUE_CONSTANT = 0.025 #based on solo12 robot

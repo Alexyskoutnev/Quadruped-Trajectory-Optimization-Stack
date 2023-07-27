@@ -24,7 +24,7 @@ from SOLO12_SIM_CONTROL.tracking import Tracking
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 
-URDF = "./data/urdf/solo12.urdf"
+URDF = "./data/urdf/solo12_test.urdf"
 config = "./data/config/solo12_debug.yml"
 config_sim = "./data/config/debug.yml"
 cfg = yaml.safe_load(open(config, 'r'))
