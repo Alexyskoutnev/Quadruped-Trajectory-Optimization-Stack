@@ -28,7 +28,7 @@ class MOTOR(object):
          GAINS_REF['HR_HIP'], GAINS_REF['HR_ELBOW'], GAINS_REF['HR_ANKLE']]
 
 class MotorModel(object):
-    def __init__(self, kp=1.2, kd=0, motor_mode=None) -> None:
+    def __init__(self, kp=1.2, kd=0, hip_scale=1.0, knee_scale=1.0, ankle_scale=1.0, motor_mode=None) -> None:
         """_summary_
 
         Args:
@@ -36,8 +36,11 @@ class MotorModel(object):
             kd (int, optional): _description_. Defaults to 0.
             motor_mode (_type_, optional): _description_. Defaults to None.
         """
-        self._kp = self.UPDATE_GAIT(kp)
-        self._kd = kd
+        self.hip_scale = hip_scale
+        self.knee_scale = knee_scale
+        self.ankle_scale = ankle_scale
+        self._kp = self.UPDATE_GAIT(kp, hip_scale, knee_scale, ankle_scale)
+        self._kd = self.UPDATE_GAIT(kd, hip_scale, knee_scale, ankle_scale)
         self._strength_ratio = [1.0] * MOTOR.NUM_MOTORS
 
     def set_motor_gains(self, kp, kd):
@@ -58,7 +61,7 @@ class MotorModel(object):
             motor_ang (_type_): _description_
             motor_vel (_type_): _description_
         """
-        kp = MOTOR.GAINS_P
+        kp = self._kp
         kd = self._kd
         desired_motor_angle = motor_ang_cmd
         desired_motor_velocities = np.full(12, 0)

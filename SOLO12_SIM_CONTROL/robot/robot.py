@@ -6,7 +6,6 @@ import numpy as np
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
 
-
 def links_to_id(robot):
     """Helper function to retrieve the joint info of a robot into a dictionary
 
@@ -101,7 +100,7 @@ class SOLO12(object):
                                       forces= [0.0 for m in self.jointidx['idx']])
         self._kp = config['kp']
         self._kd = config['kd']
-        self._motor = MotorModel(self._kp, self._kd)
+        self._motor = MotorModel(self._kp, self._kd, config['hip_gain_scale'], config['knee_gain_scale'], config['ankle_gain_scale'])
         self._joint_ang = None
         self._joint_vel = None
         self._joint_toq = None
