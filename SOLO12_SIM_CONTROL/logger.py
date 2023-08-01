@@ -12,7 +12,7 @@ class Logger(object):
             self.log = open(self.path + "/" + str(log_type) + ".out", "w")
         else:
             formatted_time = time.strftime('%Y_%m_%d_%H:%M:%S', time.localtime(self.runtime))
-            self.log = open(formatted_time + "_" + str(log_type) + ".out", "r+")
+            self.log = open(formatted_time + "_" + str(log_type) + ".out", "w")
 
     def write(self, msg : str):
         self.log.write(msg)
