@@ -9,7 +9,7 @@ from threading import Thread, Lock
 
 #third party
 import pybullet as p
-import pybullet_data
+import pybullet_data as pd
 import yaml
 import numpy as np
 
@@ -46,17 +46,6 @@ def update_file_name(file, cfg, sim_cfg):
     file_name = file +  "_cmode_" + MODE + ".csv"
     return file_name
 
-
-def setup_enviroment():
-    py_client = p.connect(p.GUI)
-    p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.setGravity(0,0,-9.81)
-    return py_client 
-
-def importRobot(file=URDF, POSE=([0,0,1], (0.0,0.0,0.0,1.0))):
-    solo12 = p.loadURDF(URDF, *POSE)
-    return solo12
-
 def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.robot = ROBOT
     global_cfg.ROBOT_CFG.linkWorldPosition = list(kwargs['COM'])
@@ -88,6 +77,7 @@ def simulation(args={}):
     """Main simulation interface that runs the bullet engine
     
     """
+    
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
     Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'])
@@ -96,6 +86,8 @@ def simulation(args={}):
     init_phase = sim_cfg['stance_phase']
     last_loop_time = time.time()
     sim_step = 0
+    
+
     """============SIM-CONFIGURATION============"""
     if sim_cfg['enviroment'] == "testing":
         velocity, angle_velocity , angle, step_period = sim_cfg['velocity'], sim_cfg['angle_velocity'], sim_cfg['angle'], sim_cfg['step_period']
