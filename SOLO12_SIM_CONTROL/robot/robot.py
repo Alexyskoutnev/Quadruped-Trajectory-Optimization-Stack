@@ -98,9 +98,10 @@ class SOLO12(object):
                                       controlMode=p.VELOCITY_CONTROL,
                                       targetVelocities= [0.0 for m in self.jointidx['idx']],
                                       forces= [0.0 for m in self.jointidx['idx']])
+        self.offsets = [0.1, 0.0, 0.0, -0.1, 0.0, 0.0, 0.1, 0.0, 0.0, -0.1, 0.0, 0.0]
         self._kp = config['kp']
         self._kd = config['kd']
-        self._motor = MotorModel(self._kp, self._kd)
+        self._motor = MotorModel(self._kp, self._kd, config['hip_gain_scale'], config['knee_gain_scale'], config['ankle_gain_scale'])
         self._joint_ang = None
         self._joint_vel = None
         self._joint_toq = None
@@ -193,7 +194,7 @@ class SOLO12(object):
             p.setJointMotorControlArray(self.robot, jointsInx, controlMode=p.TORQUE_CONTROL, forces=cmd_toq)
 
     def set_joint_control_multi(self, indices, controlMode, cmd_q, cmd_vel=None, cmd_toq=None):
-        """Function to interface with joint states for the bullet engine
+        """Function to interface with joint states within bullet engine
 
         Args:
             jointsInx (list[int]): the joints in effect in the bullet simulator
@@ -202,6 +203,8 @@ class SOLO12(object):
             cmd_vel (tuple(floats)): desired joint velocity state. Defaults to None.
             cmd_toq (tuple(floats)): desired torque state. Defaults to None.
         """
+        cmd_q += self.offsets #adding slight offsets to joint angles
+        # breakpoint()
         for i in range(0, 12, 3):
             idx = indices[i:i+3]
             q_cmd_temp = cmd_q[i:i+3]
@@ -253,6 +256,12 @@ class SOLO12(object):
         Returns:
             tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
         """
+
+        # for i, foot in enumerate(cmds):
+            # breakpoint()
+            # cmds[foot]['P'] += self.offsets[i*3:(i*3+3)]
+
+
         if cmds.get('COM') is not None:
             del cmds['COM']
         q_cmd = np.zeros(12)
@@ -401,6 +410,7 @@ class SOLO12(object):
         self._joint_state = p.getJointStates(self.robot, self.jointidx['idx'])
         self._joint_ang = [state[0] for state in self._joint_state]
         self._joint_vel = [state[1] for state in self._joint_state]
+
 
 
 

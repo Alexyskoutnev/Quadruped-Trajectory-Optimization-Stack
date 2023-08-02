@@ -1,21 +1,21 @@
 # mode : "bezier"
-# mode : "towr"
+mode : "towr"
 # mode : "balance"
 # mode : "visual_track"
 # mode : "testing"
 # mode : "track_imitation"
-mode : "towr_track_no_contact"
-enviroment : "testing"
+# mode : "towr_track_no_contact"
+# enviroment : "testing"
 # enviroment : "plane_record"
-# enviroment : "plane"
+enviroment : "plane"
 # enviroment : "testing"
 # enviroment : "towr_no_gui"
 # enviroment : "towr_track_no_contact"
 #enviroment : "towr_track_no_contact_box"
 # enviroment : "towr_track_no_contact_no_gui"
-enviroment : "fixed_in_air"
+# enviroment : "fixed_in_air"
 py_interface : False
-fix-base : True
+fix-base : False
 velocity: 1.0
 angle_velocity : 0.0
 angle : 0.0
@@ -29,5 +29,5 @@ stance_phase : True
 stance_period : 10
 skip_forward_idx : 10
 record : True
-base_stable : True
+base_stable : False
 track : True
