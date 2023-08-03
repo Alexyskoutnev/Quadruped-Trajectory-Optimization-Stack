@@ -117,21 +117,15 @@ class Simulation(object):
                     heightfield_data.write('{}, '.format(heightfieldData[i+j*numHeightfieldRows]))
                 heightfield_data.write("\n")
      
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,1.0], heightfieldTextureScaling=(numHeightfieldRows-1)/2, heightfieldData=heightfieldData, numHeightfieldRows=numHeightfieldRows, numHeightfieldColumns=numHeightfieldColumns)
+            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.2,.2,2.0], heightfieldTextureScaling=(numHeightfieldRows-1)/2, heightfieldData=heightfieldData, numHeightfieldRows=numHeightfieldRows, numHeightfieldColumns=numHeightfieldColumns)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[2,0,0], [0,0,0,1])
+            p.resetBasePositionAndOrientation(terrain,[0.5,-1,0], [0,0,0,1])
 
         if reading_from_file:
             # read from file
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[1,1,1.0],fileName = "heightmaps/heightfield_data.txt", heightfieldTextureScaling=128)
+            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,1],fileName = "heightmaps/heightfield.txt", heightfieldTextureScaling=64)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[0,0,0], [0,0,0,1])
-
-        #if reading_from_file:
-        #    # read from file
-        #    terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.5,.5,2.5],fileName = "heightmaps/ground0.txt", heightfieldTextureScaling=128)
-        #    terrain  = p.createMultiBody(0, terrainShape)
-        #    p.resetBasePositionAndOrientation(terrain,[0,0,0], [0,0,0,1])
+            p.resetBasePositionAndOrientation(terrain,[2,0,.2], [0,0,0,1])
         
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
         p.changeVisualShape(terrain, -1, rgbaColor=[1,1,1,1])
