@@ -124,6 +124,9 @@ class SOLO12(object):
         self._joint_ang = None
         self._joint_vel = None
         self._joint_toq = None
+        self._joint_ang_ref = None
+        self._joint_vel_ref = None
+        self._joint_toq_ref = None
         self._joint_state = None
         self._time_step = config['timestep']
 
@@ -181,7 +184,11 @@ class SOLO12(object):
         Returns:
             dict: 12-idx array of joint angle, joint velocity, and joint torque
         """
+        self._update()
         return {'q_cmd': self._joint_ang, "q_vel": self._joint_vel, "q_toq": self._joint_toq}
+
+    # @property
+    # def 
 
     @property
     def time(self):
@@ -289,9 +296,9 @@ class SOLO12(object):
             if (q_toq_temp is not None):
                 q_toq[i:i+3] = q_toq_temp[i:i+3]
             i += 3
-        self._joint_ang = q_cmd
-        self._joint_vel = q_vel
-        self._joint_toq = q_toq
+        self._joint_ang_ref = q_cmd
+        self._joint_vel_ref = q_vel
+        self._joint_toq_ref = q_toq
         return q_cmd, q_vel, q_toq
 
     def get_PD_values(self):
@@ -352,7 +359,6 @@ class SOLO12(object):
                 joint_position[6:9] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][6:9]
             elif idx_2_EE[idx] == "HR_FOOT":
                 joint_position[9:12] = self.inv_kinematics(cmds[idx_2_EE[idx]], idx, mode)[0][9:12]
-        self._joint_ang = joint_position
         return joint_position
 
     def inv_kinematics(self, cmd, index, mode = 'P'):
@@ -401,8 +407,8 @@ class SOLO12(object):
                     velocities.append(state[1])
                 for i, idx in enumerate([9, 10, 11]):
                     joint_velocity[idx] = velocities[i]
-        self._joint_ang = joint_position #COULD BE POTENTIALY NOT 100% accurate if we update joint 4 but we want 1 (old joint reference)
-        self._joint_vel = joint_velocity
+        self._joint_ang_ref = joint_position #COULD BE POTENTIALY NOT 100% accurate if we update joint 4 but we want 1 (old joint reference)
+        self._joint_vel_ref = joint_velocity
         return joint_position, joint_velocity
 
     def inv_kinematics_pin(self):
@@ -429,15 +435,22 @@ class SOLO12(object):
         q_mes[:] = [state[0] for state in jointStates]
         v_mes[:] = [state[1] for state in jointStates]
         q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
-        self._joint_ang = q_cmd
-        self._joint_vel = q_vel
-        self._joint_toq = q_toq
+        self._joint_ang_ref = q_cmd
+        self._joint_vel_ref = q_vel
+        self._joint_toq_ref = q_toq
         return q_cmd, q_vel, q_toq
 
     def _update(self):
+        """Current joint angles, joint velocity, base state, and base velocity of the robot 
+            in the bullet simulator.
+        """
+        base_state = p.getBasePositionAndOrientation(self.robot)
+        base_vel = p.getBaseVelocity(self.robot)
         self._joint_state = p.getJointStates(self.robot, self.jointidx['idx'])
         self._joint_ang = [state[0] for state in self._joint_state]
         self._joint_vel = [state[1] for state in self._joint_state]
+        self.q = np.hstack((np.array(base_state[0]), np.array(base_state[1]), self._joint_ang)) #Underactuated system representation
+        self.qdot = np.hstack((np.array(base_vel[0]), np.array(base_vel[1]), self._joint_vel)) #Underactuated system representation
 
 
 
