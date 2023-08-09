@@ -113,7 +113,6 @@ def simulation(args={}):
             file = open(FILE, 'w', newline='')
             writer = csv.writer(file) 
             record_timestep = 0
-            
     elif sim_cfg['mode'] == "track":
         csv_file = open(TRACK, 'r', newline='')
         reader =csv.reader(csv_file, delimiter=' ')

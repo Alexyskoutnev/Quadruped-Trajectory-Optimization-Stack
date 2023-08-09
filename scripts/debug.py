@@ -90,15 +90,14 @@ def simulation(args={}):
     if sim_cfg['mode'] == "towr_track_no_contact":
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
-        if args.get('record') or sim_cfg.get('record'):
-            FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
-            file = open(FILE, 'w', newline='')
-            NUM_TIME_STEPS = sum(1 for row in reader)
-            csv_file = open(TOWR, 'r', newline='')
-            reader = csv.reader(csv_file, delimiter=',')
-            writer = csv.writer(file) 
-            record_timestep = 0
-            TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
+        FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
+        file = open(FILE, 'w', newline='')
+        NUM_TIME_STEPS = sum(1 for row in reader)
+        csv_file = open(TOWR, 'r', newline='')
+        reader = csv.reader(csv_file, delimiter=',')
+        writer = csv.writer(file) 
+        record_timestep = 0
+        TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
     elif sim_cfg['mode'] == "bezier":
         offsets = np.array(cfg['offsets'])
         trot_2_stance_ratio = cfg['trot_2_stance_ratio']
@@ -123,7 +122,6 @@ def simulation(args={}):
                     COM = cmds['COM']
                 except StopIteration:
                     break
-
                 joint_ang, joint_vel, joint_toq = ROBOT.control_multi(cmds, ROBOT.EE_index['all'], mode=ROBOT.mode)
                 if sim_cfg.get('record'):
                     csv_entry = ROBOT.csv_entry
@@ -145,12 +143,8 @@ def simulation(args={}):
                     print(f"Steps [{sim_step:.3f}]")
                     ROBOT.time_step += 1
                     sim_step += 1
-                    TRACK_RECORD.update(gait_traj, ROBOT.time_step)
-                
-        else:
-            continue
-    
-    TRACK_RECORD.plot(plot_graph=False)
+                    TRACK_RECORD.update(gait_traj, ROBOT.time_step)               
+    TRACK_RECORD.plot(plot_graph=True)
         
     p.disconnect()
 

@@ -8,7 +8,7 @@ TIMESTEPS : 0.001
 stance_phase : False
 stance_period : 10
 skip_forward_idx : 1
-record : True
+record : False
 base_stable : False
 
 velocity : 0.5

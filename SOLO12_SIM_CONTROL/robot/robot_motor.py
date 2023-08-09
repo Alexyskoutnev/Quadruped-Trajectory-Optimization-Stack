@@ -9,7 +9,7 @@ import numpy as np
 class MOTOR(object):
     NUM_MOTORS = 12 
     VOLTAGE_CLIPPING = 50 #based on A1 robot
-    OBSERVED_TORQUE_LIMIT = 1.5 #based on A1 robot
+    OBSERVED_TORQUE_LIMIT = 3.0 #based on SOLO12 Robot
     MOTOR_VOLTAGE = 16.0 #based on A1 robot
     MOTOR_RESISTANCE = 0.186 #based on A1 robot
     MOTOR_TORQUE_CONSTANT = 0.025 #based on solo12 robot
@@ -65,7 +65,9 @@ class MotorModel(object):
         kd = self._kd
         desired_motor_angle = motor_ang_cmd
         desired_motor_velocities = np.full(12, 0)
-        motor_torque = -(kp * (motor_ang - desired_motor_angle)) - kd * (motor_vel - desired_motor_velocities)
+        # motor_torque = -(kp * (motor_ang - desired_motor_angle)) - kd * (motor_vel - desired_motor_velocities)
+        motor_torque = kp * (desired_motor_angle - motor_ang) + kd * (desired_motor_velocities - motor_vel)
+
         return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
 
     def _convert_to_torque_from_pwm(self, pwm):
