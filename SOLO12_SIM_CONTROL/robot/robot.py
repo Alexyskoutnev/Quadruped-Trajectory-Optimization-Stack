@@ -2,6 +2,7 @@ import time
 
 import pybullet as p
 import numpy as np
+import pinocchio as pin
 
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
@@ -98,6 +99,12 @@ class SOLO12(object):
                                       controlMode=p.VELOCITY_CONTROL,
                                       targetVelocities= [0.0 for m in self.jointidx['idx']],
                                       forces= [0.0 for m in self.jointidx['idx']])
+        
+        revoluteJointIndices = self.jointidx['idx']
+        # Enable torque control for revolute joints
+        jointTorques = [0.0 for m in revoluteJointIndices]
+        p.setJointMotorControlArray(self.robot, revoluteJointIndices, controlMode=p.TORQUE_CONTROL, forces=jointTorques)
+
         self.offsets = [0.1, 0.0, 0.0, -0.1, 0.0, 0.0, 0.1, 0.0, 0.0, -0.1, 0.0, 0.0]
         self._kp = config['kp']
         self._kd = config['kd']
@@ -204,7 +211,6 @@ class SOLO12(object):
             cmd_toq (tuple(floats)): desired torque state. Defaults to None.
         """
         cmd_q += self.offsets #adding slight offsets to joint angles
-        # breakpoint()
         for i in range(0, 12, 3):
             idx = indices[i:i+3]
             q_cmd_temp = cmd_q[i:i+3]
@@ -256,12 +262,6 @@ class SOLO12(object):
         Returns:
             tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
         """
-
-        # for i, foot in enumerate(cmds):
-            # breakpoint()
-            # cmds[foot]['P'] += self.offsets[i*3:(i*3+3)]
-
-
         if cmds.get('COM') is not None:
             del cmds['COM']
         q_cmd = np.zeros(12)
@@ -306,6 +306,14 @@ class SOLO12(object):
         q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
         q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
         return q_cmd, q_vel, q_toq
+
+    def inv_dynamics_pin(self):
+        """Template for Pinocchio based inverse dynamics
+
+        Raises:
+            NotImplementedError: _description_
+        """
+        raise NotImplementedError
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
         """Helper function that utilizes bullet inverse kinematics algorithm to find the optimal
@@ -384,6 +392,14 @@ class SOLO12(object):
         self._joint_ang = joint_position #COULD BE POTENTIALY NOT 100% accurate if we update joint 4 but we want 1 (old joint reference)
         self._joint_vel = joint_velocity
         return joint_position, joint_velocity
+
+    def inv_kinematics_pin(self):
+        """Template for Pinocchio based inverse kinematics
+
+        Raises:
+            NotImplementedError: _description_
+        """
+        raise NotImplementedError
 
     def default_stance_control(self):
         """Robot default stance standing still

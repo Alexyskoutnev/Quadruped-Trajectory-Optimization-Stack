@@ -5,11 +5,9 @@
     <!-- BASE LINK INERTIAL -->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <!-- <mass value="2.0"/> -->
-      <mass value="2.5"/> 
+      <mass value="1.16115091"/>
       <!-- The base is extremely symmetrical. -->
-      <!-- <inertia ixx="0.1" ixy="1.0" ixz=".1" iyy="0.1" iyz="0.1" izz="0.1"/> -->
-      <inertia ixx="0.01" ixy="0.00" ixz="0.00" iyy="0.01" iyz="0.00" izz="0.01"/>
+      <inertia ixx="0.00578574" ixy="0.0" ixz="0.0" iyy="0.01938108" iyz="0.0" izz="0.02476124"/>
     </inertial>
     <!-- BASE LINK VISUAL -->
     <visual>
@@ -33,8 +31,8 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="2."/>
-      <restitution value="0.75"/>
+      <lateral_friction value="1.0"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END BASE LINK -->
@@ -118,7 +116,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END UPPER LEG LINK -->
@@ -163,7 +161,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
@@ -207,8 +205,8 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="2."/>
-      <restitution value="0.75"/>
+      <lateral_friction value="1."/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
@@ -292,7 +290,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END UPPER LEG LINK -->
@@ -337,7 +335,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
@@ -381,8 +379,8 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="2."/>
-      <restitution value="0.75"/>
+      <lateral_friction value="1."/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
@@ -466,7 +464,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END UPPER LEG LINK -->
@@ -511,7 +509,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
@@ -555,8 +553,8 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="2."/>
-      <restitution value="0.75"/>
+      <lateral_friction value="1."/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
@@ -640,7 +638,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END UPPER LEG LINK -->
@@ -685,7 +683,7 @@
     <!-- Bullet specific paramters -->
     <contact>
       <lateral_friction value="1.0"/>
-      <restitution value="0.75"/>
+      <restitution value="0.50"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
@@ -729,8 +727,8 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="2."/>
-      <restitution value="0.75"/>
+      <lateral_friction value="1."/>
+      <restitution value="0.5"/>
     </contact>
   </link>
   <!-- END LOWER LEG LINK -->
