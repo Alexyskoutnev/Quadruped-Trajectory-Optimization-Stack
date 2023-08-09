@@ -1,7 +1,7 @@
 mode : "towr_track_no_contact"
-enviroment : "towr_track_no_contact_no_gui"
+enviroment : "towr_track_no_contact"
 py_interface : False
-fix-base : False
+fix-base : True
 NUM_TIME_STEPS : 400
 HZ : 1000
 TIMESTEPS : 0.001

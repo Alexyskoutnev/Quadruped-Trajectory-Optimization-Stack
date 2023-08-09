@@ -122,7 +122,7 @@ def simulation(args={}):
                     COM = cmds['COM']
                 except StopIteration:
                     break
-                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(cmds, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(cmds, ROBOT.EE_index['all'], mode=ROBOT.mode, usePin=True)
                 if sim_cfg.get('record'):
                     csv_entry = ROBOT.csv_entry
                     for i in range(5):

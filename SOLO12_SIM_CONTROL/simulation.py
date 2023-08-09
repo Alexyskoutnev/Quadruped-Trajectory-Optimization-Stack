@@ -8,13 +8,14 @@ URDF = "./data/urdf/"
 
 class Simulation(object):
 
-    def __init__(self, simulation_type, timestep=None):
+    def __init__(self, simulation_type, timestep=None, setup_terrain=False):
         self._wall = "./data/urdf/wall.urdf"
         self._stairs = "./data/urdf/stair.urdf"
         self._box = "./data/urdf/box.urdf"
         self.timestep = timestep
         self.p = self.setup(sim_config=simulation_type)
-        self.setup_terrain()
+        if setup_terrain:
+            self.setup_terrain()
 
     def setup(self, sim_config = "height_terrain"):
         py_client = None

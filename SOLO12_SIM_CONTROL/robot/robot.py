@@ -129,6 +129,7 @@ class SOLO12(object):
         self._joint_toq_ref = None
         self._joint_state = None
         self._time_step = config['timestep']
+        self._update()
 
     def CoM_states(self):
         """Returns the Center of mass and orientation of robot
@@ -270,7 +271,17 @@ class SOLO12(object):
             q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
-    def control_multi(self, cmds, indices, mode="P"):
+    def PD(self, qa_ref, qa_dot_ref, qa, qa_dot, dt, Kp=1, Kd=1, torques_sat=5*np.ones((12, 1)), torques_ref=np.zeros(12)):
+
+        # Output torques
+        torques = Kp * (qa_ref - qa) + Kd * (qa_dot_ref - qa_dot) + torques_ref
+
+        # Saturation to limit the maximal value that torques can have
+        torques = np.maximum(np.minimum(torques, torques_sat), -torques_sat)
+
+        return torques
+
+    def control_multi(self, cmds, indices, mode="P", usePin = False):
         """Helper function to find the control outputs for each end-effector
 
         Args:
@@ -281,21 +292,49 @@ class SOLO12(object):
         Returns:
             tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
         """
-        if cmds.get('COM') is not None:
-            del cmds['COM']
-        q_cmd = np.zeros(12)
-        q_vel = np.zeros(12)
-        q_toq = np.zeros(12)
-        i = 0
-        for cmd, idx in zip(cmds.values(), indices):
-            q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
-            if (q_cmd_temp is not None):
-                q_cmd[i:i+3] = q_cmd_temp[i:i+3]
-            if (q_vel_temp is not None):
-                q_vel[i:i+3] = q_vel_temp[i:i+3]
-            if (q_toq_temp is not None):
-                q_toq[i:i+3] = q_toq_temp[i:i+3]
-            i += 3
+        self._update()
+        if usePin:
+            if cmds.get('COM') is not None:
+                    del cmds['COM']
+            q_cmd = np.zeros(12)
+            q_vel = np.zeros(12)
+            q_toq = np.zeros(12)
+            q_cmd, q_vel_cmd = self.inv_kinematics_pin(cmds) 
+            ##DELETE FOR LATER
+            i = 0
+            for cmd, idx in zip(cmds.values(), indices):
+                q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
+                if (q_cmd_temp is not None):
+                    q_cmd[i:i+3] = q_cmd_temp[i:i+3]
+                if (q_vel_temp is not None):
+                    q_vel[i:i+3] = q_vel_temp[i:i+3]
+                if (q_toq_temp is not None):
+                    q_toq[i:i+3] = q_toq_temp[i:i+3]
+                i += 3 
+            Kp = 8.
+            Kd = 0.2
+            torque_sat = 3  # torque saturation in N.m
+            torques_ref = np.zeros(12)  # feedforward torques
+            # breakpoint()
+            self._update()
+            q_mes, v_mes = self.get_PD_values()
+            q_toq = self._motor.convert_to_torque_v1(q_cmd, q_mes, v_mes, q_vel_cmd)
+        else:
+            if cmds.get('COM') is not None:
+                del cmds['COM']
+            q_cmd = np.zeros(12)
+            q_vel = np.zeros(12)
+            q_toq = np.zeros(12)
+            i = 0
+            for cmd, idx in zip(cmds.values(), indices):
+                q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
+                if (q_cmd_temp is not None):
+                    q_cmd[i:i+3] = q_cmd_temp[i:i+3]
+                if (q_vel_temp is not None):
+                    q_vel[i:i+3] = q_vel_temp[i:i+3]
+                if (q_toq_temp is not None):
+                    q_toq[i:i+3] = q_toq_temp[i:i+3]
+                i += 3
         self._joint_ang_ref = q_cmd
         self._joint_vel_ref = q_vel
         self._joint_toq_ref = q_toq
@@ -411,13 +450,74 @@ class SOLO12(object):
         self._joint_vel_ref = joint_velocity
         return joint_position, joint_velocity
 
-    def inv_kinematics_pin(self):
+    def inv_kinematics_pin(self, cmd):
         """Template for Pinocchio based inverse kinematics
 
         Raises:
             NotImplementedError: _description_
         """
-        raise NotImplementedError
+        qa = self.q[7:]
+        qa_dot = self.qdot[6:]
+
+        q_REF = np.concatenate((cmd['FL_FOOT']['P'], cmd['FR_FOOT']['P'], cmd['HL_FOOT']['P'], cmd['HR_FOOT']['P']))
+
+        qa_ref = np.zeros(12)
+        qa_dot_ref = np.zeros(12)
+
+        K = 10.
+
+        ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")
+        ID_FR = self.ROBOT.model.getFrameId("FR_FOOT")
+        ID_HL = self.ROBOT.model.getFrameId("HL_FOOT")
+        ID_HR = self.ROBOT.model.getFrameId("HR_FOOT")
+
+        pin.forwardKinematics(self.ROBOT.model, self.ROBOT.data, self._joint_ang) #Update the state of robot for Pinocchio
+        pin.updateFramePlacements(self.ROBOT.model, self.ROBOT.data)
+
+        xyz_FL = self.ROBOT.data.oMf[ID_FL].translation
+        xyz_FR = self.ROBOT.data.oMf[ID_FR].translation
+        xyz_HL = self.ROBOT.data.oMf[ID_HL].translation
+        xyz_HR = self.ROBOT.data.oMf[ID_HR].translation
+
+
+        err_FL = xyz_FL - cmd['FL_FOOT']['P']
+        err_FR = xyz_FR - cmd['FR_FOOT']['P']
+        err_HL = xyz_HL - cmd['HL_FOOT']['P']
+        err_HR = xyz_HR - cmd['HR_FOOT']['P']
+
+        o_FL = self.ROBOT.data.oMf[ID_FL].rotation
+        o_FR = self.ROBOT.data.oMf[ID_FR].rotation
+        o_HL = self.ROBOT.data.oMf[ID_HL].rotation
+        o_HR = self.ROBOT.data.oMf[ID_HR].rotation
+
+        fJ_FL3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_FL)[:3, -12:]  # Take only the translation terms
+        oJ_FL3 = o_FL @ fJ_FL3 #Transforms to rotation to global frame
+        oJ_FLxz = oJ_FL3[0:3, -12:]
+
+        fJ_FR3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_FR)[:3, -12:]
+        oJ_FR3 = o_FR @ fJ_FR3
+        oJ_FRxz = oJ_FR3[0:3, -12:]
+
+        fJ_HL3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_HL)[:3, -12:]
+        oJ_HL3 = o_HL @ fJ_HL3
+        oJ_HLxz = oJ_HL3[0:3, -12:]
+
+        fJ_HR3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_HR)[:3, -12:]
+        oJ_HR3 = o_HR @ fJ_HR3
+        oJ_HRxz = oJ_HR3[0:3, -12:]
+
+        nu = np.hstack([err_FL, err_FR, err_HL, err_HR]) # 12 x 1
+
+        J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz]) #12 x 12
+
+        q_dot_ref = - K * np.linalg.pinv(J) @ nu # 12 x 12 X 12 x 1 => 12 x 1
+
+
+        # Computing the updated configuration
+        q_ref = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_ref * self._time_step)
+
+
+        return q_ref, q_dot_ref
 
     def default_stance_control(self):
         """Robot default stance standing still
@@ -447,8 +547,8 @@ class SOLO12(object):
         base_state = p.getBasePositionAndOrientation(self.robot)
         base_vel = p.getBaseVelocity(self.robot)
         self._joint_state = p.getJointStates(self.robot, self.jointidx['idx'])
-        self._joint_ang = [state[0] for state in self._joint_state]
-        self._joint_vel = [state[1] for state in self._joint_state]
+        self._joint_ang = np.array([state[0] for state in self._joint_state])
+        self._joint_vel = np.array([state[1] for state in self._joint_state])
         self.q = np.hstack((np.array(base_state[0]), np.array(base_state[1]), self._joint_ang)) #Underactuated system representation
         self.qdot = np.hstack((np.array(base_vel[0]), np.array(base_vel[1]), self._joint_vel)) #Underactuated system representation
 

@@ -70,6 +70,23 @@ class MotorModel(object):
 
         return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
 
+    def convert_to_torque_v1(self, motor_ang_cmd, motor_ang, motor_vel, motor_vel_cmd):
+        """Convert the motor position signal to torque
+
+        Args:
+            motor_cmd (_type_): _description_
+            motor_ang (_type_): _description_
+            motor_vel (_type_): _description_
+        """
+        kp = self._kp
+        kd = self._kd
+        desired_motor_angle = motor_ang_cmd
+        desired_motor_velocities = motor_vel_cmd
+        # motor_torque = -(kp * (motor_ang - desired_motor_angle)) - kd * (motor_vel - desired_motor_velocities)
+        motor_torque = kp * (desired_motor_angle - motor_ang) + kd * (desired_motor_velocities - motor_vel)
+
+        return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
+
     def _convert_to_torque_from_pwm(self, pwm):
         """converting a pwm signal to motor torque
 
