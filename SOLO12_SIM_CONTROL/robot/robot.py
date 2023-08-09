@@ -60,11 +60,23 @@ def shift_z(v, shift):
     """
     v[2] += shift
     return v
+
+class Loader:
+    def __init__(self, urdf_path, config, fixed = 0) -> None:
+        _load = pin.buildModelFromUrdf(urdf_path)
+        self.model = _load
+        self.data = _load.createData()
+        self.robot = p.loadURDF(urdf_path, config['start_pos'], config['start_ang'], useFixedBase=fixed)
+        self.q0 = np.zeros(12)
+    
+    def __repr__(self) -> str:
+        return str(self.robot)
         
 class SOLO12(object):
     def __init__(self, URDF, config, fixed = 0, sim_cfg=None):
         self.config = config
-        self.robot = p.loadURDF(URDF, config['start_pos'], config['start_ang'],  useFixedBase=fixed)
+        self.ROBOT = Loader(URDF, config, fixed)
+        self.robot = self.ROBOT.robot
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
         self.fixjointidqx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
         self.links = links_to_id(self.robot)
