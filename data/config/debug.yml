@@ -1,8 +1,8 @@
-mode : "towr_track_no_contact"
-enviroment : "towr_track_no_contact"
+mode : "bezier"
+enviroment : "plane"
 py_interface : False
-fix-base : True
-NUM_TIME_STEPS : 400
+fix-base : False
+NUM_TIME_STEPS : 250
 HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : False

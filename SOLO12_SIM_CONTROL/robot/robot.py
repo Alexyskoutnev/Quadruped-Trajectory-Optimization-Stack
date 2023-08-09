@@ -93,7 +93,7 @@ class SOLO12(object):
         self.EE_WORLD = {"FL_W_POSE": base_frame_tf(self.tfBaseMtx, self.get_endeffector_pose()['FL_FOOT']['linkWorldPosition']), "FR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['FR_FOOT']['linkWorldPosition']),
                                     "HL_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HL_FOOT']['linkWorldPosition']), "HR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HR_FOOT']['linkWorldPosition'])}
         if sim_cfg['mode'] == "bezier":
-            self.shiftZ = 0.05
+            self.shiftZ = 0.10
             self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
                      'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
         elif sim_cfg['mode'] == "towr":
@@ -456,15 +456,8 @@ class SOLO12(object):
         Raises:
             NotImplementedError: _description_
         """
-        qa = self.q[7:]
-        qa_dot = self.qdot[6:]
 
-        q_REF = np.concatenate((cmd['FL_FOOT']['P'], cmd['FR_FOOT']['P'], cmd['HL_FOOT']['P'], cmd['HR_FOOT']['P']))
-
-        qa_ref = np.zeros(12)
-        qa_dot_ref = np.zeros(12)
-
-        K = 10.
+        K = 25.
 
         ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")
         ID_FR = self.ROBOT.model.getFrameId("FR_FOOT")
@@ -511,7 +504,6 @@ class SOLO12(object):
         J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz]) #12 x 12
 
         q_dot_ref = - K * np.linalg.pinv(J) @ nu # 12 x 12 X 12 x 1 => 12 x 1
-
 
         # Computing the updated configuration
         q_ref = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_ref * self._time_step)

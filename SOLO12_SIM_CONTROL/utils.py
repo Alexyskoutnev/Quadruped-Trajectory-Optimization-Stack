@@ -139,6 +139,7 @@ def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_tra
                                     np.array([traj[link][mode][1] + robot.shift[link][1]]),  
                                     np.array([traj[link][mode][2] + robot.shift[link][2]]), 
                                     np.ones(1)))
+                # breakpoint()
             elif towr:
                 vec = np.concatenate((np.array([traj[link][mode][0]]), 
                                     np.array([traj[link][mode][1]]), 
