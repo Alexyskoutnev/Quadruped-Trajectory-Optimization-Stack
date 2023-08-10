@@ -51,7 +51,7 @@ def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.EE['HL_FOOT'] = list(kwargs['HL_FOOT'])
     global_cfg.ROBOT_CFG.EE['HR_FOOT'] = list(kwargs['HR_FOOT'])
     global_cfg.ROBOT_CFG.runtime = ROBOT.time
-    if sim_cfg['enviroment'] == "plane":
+    if sim_cfg['skip_forward_idx'] > 1:
         global_cfg.RUN.step += sim_cfg['skip_forward_idx'] + 1
     elif sim_cfg['enviroment'] == "towr_no_gui":
         global_cfg.RUN.step += 1
@@ -152,11 +152,16 @@ def simulation(args={}):
                         global_cfg.RUN._update = False 
                         global_cfg.RUN.step = 0
                         mutex.release()
-                    time_step, EE_POSE = traj[sim_step, 0], traj[sim_step, 1:]
+                    # time_step, EE_POSE = traj[sim_step, 0], traj[sim_step, 1:]
+                    traj = np.array([float(x) for x in next(reader)])
+                    time_step, EE_POSE = traj[0], traj[1:]
                     global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                     global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                     towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
                     COM = EE_POSE[0:6]
+                    if sim_cfg['skip_forward_idx'] > 1:
+                        for _ in range(sim_cfg['skip_forward_idx']):
+                            next(reader)
                 except StopIteration:
                     log.write("==========STANCE==========")
                     global_cfg.RUN._stance = True
@@ -200,7 +205,7 @@ def simulation(args={}):
 
             last_loop_time = time.time()
             sim_step += 1
-            print(f"runtime: {time.time() - time_loop}")
+            # print(f"runtime: {time.time() - time_loop}")
 
     TRACK_RECORD.plot()
     p.disconnect()

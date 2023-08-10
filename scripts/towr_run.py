@@ -231,7 +231,7 @@ def test_mpc_single_loop(args):
         print("===============================NO SOLUTION===============================")
 
 if __name__ == "__main__":
-    test = True
+    test = False
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)

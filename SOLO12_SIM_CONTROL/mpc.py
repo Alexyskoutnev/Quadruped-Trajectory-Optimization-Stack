@@ -37,6 +37,7 @@ class MPC(object):
     def combine(self):
         """Combines the old and new csv trajectories together
         """
+        # breakpoint()
         time_combine = time.process_time()
         _old_traj = open(self.current_traj, "r")
         _new_traj = open(self.new_traj, "r")
@@ -73,6 +74,7 @@ class MPC(object):
         """
         self.cutoff_idx = int(global_cfg.RUN.step)
         self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
+        # print(self.last_timestep)
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
 
     def update_timestep(self):
