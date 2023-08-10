@@ -5,10 +5,10 @@
     <!-- BASE LINK INERTIAL -->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.5"/>
+      <mass value="1.16115091"/>
       <!-- <mass value="1.5"/>  -->
       <!-- The base is extremely symmetrical. -->
-      <inertia ixx="0.00266220" ixy="-0.00003684" ixz="-0.00001716" iyy="0.01388510"  iyz="-0.00000009" izz="0.01605370"/>
+      <inertia ixx="0.00578574" ixy="0.0" ixz="0.0" iyy="0.01938108" iyz="0.0" izz="0.02476124"/>
     </inertial>
     <!-- BASE LINK VISUAL -->
     <visual>
@@ -32,7 +32,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.5"/>
+      <lateral_friction value="1.0"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -206,7 +206,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.5"/>
+      <lateral_friction value="1.0"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -380,7 +380,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.5"/>
+      <lateral_friction value="1.0"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -554,7 +554,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.5"/>
+      <lateral_friction value="1.0"/>
       <restitution value="0.5"/>
     </contact>
   </link>
@@ -728,7 +728,7 @@
     </collision>
     <!-- Bullet specific paramters -->
     <contact>
-      <lateral_friction value="1.5"/>
+      <lateral_friction value="1.0"/>
       <restitution value="0.5"/>
     </contact>
   </link>

@@ -98,6 +98,7 @@ def simulation(args={}):
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
+        traj = np.genfromtxt(TOWR_TRAJ, delimiter=',')
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
         if args.get('record') or sim_cfg.get('record'):
@@ -168,8 +169,8 @@ def simulation(args={}):
                         global_cfg.RUN.step = 0
                         mutex.release()
                     
-                    traj = np.array([float(x) for x in next(reader)])
-                    time_step, EE_POSE = traj[0], traj[1:]
+                    # traj = np.array([float(x) for x in next(reader)])
+                    time_step, EE_POSE = traj[t_idx, 0], traj[t_idx, 1:]
                     global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                     global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                     towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))

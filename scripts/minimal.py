@@ -15,7 +15,8 @@ config_sim_fname = "./data/config/simulation.yml"
 terrain_fname = "data/heightmaps/heightfield.txt"
 #traj_fname = "data/traj/towr.csv"
 #traj_fname = "data/traj/lift_one_foot.csv"
-traj_fname = "data/traj/lift_two_feet.csv"
+# traj_fname = "data/traj/lift_two_feet.csv"
+traj_fname=  "data/traj/test.csv"
 
 cfg = yaml.safe_load(open(config_fname, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim_fname, 'r'))
@@ -63,6 +64,6 @@ while (t_idx < sim_cfg["NUM_TIME_STEPS"]):
    #pybullet.resetBasePositionAndOrientation(robot.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
 
    pybullet.stepSimulation()
-   t_idx += 10
+   t_idx += 5
  
 pybullet.disconnect()
