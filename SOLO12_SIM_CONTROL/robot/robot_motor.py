@@ -28,7 +28,7 @@ class MOTOR(object):
          GAINS_REF['HR_HIP'], GAINS_REF['HR_ELBOW'], GAINS_REF['HR_ANKLE']]
 
 class MotorModel(object):
-    def __init__(self, kp=1.2, kd=0, hip_scale=1.0, knee_scale=1.0, ankle_scale=1.0, motor_mode=None) -> None:
+    def __init__(self, kp=1.2, kd=0, hip_scale=1.0, knee_scale=1.0, ankle_scale=1.0, motor_mode=None, toq_max=None) -> None:
         """_summary_
 
         Args:
@@ -42,6 +42,8 @@ class MotorModel(object):
         self._kp = self.UPDATE_GAIT(kp, hip_scale, knee_scale, ankle_scale)
         self._kd = self.UPDATE_GAIT(kd, hip_scale, knee_scale, ankle_scale)
         self._strength_ratio = [1.0] * MOTOR.NUM_MOTORS
+        if toq_max:
+            MOTOR.OBSERVED_TORQUE_LIMIT = toq_max
 
     def set_motor_gains(self, kp, kd):
         """Set the motor postional and derivative gains

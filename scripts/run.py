@@ -139,7 +139,7 @@ def simulation(args={}):
                 if sim_cfg['py_interface']:
                     pos, angle, velocity, angle_velocity, step_period = pybullet_interface.robostates(ROBOT.robot)
                 gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio)
-                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode, usePin=cfg['use_pinocchio'])
                 ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 p.stepSimulation()
                 ROBOT.time_step += 1

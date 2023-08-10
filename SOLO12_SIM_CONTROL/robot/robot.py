@@ -120,7 +120,7 @@ class SOLO12(object):
         self.offsets = [0.1, 0.0, 0.0, -0.1, 0.0, 0.0, 0.1, 0.0, 0.0, -0.1, 0.0, 0.0]
         self._kp = config['kp']
         self._kd = config['kd']
-        self._motor = MotorModel(self._kp, self._kd, config['hip_gain_scale'], config['knee_gain_scale'], config['ankle_gain_scale'])
+        self._motor = MotorModel(self._kp, self._kd, config['hip_gain_scale'], config['knee_gain_scale'], config['ankle_gain_scale'], toq_max=config['t_max'])
         self._joint_ang = None
         self._joint_vel = None
         self._joint_toq = None
@@ -282,7 +282,7 @@ class SOLO12(object):
             tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
         """
         self._update()
-        if usePin:
+        if usePin and (not mode == "P" or not mode == "PD"):
             cmds = trajectory_2_local_frame(self, cmds)
             if cmds.get('COM') is not None:
                     del cmds['COM']
