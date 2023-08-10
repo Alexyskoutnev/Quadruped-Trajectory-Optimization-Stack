@@ -117,7 +117,7 @@ class SOLO12(object):
         jointTorques = [0.0 for m in revoluteJointIndices]
         p.setJointMotorControlArray(self.robot, revoluteJointIndices, controlMode=p.TORQUE_CONTROL, forces=jointTorques)
 
-        self.offsets = [0.1, 0.0, 0.0, -0.1, 0.0, 0.0, 0.1, 0.0, 0.0, -0.1, 0.0, 0.0]
+        self.offsets = [0.15, 0.0, 0.0, -0.15, 0.0, 0.0, 0.15, 0.0, 0.0, -0.15, 0.0, 0.0]
         self._kp = config['kp']
         self._kd = config['kd']
         self._motor = MotorModel(self._kp, self._kd, config['hip_gain_scale'], config['knee_gain_scale'], config['ankle_gain_scale'], toq_max=config['t_max'])
@@ -156,9 +156,13 @@ class SOLO12(object):
     
     @property
     def csv_entry(self):
+        """Helper function to quickly extract robot joint states into csv
+           format
+        Returns:
+            np.array: 36-idx array [12 ... joint angles 12 ... joint velocity 12 ... joint torques] 
+        """
         csv_entry = np.hstack([self._joint_ang, self._joint_vel, self._joint_toq])
         return csv_entry
-        
 
     @property
     def jointangles(self):
@@ -315,6 +319,11 @@ class SOLO12(object):
         return q_cmd, q_vel, q_toq
 
     def get_PD_values(self):
+        """Retrieves the observed joint angle and joint velocity used for PD torque controller
+
+        Returns:
+            tuple(np.array, np.array): measured joint angle and joint velocity
+        """
         self._update()
         observation_P = []
         observation_P.extend(self._joint_ang)
@@ -340,7 +349,7 @@ class SOLO12(object):
         return q_cmd, q_vel, q_toq
 
     def inv_dynamics_pin(self, q_cmd, q_vel_cmd, q_toq_cmd):
-        """Template for Pinocchio based inverse dynamics
+        """Template for Pinocchio based inverse dynamics [NOT DONE]
 
         Raises:
             NotImplementedError: _description_
@@ -358,12 +367,8 @@ class SOLO12(object):
         self.q_dot2_ref = np.linalg.inv(M[6:, 6:]) * (torques_ref - toq[6:])
 
         q_vel_cmd += self.q_dot2_ref * self._time_step
-
-        breakpoint()
-
         q_toq = self._motor.convert_to_torque_ff(q_cmd, self._joint_ang, self._joint_vel, q_vel_cmd, toq)
 
-        breakpoint()
         return q_cmd, q_vel_cmd, q_toq
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
@@ -444,14 +449,13 @@ class SOLO12(object):
         return joint_position, joint_velocity
 
     def inv_kinematics_pin(self, cmd):
-        """Template for Pinocchio based inverse kinematics
+        """Template for Pinocchio based inverse kinematics [NOT DONE]
 
         Raises:
             NotImplementedError: _description_
         """
 
         K = 10.
-        
 
         ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")
         ID_FR = self.ROBOT.model.getFrameId("FR_FOOT")

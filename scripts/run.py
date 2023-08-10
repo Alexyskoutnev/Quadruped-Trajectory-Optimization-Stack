@@ -26,13 +26,10 @@ import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"
 config_sim = "./data/config/simulation.yml"
-config_sim_record= "./data/config/simulation_towr_record.yml"
 cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 TOWR = "./data/traj/towr.csv"
 TOWR_TRAJ = "./data/traj/towr_traj"
-TRACK = "./data/traj/traj_thirdparty/jointStates.csv"
-HZ = sim_cfg['HZ']
 
 # global keypressed
 key_press_init_phase = True
@@ -194,6 +191,7 @@ def simulation(args={}):
                         sim_step += 1
                 else:
                     ROBOT.time_step += 1
+
                 if sim_cfg.get('track'):
                     TRACK_RECORD.update(towr_traj, ROBOT.time_step)
 

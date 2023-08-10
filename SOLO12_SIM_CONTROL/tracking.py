@@ -37,6 +37,8 @@ class Tracking:
         self.traj['sim'].append(COMMAND(timestep, sim_cmd))
         self._update()
         self.idx += 1
+        if self.idx % 100 == 0:
+            self.plot()
         
     def _update(self):
         for EE_NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
