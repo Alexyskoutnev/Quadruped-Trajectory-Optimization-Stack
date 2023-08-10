@@ -148,6 +148,35 @@ def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_tra
             tf_vec = tf_mtx @ vec            
             traj[link][mode] = tf_vec[:3]
     return traj
+
+def trajectory_2_local_frame(robot, traj, bezier=False, towr=False, original_traj=None):
+    """Helper function to transform from base frame to global frame 
+       of pybullet enviroment. 
+
+    Args:
+        robot (_type_): _description_
+        traj (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    config = robot.CoM_states() #Query the state of robot in global frame
+    before_tf_towr = copy.deepcopy(traj)
+    for link in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
+        for mode in ("P", "D"):
+            if mode == "P":
+                # tf_mtx = transformation_mtx(config['linkWorldPosition'], np.zeros(3))
+                tf_mtx = transformation_inv(transformation_mtx(config['linkWorldPosition'], config['linkWorldOrientation']))
+            if mode == "D" and bezier:
+                tf_mtx = transformation_inv(transformation_mtx(np.zeros(3), config['linkWorldOrientation']))
+            
+            vec = np.concatenate((np.array([traj[link][mode][0]]), 
+                                    np.array([traj[link][mode][1]]),  
+                                    np.array([traj[link][mode][2]]), 
+                                    np.ones(1)))
+            tf_vec = tf_mtx @ vec            
+            traj[link][mode] = tf_vec[:3]
+    return traj
     
 def tf_2_world_frame(traj, CoM):
     traj[0] = traj[0] - CoM['linkWorldPosition'][0]

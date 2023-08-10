@@ -200,6 +200,11 @@ class Gait(object):
         self.gaitTraj['HR_FOOT']['D'][0] = step_coord[3]
         self.gaitTraj['HR_FOOT']['D'][1] = step_coord[4]
         self.gaitTraj['HR_FOOT']['D'][2] = step_coord[5]
+
+
+        # breakpoint()
+        self.gaitTraj['COM'] = np.concatenate((self.robot.CoM_states()['linkWorldPosition'], self.robot.CoM_states()['linkWorldPosition']))
+
         self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj, bezier=True)
 
         return self.gaitTraj, True
