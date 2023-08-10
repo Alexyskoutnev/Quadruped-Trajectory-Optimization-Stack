@@ -91,10 +91,7 @@ def simulation(args={}):
         csv_file = open(TOWR, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         NUM_TIME_STEPS = sum(1 for row in reader)
-        csv_file = open(TOWR, 'r', newline='')
-        reader = csv.reader(csv_file, delimiter=',')
-        _t = np.linspace(0, NUM_TIME_STEPS/HZ, NUM_TIME_STEPS)
-        traj = np.genfromtxt(TOWR_TRAJ, delimiter=',')
+        traj = np.genfromtxt(TOWR, delimiter=',')
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
         if args.get('record') or sim_cfg.get('record'):
@@ -158,21 +155,14 @@ def simulation(args={}):
                         global_cfg.RUN._update = False 
                         global_cfg.RUN.step = 0
                         mutex.release()
-
                     time_step, EE_POSE = traj[sim_step, 0], traj[sim_step, 1:]
                     global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                     global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                     towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
                     COM = EE_POSE[0:6]
-                    if sim_cfg['enviroment'] == "plane":
-                        for _ in range(sim_cfg['skip_forward_idx']):
-                            next(reader)
                 except StopIteration:
                     log.write("==========STANCE==========")
                     global_cfg.RUN._stance = True
-                
-
-
                 ##====================Logging====================##
                 log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
                 log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
@@ -180,7 +170,6 @@ def simulation(args={}):
                 log.write(f"=========Global Vars=========\n")
                 log.write(f"{global_cfg.print_vars(log.log)}\n")
                 ##===============================================##
-
                 if global_cfg.RUN._stance:
                     _, _, joint_toq = ROBOT.default_stance_control()
                     p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
@@ -199,12 +188,14 @@ def simulation(args={}):
                     if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
                         global_cfg.RUN._run_update_thread = False
                         break
-                
                 if sim_cfg['skip_forward_idx'] > 1:
                     for _ in range(sim_cfg['skip_forward_idx'] + 1):
                         ROBOT.time_step += 1
+                        sim_step += 1
                 else:
                     ROBOT.time_step += 1
+                if sim_cfg.get('track'):
+                    TRACK_RECORD.update(towr_traj, ROBOT.time_step)
 
                 p.stepSimulation()
                 _global_update(ROBOT, ROBOT.state)
@@ -212,8 +203,6 @@ def simulation(args={}):
             last_loop_time = time.time()
             sim_step += 1
             print(f"runtime: {time.time() - time_loop}")
-        else:
-            continue
 
     TRACK_RECORD.plot()
     p.disconnect()

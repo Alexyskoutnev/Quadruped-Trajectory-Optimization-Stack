@@ -1,6 +1,7 @@
-mode : "bezier"
-# mode : "towr"
+# mode : "bezier"
+mode : "towr"
 enviroment : "plane"
+enviroment: "towr_track_no_contact_no_gui"
 
 py_interface : False
 fix-base : False
@@ -14,13 +15,13 @@ trot_2_stance_ratio : 0.5
 #============================
 terrain_offset : [1.5, 0, 0]
 
-NUM_TIME_STEPS : 1000
+NUM_TIME_STEPS : 10000
 
 HZ : 1000
 TIMESTEPS : 0.005
 stance_phase : True
 stance_period : 10
-skip_forward_idx : 1
+skip_forward_idx : 5
 record : True
 base_stable : False
 track : True
