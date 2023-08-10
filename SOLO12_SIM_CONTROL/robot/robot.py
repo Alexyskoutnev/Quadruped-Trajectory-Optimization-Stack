@@ -451,7 +451,7 @@ class SOLO12(object):
             NotImplementedError: _description_
         """
 
-        K = 100.
+        K = 50.
         
 
         ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")

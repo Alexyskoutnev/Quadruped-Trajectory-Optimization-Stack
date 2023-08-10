@@ -134,6 +134,11 @@ def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_tra
             if mode == "D" and bezier:
                 tf_mtx = transformation_mtx(np.zeros(3), config['linkWorldOrientation'])
             
+            vec = np.concatenate((np.array([traj[link][mode][0]]), 
+                                    np.array([traj[link][mode][1]]),  
+                                    np.array([traj[link][mode][2]]), 
+                                    np.ones(1)))
+
             if bezier:
                 vec = np.concatenate((np.array([traj[link][mode][0] + robot.shift[link][0]]), 
                                     np.array([traj[link][mode][1] + robot.shift[link][1]]),  

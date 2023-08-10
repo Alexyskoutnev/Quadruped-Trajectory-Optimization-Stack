@@ -143,7 +143,7 @@ def simulation(args={}):
                     print(f"Steps [{sim_step:.3f}]")
                     ROBOT.time_step += 1
                     sim_step += 1
-                    TRACK_RECORD.update(gait_traj, ROBOT.time_step)               
+                    TRACK_RECORD.update(trajectory_2_world_frame(ROBOT, gait_traj), ROBOT.time_step)               
     TRACK_RECORD.plot(plot_graph=True)
         
     p.disconnect()
