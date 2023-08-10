@@ -13,10 +13,10 @@ solo12_urdf_fname = "./data/urdf/solo12.urdf"
 config_fname = "./data/config/solo12.yml"
 config_sim_fname = "./data/config/simulation.yml"
 terrain_fname = "data/heightmaps/heightfield.txt"
-#traj_fname = "data/traj/towr.csv"
+traj_fname = "data/traj/towr.csv"
 #traj_fname = "data/traj/lift_one_foot.csv"
 # traj_fname = "data/traj/lift_two_feet.csv"
-traj_fname=  "data/traj/test.csv"
+# traj_fname=  "data/traj/test.csv"
 
 cfg = yaml.safe_load(open(config_fname, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim_fname, 'r'))
@@ -25,12 +25,12 @@ sim_cfg = yaml.safe_load(open(config_sim_fname, 'r'))
 physicsClient = pybullet.connect(p.GUI)
 pybullet.setGravity(0,0,-10)
 
-""" terrain """
-terrainShape = pybullet.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,1], fileName = terrain_fname, heightfieldTextureScaling=64)
-terrain = pybullet.createMultiBody(0, terrainShape)
-pybullet.resetBasePositionAndOrientation(terrain, sim_cfg["terrain_offset"], [0,0,0,1])
-pybullet.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
-pybullet.changeVisualShape(terrain, -1, rgbaColor=[1,1,1,1])
+# """ terrain """
+# terrainShape = pybullet.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,1], fileName = terrain_fname, heightfieldTextureScaling=64)
+# terrain = pybullet.createMultiBody(0, terrainShape)
+# pybullet.resetBasePositionAndOrientation(terrain, sim_cfg["terrain_offset"], [0,0,0,1])
+# pybullet.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
+# pybullet.changeVisualShape(terrain, -1, rgbaColor=[1,1,1,1])
 
 """ example objects """
 pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -64,6 +64,6 @@ while (t_idx < sim_cfg["NUM_TIME_STEPS"]):
    #pybullet.resetBasePositionAndOrientation(robot.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
 
    pybullet.stepSimulation()
-   t_idx += 5
+   t_idx += 1
  
 pybullet.disconnect()

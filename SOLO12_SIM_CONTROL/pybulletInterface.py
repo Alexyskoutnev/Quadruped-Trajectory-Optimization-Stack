@@ -62,4 +62,4 @@ class PybulletInterface(object):
             angle_velocity = 0.0
             angle = 0.0
             stepPeriod = 1.0
-        return pos, angle, velocity, angle_velocity , angle, stepPeriod
+        return pos, angle, velocity, angle_velocity, stepPeriod

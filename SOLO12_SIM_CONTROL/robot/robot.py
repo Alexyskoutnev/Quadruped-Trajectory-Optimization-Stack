@@ -503,7 +503,6 @@ class SOLO12(object):
 
         q_dot_cmd = np.reshape(q_dot_cmd, (12, ))
 
-        # Computing the updated configuration
         q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
 
         return q_cmd, q_dot_cmd
@@ -523,6 +522,7 @@ class SOLO12(object):
         jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
         q_mes[:] = [state[0] for state in jointStates]
         v_mes[:] = [state[1] for state in jointStates]
+        self._motor.set_motor_gains(10, 0.2)
         q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
         self._joint_ang_ref = q_cmd
         self._joint_vel_ref = q_vel

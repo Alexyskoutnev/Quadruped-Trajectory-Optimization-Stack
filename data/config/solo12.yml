@@ -4,9 +4,9 @@
   q_init : [0.008, 0.38, -0.845, -0.008, 0.38, -0.845, 0.0082, -0.38, 0.845, -0.082, -0.2805, 0.845]
   start_pos : [0,0,0.30]
   start_ang : [0.0, 0.0, 0.0, 1.0]
-  t_max : 2.0
+  t_max : 3.0
   # mode : "P" #position control
-  #mode : "torque"
+  # mode : "torque"
   mode : 'PD' #position-velocity control
   endeffector_count: 4
   mass: 1.16115091
@@ -20,8 +20,8 @@
   offsets : [0.5, 0.0, 0.0, 0.5]
   kp : 0.5 #values for p-control or pd-control
   kd : 0.1 #values for p-control or pd-control
-  #kp : 50 #Good values for torque control
-  #kd : 0.009 #Good values for torque control
+  # kp : 5 #Good values for torque control
+  # kd : .5 #Good values for torque control
   hip_gain_scale : 2.0
   knee_gain_scale : 1.0
   ankle_gain_scale : 1.0
