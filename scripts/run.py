@@ -229,7 +229,7 @@ def simulation(args={}):
                     COM = cmds['COM']
                 except StopIteration:
                     break
-                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(cmds, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(cmds, ROBOT.EE_index['all'], mode=ROBOT.mode, usePin=True)
 
                 if sim_cfg.get('record'):
                     csv_entry = ROBOT.csv_entry
@@ -250,7 +250,7 @@ def simulation(args={}):
                 except StopIteration:
                     break
                 traj = trajectory_2_world_frame(ROBOT, create_cmd(ee_pose))
-                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(traj, ROBOT.EE_index['all'], mode=ROBOT.mode, usePin=True)
                 ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 global_cfg.RUN.step += 1  
                 p.stepSimulation()

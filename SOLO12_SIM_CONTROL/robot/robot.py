@@ -283,7 +283,6 @@ class SOLO12(object):
         """
         self._update()
         if usePin:
-            # breakpoint()
             cmds = trajectory_2_local_frame(self, cmds)
             if cmds.get('COM') is not None:
                     del cmds['COM']
@@ -451,7 +450,7 @@ class SOLO12(object):
             NotImplementedError: _description_
         """
 
-        K = 50.
+        K = 10.
         
 
         ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")
@@ -506,8 +505,6 @@ class SOLO12(object):
 
         # Computing the updated configuration
         q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
-
-        self.q_ref = q_cmd
 
         return q_cmd, q_dot_cmd
 

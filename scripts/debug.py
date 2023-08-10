@@ -130,7 +130,7 @@ def simulation(args={}):
                 ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                 p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
                 p.stepSimulation()
-                TRACK_RECORD.update(cmds, time_step)
+                TRACK_RECORD.update(trajectory_2_world_frame(ROBOT, cmds), time_step)
                 print(f"Time [{time_step:.3f}] || COM [{[round(i, 3) for i in COM[0:3].tolist()]}]")
                 ROBOT.time_step += 1
                 sim_step += 1
