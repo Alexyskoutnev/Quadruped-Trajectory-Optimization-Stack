@@ -270,17 +270,6 @@ class SOLO12(object):
             q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
-    def PD(self, qa_ref, qa_dot_ref, qa, qa_dot, dt, Kp=1, Kd=1, torques_sat=5*np.ones(12), torques_ref=np.zeros(12)):
-
-        # breakpoint()
-        # Output torques
-        torques = Kp * (qa_ref - qa) + Kd * (qa_dot_ref - qa_dot) + torques_ref
-
-        # Saturation to limit the maximal value that torques can have
-        torques = np.maximum(np.minimum(torques, torques_sat), -torques_sat)
-
-        return torques
-
     def control_multi(self, cmds, indices, mode="P", usePin = False):
         """Helper function to find the control outputs for each end-effector
 
@@ -302,27 +291,9 @@ class SOLO12(object):
             q_vel = np.zeros(12)
             q_toq = np.zeros(12)
             q_cmd, q_vel_cmd = self.inv_kinematics_pin(cmds) 
-            # ##DELETE FOR LATER
-            # i = 0
-            # for cmd, idx in zip(cmds.values(), indices):
-            #     q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
-            #     if (q_cmd_temp is not None):
-            #         q_cmd[i:i+3] = q_cmd_temp[i:i+3]
-            #     if (q_vel_temp is not None):
-            #         q_vel[i:i+3] = q_vel_temp[i:i+3]
-            #     if (q_toq_temp is not None):
-            #         q_toq[i:i+3] = q_toq_temp[i:i+3]
-            #     i += 3 
-            # Kp = 8.
-            # Kd = 0.2
-            # torque_sat = 3  # torque saturation in N.m
-            # torques_ref = np.zeros(12)  # feedforward torques
-            # # breakpoint()
             self._update()
             q_mes, v_mes = self.get_PD_values()
             q_toq = self._motor.convert_to_torque_v1(q_cmd, q_mes, v_mes, q_vel_cmd)
-            # q_toq = self.PD(q_cmd, q_vel_cmd, q_mes, v_mes, self._time_step)
-            # breakpoint()
         else:
             if cmds.get('COM') is not None:
                 del cmds['COM']
@@ -496,22 +467,10 @@ class SOLO12(object):
         xyz_HL = self.ROBOT.data.oMf[ID_HL].translation
         xyz_HR = self.ROBOT.data.oMf[ID_HR].translation
 
-        # err_FL = xyz_FL - cmd['FL_FOOT']['P']
         err_FL = np.reshape(xyz_FL - cmd['FL_FOOT']['P'], (3,1))
-        # err_FR = xyz_FR - cmd['FR_FOOT']['P']
         err_FR = np.reshape(xyz_FR - cmd['FR_FOOT']['P'], (3, 1))
-        # err_HL = xyz_HL - cmd['HL_FOOT']['P']
         err_HL = np.reshape(xyz_HL - cmd['HL_FOOT']['P'], (3, 1))
-        # err_HR = xyz_HR - cmd['HR_FOOT']['P']
         err_HR = np.reshape(xyz_HR - cmd['HR_FOOT']['P'], (3, 1))
-
-        print(f"xyx_FL [{xyz_FL}]")
-        print(f"FL_FOOT {cmd['FL_FOOT']['P']}")
-        print(f"xyx_FR [{xyz_FR}]")
-        print(f"FR_FOOT {cmd['FR_FOOT']['P']}")
-        print(f"xyx_HL [{xyz_HL}]")
-        print(f"HL_FOOT {cmd['HL_FOOT']['P']}")
-        print(f"xyx_HR [{xyz_HR}]")
 
         o_FL = self.ROBOT.data.oMf[ID_FL].rotation
         o_FR = self.ROBOT.data.oMf[ID_FR].rotation
@@ -535,13 +494,11 @@ class SOLO12(object):
         oJ_HR3 = o_HR @ fJ_HR3
         oJ_HRxz = oJ_HR3[0:3, -12:]
 
-        # breakpoint()
 
         nu = np.vstack([err_FL, err_FR, err_HL, err_HR]) # 12 x 1
 
         J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz]) #12 x 12
 
-        # breakpoint()
 
         q_dot_cmd = - K * np.linalg.pinv(J) @ nu # 12 x 12 X 12 x 1 => 12 x 1
 
@@ -551,8 +508,6 @@ class SOLO12(object):
         q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
 
         self.q_ref = q_cmd
-
-        # breakpoint()
 
         return q_cmd, q_dot_cmd
 
