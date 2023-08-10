@@ -19,7 +19,7 @@ from SOLO12_SIM_CONTROL.logger import Logger
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
-            'run': 'docker exec <id> ./towr-example',
+            'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
             'data': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv',
             'delete': 'rm ./data/traj/towr.csv'}
@@ -52,7 +52,7 @@ def parse_scripts(scripts_dic, docker_id):
     return scripts_dic
 
 def start_config(args):
-    args['-s'] = [0, 0, 0.25]
+    args['-s'] = [0, 0, 0.24]
     args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
     args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
     args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
@@ -82,7 +82,7 @@ def _step(args):
     diff_vec = np.clip(goal - global_pos, -step_size, step_size)
     diff_vec[2] = 0.0
     args['-g'] = list(global_pos + diff_vec)
-    args['-g'][2] = 0.25
+    args['-g'][2] = 0.24
     return args
 
 def _plan(args):
@@ -223,7 +223,6 @@ def test_mpc_single_loop(args):
     p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
     towr_runtime_1 = time.time()
     print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
-    
     if p.returncode == 0:
         print("TOWR found a trajectory")
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
@@ -234,7 +233,7 @@ def test_mpc_single_loop(args):
 if __name__ == "__main__":
     test = True
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.25])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
