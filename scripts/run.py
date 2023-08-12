@@ -187,7 +187,6 @@ def simulation(args={}):
 
                 if RECORD_TRAJ:
                     csv_entry = ROBOT.csv_entry
-                    breakpoint()
                     writer.writerow(csv_entry)
                     record_timestep += 1
                     if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
