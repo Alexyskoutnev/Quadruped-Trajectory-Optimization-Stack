@@ -2,7 +2,7 @@
   robot: "SOLO12"
   joint_count: 12
   q_init : [0.008, 0.38, -0.845, -0.008, 0.38, -0.845, 0.0082, -0.38, 0.845, -0.082, -0.2805, 0.845]
-  start_pos : [0,0,0.30]
+  start_pos : [0,0,0.305]
   start_ang : [0.0, 0.0, 0.0, 1.0]
   t_max : 3.0
   # mode : "P" #position control

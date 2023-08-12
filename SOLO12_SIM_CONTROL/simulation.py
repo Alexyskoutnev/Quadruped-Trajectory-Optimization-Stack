@@ -5,6 +5,22 @@ import pybullet_data
 from scipy.spatial.transform import Rotation
 
 URDF = "./data/urdf/"
+HEIGHT_FIELD = "heightmaps/staircase.txt"
+HEIGHT_FIELD_FILE = "./data/heightmaps/staircase.txt"
+
+def max_height(file):
+    max_num = 0
+    with open(file, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            nums = [x.strip() for x in line.strip().split(',')]
+            for num in nums:
+                try:
+                    num = float(num)
+                    max_num = max(num, max_num)
+                except:
+                    pass
+    return max_num
 
 class Simulation(object):
 
@@ -31,8 +47,7 @@ class Simulation(object):
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
-            p.loadURDF("plane.urdf")
-
+            # p.loadURDF("plane.urdf")
 
         elif sim_config == "towr_no_gui":
             py_client = p.connect(p.DIRECT)
@@ -111,7 +126,7 @@ class Simulation(object):
                     heightfieldData[i+(j+1)*numHeightfieldRows]=height
                     heightfieldData[i+1+(j+1)*numHeightfieldRows]=height
             
-            heightfield_data = open("data/heightmaps/generated_heightfield.txt","w")
+            heightfield_data = open(HEIGHT_FIELD,"w")
 
             for j in range (numHeightfieldColumns):
                 for i in range (numHeightfieldRows):
@@ -120,13 +135,14 @@ class Simulation(object):
      
             terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.2,.2,2.0], heightfieldTextureScaling=(numHeightfieldRows-1)/2, heightfieldData=heightfieldData, numHeightfieldRows=numHeightfieldRows, numHeightfieldColumns=numHeightfieldColumns)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[0.5,-1,0], [0,0,0,1])
+            p.resetBasePositionAndOrientation(terrain,[0.5,-1,0.5], [0,0,0,1])
 
         if reading_from_file:
             # read from file
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,1],fileName = "heightmaps/heightfield.txt", heightfieldTextureScaling=64)
+            height_shift = max_height(HEIGHT_FIELD_FILE) / 20.0
+            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], fileName = HEIGHT_FIELD, heightfieldTextureScaling=64)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[2,0,.2], [0,0,0,1])
+            p.resetBasePositionAndOrientation(terrain,[0.3,0,height_shift], [0,0,0,1])
         
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
-        p.changeVisualShape(terrain, -1, rgbaColor=[1,1,1,1])
+        p.changeVisualShape(terrain, -1, rgbaColor=[0.5,1.0,1.0,1])
