@@ -7,6 +7,14 @@ from scipy.spatial.transform import Rotation
 URDF = "./data/urdf/"
 HEIGHT_FIELD = "heightmaps/staircase.txt"
 HEIGHT_FIELD_FILE = "./data/heightmaps/staircase.txt"
+HEIGHT_FIELD_OUT = "./data/heightmaps/staircase.out"
+
+def is_float(x):
+    try:
+        float(x)
+        return True
+    except:
+        return False
 
 def max_height(file):
     max_num = 0
@@ -21,6 +29,34 @@ def max_height(file):
                 except:
                     pass
     return max_num
+
+def scale_values(file, scale=1.0):
+    scaled_values = []
+    with open(file, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            nums = [x.strip() for x in line.strip().split(',')]
+            scaled_line = []
+            for num in nums:
+                try:
+                    if is_float(num):
+                        num = float(num)
+                        scaled_num = num * scale
+                        scaled_line.append(scaled_num)
+                except ValueError:
+                    pass  # Skip non-numeric values
+            scaled_values.append(scaled_line)
+    return scaled_values
+
+def TOWR_HEIGHT_FILE(file, height_data):
+    rows = len(height_data)
+    with open(file, 'w') as f:
+        for row_n, line in enumerate(height_data):
+            s = ', '.join(str(value) for value in line)
+            s += ','
+            f.write(s)
+            if row_n < rows - 1:
+                f.write('\n')
 
 class Simulation(object):
 
@@ -140,6 +176,7 @@ class Simulation(object):
         if reading_from_file:
             # read from file
             height_shift = max_height(HEIGHT_FIELD_FILE) / 20.0
+            TOWR_HEIGHT_FILE(HEIGHT_FIELD_OUT, scale_values(HEIGHT_FIELD_FILE, 0.1))
             terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], fileName = HEIGHT_FIELD, heightfieldTextureScaling=64)
             terrain  = p.createMultiBody(0, terrainShape)
             p.resetBasePositionAndOrientation(terrain,[0.3,0,height_shift], [0,0,0,1])
