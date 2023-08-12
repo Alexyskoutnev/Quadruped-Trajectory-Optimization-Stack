@@ -3,7 +3,10 @@
 # LABEL version="1.0.0"
 # LABEL description="Dockerfile to build towr and run simulator and towr together"
 
-FROM ubuntu:18.04
+# FROM ubuntu:18.04
+FROM dorowu/ubuntu-desktop-lxde-vnc:bionic
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /root
 RUN echo "Trying to install dependecies to Docker image"
