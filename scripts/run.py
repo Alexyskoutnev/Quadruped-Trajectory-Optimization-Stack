@@ -76,12 +76,13 @@ def simulation(args={}):
     
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
-    Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'], setup_terrain=True)
+    Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'], setup_terrain=False)
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
     last_loop_time = time.time()
     sim_step = 0
+    RECORD_TRAJ = False
     
     """============SIM-CONFIGURATION============"""
     if sim_cfg['mode'] == "towr":
@@ -93,9 +94,10 @@ def simulation(args={}):
             TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
         if args.get('record') or sim_cfg.get('record'):
             FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
-            file = open(FILE, 'w', newline='')
-            writer = csv.writer(file) 
+            record_file = open(FILE, 'w', newline='')
+            writer = csv.writer(record_file) 
             record_timestep = 0
+            RECORD_TRAJ = True
     elif sim_cfg['mode'] == 'bezier':
         trot_2_stance_ratio = cfg['trot_2_stance_ratio']
         velocity, angle, angle_velocity, step_period, offsets = sim_cfg['velocity'], sim_cfg['angle'], sim_cfg['angle_velocity'], sim_cfg['step_period'], np.array(cfg['offsets'])
@@ -119,7 +121,7 @@ def simulation(args={}):
                 _, _, joint_toq = ROBOT.default_stance_control()
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
-        if loop_time > sim_cfg['TIMESTEPS'] and args.get('record'):
+        if loop_time > sim_cfg['TIMESTEPS'] and RECORD_TRAJ:
             csv_entry = ROBOT.csv_entry
             writer.writerow(csv_entry)
             last_loop_time = time.time()
@@ -183,7 +185,7 @@ def simulation(args={}):
                     joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                     ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
 
-                if args.get('record'):
+                if RECORD_TRAJ:
                     csv_entry = ROBOT.csv_entry
                     writer.writerow(csv_entry)
                     record_timestep += 1
@@ -205,10 +207,11 @@ def simulation(args={}):
 
             last_loop_time = time.time()
             sim_step += 1
-            # print(f"runtime: {time.time() - time_loop}")
 
     TRACK_RECORD.plot()
     p.disconnect()
+    if RECORD_TRAJ:
+        print(f"TRAJ RECORD PATH -> {record_file}")
 
 if __name__ == "__main__":
     simulation()

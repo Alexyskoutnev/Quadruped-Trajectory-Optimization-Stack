@@ -86,7 +86,7 @@ class Simulation(object):
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
-            # p.loadURDF("plane.urdf")
+            p.loadURDF("plane.urdf")
 
         elif sim_config == "towr_no_gui":
             py_client = p.connect(p.DIRECT)

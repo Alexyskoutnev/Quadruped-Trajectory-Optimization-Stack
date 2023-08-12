@@ -5,7 +5,7 @@ DOCKER_BUILDKIT=1 docker build --no-cache -t towr .
 docker run -it towr
 ```
 Now you should a Docker image named towr which will be used in the towr_run.py script to strat the Towr MPC loop.
-To check that the container was built correctly, use the command below (should output that the container is a ancestor of the towr image).
+To check that the container was built correctly, use the follwing command (should output that the container is a ancestor of the towr image).
 ```console
 docker ps -f ancestor=towr
 ```
