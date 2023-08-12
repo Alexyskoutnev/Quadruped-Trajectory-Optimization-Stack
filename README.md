@@ -1,7 +1,7 @@
 Robotic trajectory simulation package built on top of Pybullet. Used for testing trajectories (TOWR) and dynamics between robot model and enviroment  (SOLO12).
 # Docker Installation Steps #
 ```console
-sudo DOCKER_BUILDKIT=1 docker build --no-cache -t towr .
+DOCKER_BUILDKIT=1 docker build --no-cache -t towr .
 docker run -it towr
 ```
 Now you should a Docker image named towr which will be used in the towr_run.py script to strat the Towr MPC loop.
