@@ -21,7 +21,7 @@ HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : True
 stance_period : 10
-skip_forward_idx : 5 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
+skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : True
 base_stable : False
 track : True

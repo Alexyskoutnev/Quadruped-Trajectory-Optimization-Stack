@@ -121,9 +121,9 @@ class SOLO12(object):
         self._kp = config['kp']
         self._kd = config['kd']
         self._motor = MotorModel(self._kp, self._kd, config['hip_gain_scale'], config['knee_gain_scale'], config['ankle_gain_scale'], toq_max=config['t_max'])
-        self._joint_ang = None
-        self._joint_vel = None
-        self._joint_toq = None
+        self._joint_ang = np.zeros(12)
+        self._joint_vel = np.zeros(12)
+        self._joint_toq = np.zeros(12)
         self._joint_ang_ref = None
         self._joint_vel_ref = None
         self._joint_toq_ref = None
