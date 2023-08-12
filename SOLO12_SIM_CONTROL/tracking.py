@@ -37,7 +37,7 @@ class Tracking:
         self.traj['sim'].append(COMMAND(timestep, sim_cmd))
         self._update()
         self.idx += 1
-        if self.idx % 1000 == 0:
+        if self.idx % 100 == 0:
             self.plot()
         
     def _update(self):

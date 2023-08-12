@@ -6,8 +6,11 @@ from scipy.spatial.transform import Rotation
 
 URDF = "./data/urdf/"
 HEIGHT_FIELD = "heightmaps/staircase.txt"
+# HEIGHT_FIELD = "heightmaps/walls.txt"
 HEIGHT_FIELD_FILE = "./data/heightmaps/staircase.txt"
+# HEIGHT_FIELD_FILE = "./data/heightmaps/walls.txt"
 HEIGHT_FIELD_OUT = "./data/heightmaps/staircase.out"
+# HEIGHT_FIELD_OUT = "./data/heightmaps/walls.out"
 
 def is_float(x):
     try:
@@ -44,7 +47,7 @@ def scale_values(file, scale=1.0):
                         scaled_num = num * scale
                         scaled_line.append(scaled_num)
                 except ValueError:
-                    pass  # Skip non-numeric values
+                    pass
             scaled_values.append(scaled_line)
     return scaled_values
 
