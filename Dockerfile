@@ -1,5 +1,5 @@
 # MAINTAINER Alexy Skoutnev
-# LABEL version="1.0.0"
+# LABEL version="1.0.1"
 # LABEL description="Dockerfile to build towr and run simulator and towr together"
 FROM dorowu/ubuntu-desktop-lxde-vnc:bionic
 # # FROM ubuntu:18.04
