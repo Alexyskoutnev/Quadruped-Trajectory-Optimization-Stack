@@ -77,7 +77,7 @@ def simulation(args={}):
     
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
-    Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'], setup_terrain=sim_cfg['height_map'])
+    Simulation(sim_cfg)
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']

@@ -1,6 +1,6 @@
 mode : "bezier"
 # mode : "towr"
-enviroment : "plane"
+enviroment : "custom"
 # enviroment: "towr_track_no_con"
 
 py_interface : False
@@ -26,3 +26,4 @@ record : True
 base_stable : False
 track : True
 height_map : True
+map_id : ['plane']
