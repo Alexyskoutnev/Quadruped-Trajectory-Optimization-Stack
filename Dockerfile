@@ -44,7 +44,7 @@ RUN apt-get install -y ros-melodic-xpp
 WORKDIR /root/
 RUN mkdir -p catkin_ws/src
 WORKDIR /root/catkin_ws/src
-RUN git clone https://github.com/Alexyskoutnev/towr_solo12.git towr
+RUN git clone https://github.com/Alexyskoutnev/towr_solo12.git towr_solo12
 WORKDIR /root/catkin_ws/src/towr/towr
 RUN mkdir build
 WORKDIR /root/catkin_ws/src/towr/towr/build

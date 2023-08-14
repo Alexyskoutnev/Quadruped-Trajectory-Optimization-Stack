@@ -5,11 +5,14 @@ import pybullet_data
 from scipy.spatial.transform import Rotation
 
 URDF = "./data/urdf/"
-HEIGHT_FIELD = "heightmaps/staircase.txt"
+# HEIGHT_FIELD = "heightmaps/staircase.txt"
+HEIGHT_FIELD = "heightmaps/heightfield.txt"
+HEIGHT_FIELD_FILE = "./data/heightmaps/heightfield.txt"
 # HEIGHT_FIELD = "heightmaps/walls.txt"
-HEIGHT_FIELD_FILE = "./data/heightmaps/staircase.txt"
+# HEIGHT_FIELD_FILE = "./data/heightmaps/staircase.txt"
 # HEIGHT_FIELD_FILE = "./data/heightmaps/walls.txt"
-HEIGHT_FIELD_OUT = "./data/heightmaps/staircase.out"
+# HEIGHT_FIELD_OUT = "./data/heightmaps/staircase.out"
+HEIGHT_FIELD_OUT = "./data/heightmaps/heightfield.out"
 # HEIGHT_FIELD_OUT = "./data/heightmaps/walls.out"
 
 def is_float(x):

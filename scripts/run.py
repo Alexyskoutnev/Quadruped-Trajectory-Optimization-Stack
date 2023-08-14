@@ -30,6 +30,7 @@ cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 TOWR = "./data/traj/towr.csv"
 TOWR_TRAJ = "./data/traj/towr_traj"
+BEZIER_TRAJ = "./data/traj/bezier_traj"
 
 # global keypressed
 key_press_init_phase = True
@@ -76,7 +77,7 @@ def simulation(args={}):
     
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
-    Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'], setup_terrain=False)
+    Simulation(sim_cfg['enviroment'], timestep=sim_cfg['TIMESTEPS'], setup_terrain=sim_cfg['height_map'])
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
@@ -104,6 +105,12 @@ def simulation(args={}):
         NUM_TIME_STEPS = sim_cfg['NUM_TIME_STEPS']
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, NUM_TIME_STEPS)
+        if args.get('record') or sim_cfg.get('record'):
+            FILE = update_file_name(BEZIER_TRAJ, cfg, sim_cfg)
+            record_file = open(FILE, 'w', newline='')
+            writer = csv.writer(record_file) 
+            record_timestep = 0
+            RECORD_TRAJ = True
     if sim_cfg['py_interface']:
         pybullet_interface = PybulletInterface()
     """=========================================="""
@@ -130,6 +137,9 @@ def simulation(args={}):
         loop_time = time.time() - last_loop_time
         time_loop = time.time()
 
+        if sim_step % 500 == 0:
+            print(f"SIM STEP [{sim_step}]")
+
         if loop_time > sim_cfg['TIMESTEPS']:
             if sim_cfg['mode'] == "bezier":
                 if sim_cfg['py_interface']:
@@ -141,6 +151,13 @@ def simulation(args={}):
                 ROBOT.time_step += 1
                 if sim_cfg.get('track'):
                     TRACK_RECORD.update(gait_traj, ROBOT.time_step)
+
+                if RECORD_TRAJ:
+                    csv_entry = ROBOT.csv_entry
+                    writer.writerow(csv_entry)
+                    record_timestep += 1
+                    if record_timestep >= sim_cfg['NUM_TIME_STEPS']:
+                        break
 
             elif sim_cfg['mode'] == "towr":
                 try:
