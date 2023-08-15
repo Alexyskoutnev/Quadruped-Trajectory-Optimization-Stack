@@ -60,17 +60,20 @@ class RandomMaps(object):
 
 class Maps(object):
 
-    wall_1_file = "../data/heightmaps/wall_1.txt"
-    wall_2_file = "../data/heightmaps/wall_2.txt"
-    wall_3_file = "../data/heightmaps/wall_3.txt"
-    stairs_file = "../data/heightmaps/staircase.txt"
-    plane_file =  "../data/heightmaps/plane.txt"
+    wall_1_file = "./data/heightmaps/wall_1.txt"
+    wall_2_file = "./data/heightmaps/wall_2.txt"
+    wall_3_file = "./data/heightmaps/wall_3.txt"
+    test_file = "./data/heightmaps/heightfield_test.txt"
+    stairs_file = "./data/heightmaps/staircase.txt"
+    plane_file =  "./data/heightmaps/plane.txt"
     wall_1 = txt_2_np_reader(wall_1_file)
     wall_2 = txt_2_np_reader(wall_2_file)
     wall_3 = txt_2_np_reader(wall_3_file)
     stairs = txt_2_np_reader(stairs_file)
     plane = txt_2_np_reader(plane_file)
-    name_2_np_arr = {'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3}
+    test = txt_2_np_reader(test_file)
+    name_2_np_arr = {'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
+                     'test': test}
 
     def __init__(self, maps=['plane'], dim=20):
         self.dim = 20
@@ -83,9 +86,11 @@ class Maps(object):
             self.map = self.multi_map_generator(maps)
 
     def multi_map_generator(self, maps):
-        map_arr = np.zeros((self.standard_map_dim[0] * len(maps), self.standard_map_dim[1]))
+        # map_arr = np.zeros((self.standard_map_dim[0] * len(maps), self.standard_map_dim[1]))
+        map_arr = np.zeros((self.standard_map_dim[1], self.standard_map_dim[0] * len(maps)))
         for i, map_id in enumerate(maps):
-            map_arr[(i * self.dim):(i + 1) * self.dim, :] = self.name_2_np_arr[map_id]
+            # map_arr[(i * self.dim):(i + 1) * self.dim, :] = self.name_2_np_arr[map_id]
+            map_arr[:, (i * self.dim):(i + 1) * self.dim] = self.name_2_np_arr[map_id]
         return map_arr
 
 class Height_Map_Generator(Maps):
@@ -96,6 +101,8 @@ class Height_Map_Generator(Maps):
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.height_shift = max_height(HEIGHT_FIELD_TXT) / 20.0
         self.f_name = HEIGHT_FIELD
+        self.num_rows = self.map.shape[0]
+        self.num_cols = self.map.shape[1]
 
 
     def create_height_file(self, file, h_data):

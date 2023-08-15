@@ -1,4 +1,4 @@
-from SOLO12_SIM_CONTROL.generateHeightField import Height_Map_Generator
+from SOLO12_SIM_CONTROL.generateHeightField import Height_Map_Generator, txt_2_np_reader
 
 import time
 
@@ -9,6 +9,7 @@ from scipy.spatial.transform import Rotation
 URDF = "./data/urdf/"
 # HEIGHT_FIELD = "heightmaps/staircase.txt"
 HEIGHT_FIELD = "heightmaps/heightfield.txt"
+HEIGHT_FIELD_TEST = "./data/heightmaps/heightfield_test.txt"
 HEIGHT_FIELD_FILE = "./data/heightmaps/heightfield_test.txt"
 # HEIGHT_FIELD = "heightmaps/walls.txt"
 # HEIGHT_FIELD_FILE = "./data/heightmaps/staircase.txt"
@@ -77,19 +78,29 @@ class Simulation(object):
     def setup(self, cfg):
         py_client = None
 
-        if cfg['enviroment'] == "custom":
+        test = False
+
+        if test:
+            py_client = p.connect(p.GUI)
+            p.setAdditionalSearchPath(pybullet_data.getDataPath())
+            p.setGravity(0,0,-10.0)
+            self.setup_terrain()
+
+        elif cfg['enviroment'] == "custom":
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
             height_map = Height_Map_Generator(maps=cfg['map_id'])
             height_shift = height_map.height_shift
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], fileName = height_map.f_name, heightfieldTextureScaling=64)
+            tiles = len(cfg['map_id'])
+            num_rows, num_cols = height_map.num_rows, height_map.num_cols
+            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], heightfieldTextureScaling=64, heightfieldData=height_map.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[0.3,0.0,height_shift+0.001], [0,0,0,1])
+            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1),0.0,height_shift+0.001], [0,0,0,1.0])
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
-            p.changeVisualShape(terrain, -1, rgbaColor=[0.1,1.0,1.0,1])
+            p.changeVisualShape(terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
 
-        if cfg['enviroment'] == "testing":
+        elif cfg['enviroment'] == "testing":
             py_client = p.connect(p.DIRECT)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10)
@@ -141,12 +152,12 @@ class Simulation(object):
         return py_client
 
     def setup_terrain(self):
-        reading_from_file = True
+        reading_from_file = False
     
         if not reading_from_file:
             # fill manually
-            numHeightfieldRows = 100
-            numHeightfieldColumns = 100
+            numHeightfieldRows = 30 #dim 1 for numpy
+            numHeightfieldColumns = 20 #dim 0 for numpy
             heightfieldData = [0]*numHeightfieldRows*numHeightfieldColumns 
             for j in range (numHeightfieldColumns - 1):
                 for i in range (numHeightfieldRows - 1):
@@ -159,16 +170,21 @@ class Simulation(object):
                     heightfieldData[i+(j+1)*numHeightfieldRows]=height
                     heightfieldData[i+1+(j+1)*numHeightfieldRows]=height
             
-            heightfield_data = open(HEIGHT_FIELD,"w")
 
-            for j in range (numHeightfieldColumns):
-                for i in range (numHeightfieldRows):
-                    heightfield_data.write('{}, '.format(heightfieldData[i+j*numHeightfieldRows]))
-                heightfield_data.write("\n")
+            # heightfield_data = open(HEIGHT_FIELD_TEST,"w")
+            breakpoint()
+            heightfieldData_1 = txt_2_np_reader(HEIGHT_FIELD_TEST)
+            flatten_data_1 = heightfieldData_1.flatten().tolist()
+            
+
+            # for j in range (numHeightfieldColumns):
+            #     for i in range (numHeightfieldRows):
+            #         heightfield_data.write('{}, '.format(heightfieldData[i+j*numHeightfieldRows]))
+            #     heightfield_data.write("\n")
      
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.2,.2,2.0], heightfieldTextureScaling=(numHeightfieldRows-1)/2, heightfieldData=heightfieldData, numHeightfieldRows=numHeightfieldRows, numHeightfieldColumns=numHeightfieldColumns)
+            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], heightfieldTextureScaling=64, heightfieldData=flatten_data_1, numHeightfieldRows=numHeightfieldRows, numHeightfieldColumns=numHeightfieldColumns)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[0.5,-1,0.5], [0,0,0,1])
+            p.resetBasePositionAndOrientation(terrain,[0.0,0.0,0.5], [0,0,0,1])
 
         if reading_from_file:
             # read from file

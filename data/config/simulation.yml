@@ -4,7 +4,7 @@ enviroment : "custom"
 # enviroment: "towr_track_no_con"
 
 py_interface : False
-fix-base : True
+fix-base : False
 #==BEZIER INIT CONFIGURATION==
 pos : [0, 0, 0]
 angle : 0.0
@@ -26,4 +26,4 @@ record : True
 base_stable : False
 track : True
 height_map : True
-map_id : ['plane']
+map_id : ['plane', 'wall_1', 'wall_1', 'wall_2', 'plane']
