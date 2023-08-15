@@ -26,4 +26,4 @@ record : True
 base_stable : False
 track : True
 height_map : True
-map_id : ['plane', 'wall_1', 'wall_1', 'wall_2', 'plane']
+map_id : ['plane', 'wall_1', 'wall_2', 'wall_1', 'plane']

@@ -21,7 +21,7 @@ def txt_2_np_reader(file, delimiter=','):
             _row = row.strip().split(delimiter)
             _row = [float(x) for x in _row if is_numeric(x)]
             data.append(_row)
-    return np.array(data)
+    return np.transpose(np.array(data))
 
 def scale_values(file, scale=1.0):
     scaled_values = []
@@ -73,7 +73,7 @@ class Maps(object):
     plane = txt_2_np_reader(plane_file)
     test = txt_2_np_reader(test_file)
     name_2_np_arr = {'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
-                     'test': test}
+                     'test': test, 'stairs': stairs}
 
     def __init__(self, maps=['plane'], dim=20):
         self.dim = 20
