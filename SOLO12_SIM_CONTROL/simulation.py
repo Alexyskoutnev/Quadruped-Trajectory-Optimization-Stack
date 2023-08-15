@@ -18,55 +18,6 @@ HEIGHT_FIELD_FILE = "./data/heightmaps/heightfield_test.txt"
 HEIGHT_FIELD_OUT = "./data/heightmaps/heightfield.out"
 # HEIGHT_FIELD_OUT = "./data/heightmaps/walls.out"
 
-def is_float(x):
-    try:
-        float(x)
-        return True
-    except:
-        return False
-
-def max_height(file):
-    max_num = 0
-    with open(file, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            nums = [x.strip() for x in line.strip().split(',')]
-            for num in nums:
-                try:
-                    num = float(num)
-                    max_num = max(num, max_num)
-                except:
-                    pass
-    return max_num
-
-def scale_values(file, scale=1.0):
-    scaled_values = []
-    with open(file, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            nums = [x.strip() for x in line.strip().split(',')]
-            scaled_line = []
-            for num in nums:
-                try:
-                    if is_float(num):
-                        num = float(num)
-                        scaled_num = num * scale
-                        scaled_line.append(scaled_num)
-                except ValueError:
-                    pass
-            scaled_values.append(scaled_line)
-    return scaled_values
-
-def TOWR_HEIGHT_FILE(file, height_data):
-    rows = len(height_data)
-    with open(file, 'w') as f:
-        for row_n, line in enumerate(height_data):
-            s = ', '.join(str(value) for value in line)
-            s += ','
-            f.write(s)
-            if row_n < rows - 1:
-                f.write('\n')
-
 class Simulation(object):
 
     def __init__(self, cfg):
@@ -150,49 +101,3 @@ class Simulation(object):
             p.loadURDF("plane.urdf")
 
         return py_client
-
-    def setup_terrain(self):
-        reading_from_file = False
-    
-        if not reading_from_file:
-            # fill manually
-            numHeightfieldRows = 30 #dim 1 for numpy
-            numHeightfieldColumns = 20 #dim 0 for numpy
-            heightfieldData = [0]*numHeightfieldRows*numHeightfieldColumns 
-            for j in range (numHeightfieldColumns - 1):
-                for i in range (numHeightfieldRows - 1):
-                    if j > int(numHeightfieldColumns/2) and j < int(numHeightfieldColumns*3/4) and i > int(numHeightfieldRows/2) and i < int(numHeightfieldRows*3/4):
-                        height = .5
-                    else:
-                        height = .0
-                    heightfieldData[i+j*numHeightfieldRows]=height
-                    heightfieldData[i+1+j*numHeightfieldRows]=height
-                    heightfieldData[i+(j+1)*numHeightfieldRows]=height
-                    heightfieldData[i+1+(j+1)*numHeightfieldRows]=height
-            
-
-            # heightfield_data = open(HEIGHT_FIELD_TEST,"w")
-            breakpoint()
-            heightfieldData_1 = txt_2_np_reader(HEIGHT_FIELD_TEST)
-            flatten_data_1 = heightfieldData_1.flatten().tolist()
-            
-
-            # for j in range (numHeightfieldColumns):
-            #     for i in range (numHeightfieldRows):
-            #         heightfield_data.write('{}, '.format(heightfieldData[i+j*numHeightfieldRows]))
-            #     heightfield_data.write("\n")
-     
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], heightfieldTextureScaling=64, heightfieldData=flatten_data_1, numHeightfieldRows=numHeightfieldRows, numHeightfieldColumns=numHeightfieldColumns)
-            terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[0.0,0.0,0.5], [0,0,0,1])
-
-        if reading_from_file:
-            # read from file
-            height_shift = max_height(HEIGHT_FIELD_FILE) / 20.0
-            TOWR_HEIGHT_FILE(HEIGHT_FIELD_OUT, scale_values(HEIGHT_FIELD_FILE, 0.1))
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], fileName = HEIGHT_FIELD, heightfieldTextureScaling=64)
-            terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[0.3,0.0,height_shift+0.001], [0,0,0,1])
-        
-        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
-        p.changeVisualShape(terrain, -1, rgbaColor=[0.1,1.0,1.0,1])
