@@ -98,7 +98,7 @@ class Height_Map_Generator(Maps):
     def __init__(self, dim=20, maps='plane'):
         super(Height_Map_Generator, self).__init__(maps, dim)
         self.create_height_file(HEIGHT_FIELD_TXT, self.map)
-        self.create_height_file(HEIGHT_FIELD_OUT, self.map)
+        self.create_height_file(HEIGHT_FIELD_OUT, scale_values(HEIGHT_FIELD_TXT, 0.1))
         self.height_shift = max_height(HEIGHT_FIELD_TXT) / 20.0
         self.f_name = HEIGHT_FIELD
         self.num_rows = self.map.shape[0]

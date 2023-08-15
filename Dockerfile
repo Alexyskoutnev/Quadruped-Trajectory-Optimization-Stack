@@ -36,7 +36,7 @@ RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt
 RUN apt update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install ros-melodic-desktop-full
 WORKDIR /
-RUN bash -c "source ./opt/ros/melodic/setup.bash >> /root/.bashrc"
+RUN bash -c "source /opt/ros/melodic/setup.bash >> /root/.bashrc"
 RUN bash -c "source /root/.bashrc"
 #installing towr
 # RUN apt-get -y install ros-melodic-towr-ros
@@ -45,10 +45,14 @@ WORKDIR /root/
 RUN mkdir -p catkin_ws/src
 WORKDIR /root/catkin_ws/src
 RUN git clone https://github.com/Alexyskoutnev/towr_solo12.git towr_solo12
-WORKDIR /root/catkin_ws/src/towr/towr
+WORKDIR /root/catkin_ws/src/towr_solo12/towr
 RUN mkdir build
-WORKDIR /root/catkin_ws/src/towr/towr/build
+WORKDIR /root/catkin_ws/src/towr_solo12/towr/build
 RUN cmake -S ../ -DCMAKE_BUILD_TYPE=Release
 RUN make -j4
 RUN make install
-WORKDIR /root/
+WORKDIR /root/catkin_ws/src/towr_solo12/scripts/catkin_build
+#installing towr-gui
+RUN ./build.sh
+WORKDIR /root/catkin_ws
+RUN bash -c "source devel_isolated/setup.bash"
