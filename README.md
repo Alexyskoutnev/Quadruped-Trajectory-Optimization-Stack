@@ -18,6 +18,16 @@ Now open a web browser and type in,
 ```
 http://localhost:6080/
 ```
+To launch a visual towr interface in the Towr Docker GUI, use the commands
+```console
+cd ~/catkin_ws
+source /opt/ros/melodic/setup.sh
+/opt/ros/melodic/setup.sh >> ~/.bashrc
+source ~/.bashrc
+catkin_make_isolated -DCMAKE_BUILD_TYPE=Release -j4
+source devel_isolated/setup.sh
+roslaunch towr_ros towr_ros.launch
+```
 # Python Installation Steps #
 ```
 conda create --name soloSim python=3.10
