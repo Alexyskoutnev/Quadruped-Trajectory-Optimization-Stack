@@ -50,4 +50,9 @@ WORKDIR /root/catkin_ws/src/towr_solo12/towr/build
 RUN cmake -S ../ -DCMAKE_BUILD_TYPE=Release
 RUN make -j4
 RUN make install
-WORKDIR /root/catkin_ws/
+WORKDIR /root/catkin_ws/src/towr_solo12/scripts/catkin_build
+#installing towr-gui
+RUN mkdir -p ~/.ros/data
+RUN ./build.sh
+WORKDIR /root/catkin_ws
+# RUN bash -c "source ./devel_isolated/setup.bash"
