@@ -1,8 +1,7 @@
 # MAINTAINER Alexy Skoutnev
 # LABEL version="1.0.1"
 # LABEL description="Dockerfile to build towr and run simulator and towr together"
-FROM dorowu/ubuntu-desktop-lxde-vnc:bionic
-# # FROM ubuntu:18.04
+FROM ubuntu:18.04
 WORKDIR /root
 RUN echo "Trying to install dependecies to Docker image"
 RUN apt-get -y update
