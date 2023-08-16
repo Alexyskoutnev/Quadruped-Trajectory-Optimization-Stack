@@ -18,7 +18,7 @@ class COMMAND:
 
 class Tracking:
 
-    def __init__(self, robot, num_traj) -> None:
+    def __init__(self, robot, num_traj, cfg) -> None:
         self.robot = robot
         self.traj = {"reference" : [], "sim" : []}
         self.idx = 0
@@ -30,6 +30,8 @@ class Tracking:
         self.HR_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.timeseries = np.linspace(0, 10, num_traj)
         self.total_error = 0.0
+        self.track_rate = cfg['track_rate']
+        self.track_flag = cfg['track']
     
     def update(self, reference_cmd, timestep):
         sim_cmd = self.get_sim_cmd()
@@ -37,9 +39,9 @@ class Tracking:
         self.traj['sim'].append(COMMAND(timestep, sim_cmd))
         self._update()
         self.idx += 1
-        if self.idx % 1000 == 0:
-            pass
-            #self.plot()
+        if self.idx % self.track_rate == 0:
+            if self.track_flag:
+                self.plot()
         
     def _update(self):
         for EE_NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
@@ -107,6 +109,7 @@ class Tracking:
         plt.subplot(4, 3, 3)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FL_FOOT['r_z'])], self.FL_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FL_FOOT['s_z'])], self.FL_FOOT['s_z'], label='sim', color='blue')
+        plt.ylim(-0.1,0.3)
         plt.grid(True)
         plt.legend()
         plt.title('FL Z Position')
@@ -126,6 +129,7 @@ class Tracking:
         plt.subplot(4, 3, 6)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FR_FOOT['r_z'])], self.FR_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FR_FOOT['s_z'])], self.FR_FOOT['s_z'], label='sim', color='blue')
+        plt.ylim(-0.1,0.3)
         plt.grid(True)
         plt.legend()
         plt.title('FR Z Position')
@@ -145,6 +149,7 @@ class Tracking:
         plt.subplot(4, 3, 9)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.HL_FOOT['r_z'])], self.HL_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HL_FOOT['s_z'])], self.HL_FOOT['s_z'], label='sim', color='blue')
+        plt.ylim(-0.1,0.3)
         plt.grid(True)
         plt.legend()
         plt.title('HL Z Position')
@@ -165,6 +170,7 @@ class Tracking:
         plt.subplot(4, 3, 12)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.HR_FOOT['r_z'])], self.HR_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HR_FOOT['s_z'])], self.HR_FOOT['s_z'], label='sim', color='blue')
+        plt.ylim(-0.1,0.3)
         plt.grid(True)
         plt.legend()
         plt.title('HR Z Position')
