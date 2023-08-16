@@ -2,6 +2,7 @@
 # LABEL version="1.0.1"
 # LABEL description="Dockerfile to build towr and run simulator and towr together"
 FROM ubuntu:18.04
+RUN DEBIAN_FRONTEND=noninteractive
 WORKDIR /root
 RUN echo "Trying to install dependecies to Docker image"
 RUN apt-get -y update
@@ -33,7 +34,7 @@ WORKDIR /root/
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu bionic main" > /etc/apt/sources.list.d/ros-melodic.list'
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 RUN apt update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install ros-melodic-desktop-full
+RUN apt-get -y install ros-melodic-desktop-full
 WORKDIR /
 RUN bash -c "source /opt/ros/melodic/setup.bash >> /root/.bashrc"
 RUN bash -c "source /root/.bashrc"

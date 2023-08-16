@@ -47,7 +47,7 @@ class Simulation(object):
             num_rows, num_cols = height_map.num_rows, height_map.num_cols
             terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1,.1], heightfieldTextureScaling=64, heightfieldData=height_map.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1) - 1,.0,height_shift+0.001], [0,0,0,1.0])
+            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1),.0,height_shift+0.001], [0,0,0,1.0])
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
             p.changeVisualShape(terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
 

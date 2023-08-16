@@ -11,8 +11,8 @@ docker ps -f ancestor=towr
 ```
 To build a towr enviroment with a GUI, you would need to build anthor image named, Dockerfile_GUI. However this image is slow and should be only used to debug towr source code/binaries. 
 ```console
-DOCKER_BUILDKIT=1 docker build --no-cache -t towr-gui -f Dockerfile_GUI
-docker run -p 6080:80 -b /dev/shm:/dev/shem towr-gui
+DOCKER_BUILDKIT=1 docker build --no-cache -t towr-gui -f Dockerfile_GUI .
+docker run -p 6080:80 -v /dev/shm:/dev/shm towr-gui
 ```
 Now open a web browser and type in,
 ```

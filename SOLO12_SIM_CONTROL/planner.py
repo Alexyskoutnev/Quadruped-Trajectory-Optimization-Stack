@@ -9,7 +9,7 @@ TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
 def heuristic(a, b):
     return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
 
-def astar(array, start, goal, height_bound=1.0):
+def astar(map, start, goal, height_bound=1.0):
 
     neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     close_set = set()
@@ -18,9 +18,9 @@ def astar(array, start, goal, height_bound=1.0):
     fscore = {start: heuristic(start, goal)}
     oheap = []
     heapq.heappush(oheap, (fscore[start], start))
+    i = 0
 
     while oheap:
-        print(close_set)
         current = heapq.heappop(oheap)[1]
         if current == goal:
             print("Found a path")
@@ -28,13 +28,13 @@ def astar(array, start, goal, height_bound=1.0):
             while current in came_from:
                 data.append(current)
                 current = came_from[current]
-            return data
+            return [start] + data[::-1]
         close_set.add(current)
         for i, j in neighbors:
             neighbor = current[0] + i, current[1] + j
             _g_score = gscore[current] + heuristic(current,  neighbor) #Current min cost from start node [start node] to current [n]
-            if 0 <= neighbor[0] < array.shape[0] and 0 <= neighbor[1] < array.shape[1]: #Check for a feasible solution
-                if array[neighbor[0]][neighbor[1]] >= height_bound:
+            if 0 <= neighbor[0] < map.shape[0] and 0 <= neighbor[1] < map.shape[1]: #Check for a feasible solution
+                if map[neighbor[0]][neighbor[1]] >= height_bound:
                     continue
             else:
                 continue
@@ -45,7 +45,7 @@ def astar(array, start, goal, height_bound=1.0):
                 gscore[neighbor] = _g_score
                 fscore[neighbor] = _g_score + heuristic(neighbor, goal) # f(n) = g(n) + h(n) Compute the total cost of the node 
                 heapq.heappush(oheap, (fscore[neighbor], neighbor))
-        return None
+    return None
 
 def obj_function(path, map, start, goal):
     total_cost = 0
@@ -121,14 +121,15 @@ if __name__ == "__main__":
     start = (0, 0)
     goal = (4, 4)
     path = astar(map, start, goal)
+    
 
-    breakpoint()
+    plot_height_map(start, goal, map, path)
 
 
     heights = np.array([[0.0, 0.0, 0.0, 0.4],
                     [0.5, 0.0, 0.7, 0.8],
                     [0.9, 0.0, 1.1, 1.2],
-                    [1.3, 0.0, 1.1, 1.6]])
+                    [1.3, 0.0, 0.2, 1.6]])
 
     start = (0, 0)
     goal = (3, 3)

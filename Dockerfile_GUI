@@ -45,14 +45,14 @@ RUN mkdir -p catkin_ws/src
 WORKDIR /root/catkin_ws/src
 RUN git clone https://github.com/Alexyskoutnev/towr_solo12.git towr_solo12
 WORKDIR /root/catkin_ws/src/towr_solo12/towr
-RUN mkdir build
-WORKDIR /root/catkin_ws/src/towr_solo12/towr/build
-RUN cmake -S ../ -DCMAKE_BUILD_TYPE=Release
-RUN make -j4
-RUN make install
-WORKDIR /root/catkin_ws/src/towr_solo12/scripts/catkin_build
-#installing towr-gui
-RUN mkdir -p ~/.ros/data
-RUN ./build.sh
-WORKDIR /root/catkin_ws
+# RUN mkdir build
+# WORKDIR /root/catkin_ws/src/towr_solo12/towr/build
+# RUN cmake -S ../ -DCMAKE_BUILD_TYPE=Release
+# RUN make -j4
+# RUN make install
+# WORKDIR /root/catkin_ws/src/towr_solo12/scripts/catkin_build
+# #installing towr-gui
+# RUN mkdir -p ~/.ros/data
+# RUN ./build.sh
+# WORKDIR /root/catkin_ws
 # RUN bash -c "source ./devel_isolated/setup.bash"
