@@ -2,9 +2,8 @@ import time
 
 import numpy as np
 
-HEIGHT_FIELD = "heightmaps/test_heightfield.txt"
-HEIGHT_FIELD_TXT = "./data/heightmaps/test_heightfield.txt"
-HEIGHT_FIELD_OUT = "./data/heightmaps/test_heightfield_towr.txt"
+HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
+TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
 
 def is_numeric(s):
     try:
@@ -60,19 +59,23 @@ class RandomMaps(object):
 
 class Maps(object):
 
-    wall_1_file = "./data/heightmaps/wall_1.txt"
-    wall_2_file = "./data/heightmaps/wall_2.txt"
-    wall_3_file = "./data/heightmaps/wall_3.txt"
-    test_file = "./data/heightmaps/heightfield_test.txt"
-    stairs_file = "./data/heightmaps/staircase.txt"
-    plane_file =  "./data/heightmaps/plane.txt"
+    calibration_file = "./data/heightfields/calibration.txt"
+    step_file = "./data/heightfields/step.txt"
+    wall_1_file = "./data/heightfields/wall_1.txt"
+    wall_2_file = "./data/heightfields/wall_2.txt"
+    wall_3_file = "./data/heightfields/wall_3.txt"
+    test_file = "./data/heightfields/heightfield_test.txt"
+    stairs_file = "./data/heightfields/staircase.txt"
+    plane_file =  "./data/heightfields/plane.txt"
+    calibration = txt_2_np_reader(calibration_file)
+    step = txt_2_np_reader(step_file)
     wall_1 = txt_2_np_reader(wall_1_file)
     wall_2 = txt_2_np_reader(wall_2_file)
     wall_3 = txt_2_np_reader(wall_3_file)
     stairs = txt_2_np_reader(stairs_file)
     plane = txt_2_np_reader(plane_file)
     test = txt_2_np_reader(test_file)
-    name_2_np_arr = {'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
+    name_2_np_arr = {'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
                      'test': test, 'stairs': stairs}
 
     def __init__(self, maps=['plane'], dim=20):
@@ -97,10 +100,10 @@ class Height_Map_Generator(Maps):
 
     def __init__(self, dim=20, maps='plane'):
         super(Height_Map_Generator, self).__init__(maps, dim)
-        self.create_height_file(HEIGHT_FIELD_TXT, self.map)
-        self.create_height_file(HEIGHT_FIELD_OUT, scale_values(HEIGHT_FIELD_TXT, 0.1))
-        self.height_shift = max_height(HEIGHT_FIELD_TXT) / 20.0
-        self.f_name = HEIGHT_FIELD
+        self.towr_map =  np.transpose(self.map)
+        self.create_height_file(HEIGHT_FIELD_OUT, self.map)
+        self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map)
+        self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
 

@@ -37,8 +37,9 @@ class Tracking:
         self.traj['sim'].append(COMMAND(timestep, sim_cmd))
         self._update()
         self.idx += 1
-        if self.idx % 100 == 0:
-            self.plot()
+        if self.idx % 1000 == 0:
+            pass
+            #self.plot()
         
     def _update(self):
         for EE_NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
@@ -169,6 +170,8 @@ class Tracking:
         plt.title('HR Z Position')
 
         plt.savefig(SAVE_FILE)
+        plt.close()
+        
         if plot_graph:
             plt.show()
 
@@ -198,6 +201,7 @@ class Tracking:
         plt.legend()
         plt.title('HR X Error')
         plt.savefig(SAVE_FILE_ERROR)
+        plt.close()
 
         if plot_graph:
             plt.show()

@@ -2,8 +2,10 @@ README.md
 setup.py
 SOLO12_SIM_CONTROL/__init__.py
 SOLO12_SIM_CONTROL/gaitPlanner.py
+SOLO12_SIM_CONTROL/generateHeightField.py
 SOLO12_SIM_CONTROL/logger.py
 SOLO12_SIM_CONTROL/mpc.py
+SOLO12_SIM_CONTROL/planner.py
 SOLO12_SIM_CONTROL/pybulletInterface.py
 SOLO12_SIM_CONTROL/simulation.py
 SOLO12_SIM_CONTROL/tracking.py
