@@ -212,6 +212,9 @@ class Tracking:
         if plot_graph:
             plt.show()
 
+    def plot_CoM(self):
+        pass
+
     def plot(self, plot_graph=False):
         self.plot_reference_vs_sim(plot_graph)
         self.plot_error(plot_graph)

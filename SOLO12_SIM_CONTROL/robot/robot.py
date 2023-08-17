@@ -545,13 +545,3 @@ class SOLO12(object):
         self._joint_vel = np.array([state[1] for state in self._joint_state])
         self.q = np.hstack((np.array(base_state[0]), np.array(base_state[1]), self._joint_ang)) #Underactuated system representation
         self.qdot = np.hstack((np.array(base_vel[0]), np.array(base_vel[1]), self._joint_vel)) #Underactuated system representation
-
-
-
-
-
-
-
-
-
-

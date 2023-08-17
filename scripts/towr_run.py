@@ -18,11 +18,13 @@ from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
 from SOLO12_SIM_CONTROL.logger import Logger
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
-            'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
+            'copy': 'docker cp <id>:root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
             'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
-            'data': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv',
-            'delete': 'rm ./data/traj/towr.csv'}
+            'data': 'docker cp <id>:root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv',
+            'delete': 'rm ./data/traj/towr.csv',
+            'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
+            'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t']
 
@@ -161,8 +163,12 @@ def _cmd_args(args):
     return _cmd
 
 def _run(args):
+    TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
+    TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
     log = Logger("./logs", "towr_log")
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
+    p = subprocess.run(TOWR_RM_HEIGHTFIELD_SCRIPT)
+    p = subprocess.run(TOWR_COPY_HEIGHTFIELD_SCRIPT)
     args = _step(args)
     towr_runtime_0 = time.process_time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
@@ -214,7 +220,11 @@ def test_mpc(args):
             print("Error in copying Towr Trajectory")
 
 def test_mpc_single_loop(args):
+    TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
+    TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
     log = open("./logs/towr_log.out", "w")
+    p = subprocess.run(TOWR_RM_HEIGHTFIELD_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
+    p = subprocess.run(TOWR_COPY_HEIGHTFIELD_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
     args = _step(args)
     towr_runtime_0 = time.time()
