@@ -168,6 +168,7 @@ def _cmd_args(args):
 
 def _run(args):
     sim = Simulation(sim_cfg)
+    args['-g'][0] = (sim.num_tiles - 1) * 1.0 + 0.5
     TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
     TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
     log = Logger("./logs", "towr_log")
@@ -250,7 +251,7 @@ def test_mpc_single_loop(args):
 if __name__ == "__main__":
     test = False
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[10.0,0,0.24])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)

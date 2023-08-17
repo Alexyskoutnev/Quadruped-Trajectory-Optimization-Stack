@@ -512,7 +512,7 @@ class SOLO12(object):
 
         return q_cmd, q_dot_cmd
 
-    def default_stance_control(self):
+    def default_stance_control(self, q_init = None):
         """Robot default stance standing still
 
         Returns:
@@ -520,18 +520,33 @@ class SOLO12(object):
             q_vel (np.array): Stance joint velocities
             q_toq (np.array): Stance motor torques
         """
-        q_cmd = self.q_init
-        q_vel = np.zeros(12)
-        q_mes = np.zeros(12)
-        v_mes = np.zeros(12)
-        jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
-        q_mes[:] = [state[0] for state in jointStates]
-        v_mes[:] = [state[1] for state in jointStates]
-        self._motor.set_motor_gains(5, 0.01)
-        q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
-        self._joint_ang_ref = q_cmd
-        self._joint_vel_ref = q_vel
-        self._joint_toq_ref = q_toq
+        if q_init is None:
+            q_cmd = self.q_init
+            q_vel = np.zeros(12)
+            q_mes = np.zeros(12)
+            v_mes = np.zeros(12)
+            jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
+            q_mes[:] = [state[0] for state in jointStates]
+            v_mes[:] = [state[1] for state in jointStates]
+            self._motor.set_motor_gains(5, 0.01)
+            q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+            self._joint_ang_ref = q_cmd
+            self._joint_vel_ref = q_vel
+            self._joint_toq_ref = q_toq
+        else:
+            q_cmd = q_init
+            q_vel = np.zeros(12)
+            q_mes = np.zeros(12)
+            v_mes = np.zeros(12)
+            jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
+            q_mes[:] = [state[0] for state in jointStates]
+            v_mes[:] = [state[1] for state in jointStates]
+            self._motor.set_motor_gains(5, 0.01)
+            q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
+            self._joint_ang_ref = q_cmd
+            self._joint_vel_ref = q_vel
+            self._joint_toq_ref = q_toq
+
         return q_cmd, q_vel, q_toq
 
     def _update(self):

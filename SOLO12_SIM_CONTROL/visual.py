@@ -76,7 +76,6 @@ class Visual_Planner:
                                             radius=self.CoM_radius,
                                             rgbaColor=[0.1, 1, 0, 1])
             CoM = list(plan[length_q*self.step_size][0:3])
-            print(f"[{length_q}] COM [{CoM}]")
             visual_body_id = p.createMultiBody(baseVisualShapeIndex=visual_shape_id,
                                                 basePosition=CoM,
                                                 baseOrientation=self.CoM_orientation)
@@ -222,7 +221,6 @@ class Visual_Planner:
                 p.removeBody(self.foot_id.dequeue())
 
     def step(self, idx, timestamp):
-        print(f"idx -> {idx}")
         if self.show_com:
             self.CoM_step(idx, timestamp)
         if self.show_feet:
@@ -232,7 +230,6 @@ class Visual_Planner:
 
     def CoM_step(self, idx, timestamp):
         if idx % self.step_size == 0:
-            print(f"idx {idx}, loading COm")
             self.plot_Com_plan(timestamp)
             self.delete_CoM_one()
         else:
@@ -240,7 +237,6 @@ class Visual_Planner:
 
     def feet_step(self, idx, timestamp):
         if idx % self.step_size == 0:
-            print(f"idx {idx}, loading foot")
             self.plot_foot_plan(timestamp)
             self.delete_foot_plan_one()
         else:

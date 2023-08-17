@@ -100,6 +100,11 @@ def simulation(args={}):
         reader = csv.reader(csv_file, delimiter=',')
         TRAJ_SIZE = sum(1 for row in reader)
         traj = np.genfromtxt(TOWR, delimiter=',')
+        first_traj_point = traj[0]
+        if sim_cfg['stance_phase']:
+            time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
+            ref_start_cmd = vec_to_cmd_pose(EE_POSE)
+            q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)
         v_planner = Visual_Planner(TOWR, sim_cfg)
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
@@ -132,16 +137,21 @@ def simulation(args={}):
     else:
         key_press_init_phase = False
     
+    stance_step = 0
     while (key_press_init_phase):
         loop_time = time.time() - last_loop_time
+        if stance_step >= sim_cfg['stance_period']:
+            key_press_init_phase = False
+            break
         if init_phase and key_press_init_phase:
-                _, _, joint_toq = ROBOT.default_stance_control()
+                _, _, joint_toq = ROBOT.default_stance_control(q_init)
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
         if loop_time > sim_cfg['TIMESTEPS'] and RECORD_TRAJ:
             csv_entry = ROBOT.csv_entry
             writer.writerow(csv_entry)
             last_loop_time = time.time()
+            stance_step += 1
 
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:

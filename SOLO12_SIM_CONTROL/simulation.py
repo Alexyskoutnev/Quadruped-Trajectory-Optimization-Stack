@@ -17,6 +17,7 @@ class Simulation(object):
         self._wall = "./data/urdf/wall.urdf"
         self._stairs = "./data/urdf/stair.urdf"
         self._box = "./data/urdf/box.urdf"
+        self.num_tiles = 0
         self.p = self.setup(cfg)
 
     def setup(self, cfg):
@@ -30,6 +31,7 @@ class Simulation(object):
             height_map = Height_Map_Generator(maps=cfg['map_id'])
             height_shift = height_map.height_shift
             tiles = len(cfg['map_id'])
+            self.num_tiles = tiles
             num_rows, num_cols = height_map.num_rows, height_map.num_cols
             terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1, 1.0], heightfieldTextureScaling=64, heightfieldData=height_map.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
             terrain  = p.createMultiBody(0, terrainShape)
