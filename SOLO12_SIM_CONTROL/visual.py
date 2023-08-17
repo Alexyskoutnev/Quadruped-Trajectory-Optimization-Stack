@@ -28,10 +28,11 @@ class FIFOQueue:
         return len(self.queue)
 
 class Visual_Planner:
-    def __init__(self, traj_file, step_size=500, lookahead=5000) -> None:
+    def __init__(self, traj_file, step_size=100, lookahead=5000) -> None:
         self.CoM_id = FIFOQueue()
-        self.CoM_radius = 0.025
+        self.CoM_radius = 0.010
         self.CoM_orientation = [0, 0, 0, 1]
+        self.CoM_goal_flag = False
         self.foot_id = FIFOQueue()
         self.traj_file = traj_file
         self.step_size = step_size
@@ -46,31 +47,44 @@ class Visual_Planner:
         plan = self.load_plan(timestep)
         radius = self.CoM_id
         orientation = self.CoM_orientation
-        num_com_points = self.lookahead // self.step_size
+        num_com_points = self.look_ahead // self.step_size
         for i in range(1, num_com_points):
             visual_shape_id = p.createVisualShape(shapeType=p.GEOM_SPHERE,
                                         radius=self.CoM_radius,
                                         rgbaColor=[0.1, 1, 0, 1])
             CoM = list(plan[i*self.step_size][0:3])
-            print(f"[{i}] COM [{CoM}]")
             visual_body_id = p.createMultiBody(baseVisualShapeIndex=visual_shape_id,
                                             basePosition=CoM,
                                             baseOrientation=orientation)
             self.CoM_id.enqueue(visual_body_id)
 
-    def plot_Com_plan(self, timestep, step_size=250, lookahead=2000):
+    def plot_Com_plan(self, timestep):
         plan = self.load_plan(timestep)
+        length_remaining_traj = plan.shape[0]
         length_q = self.CoM_id.size()
-        visual_shape_id = p.createVisualShape(shapeType=p.GEOM_SPHERE,
-                                        radius=self.CoM_radius,
-                                        rgbaColor=[0.1, 1, 0, 1])
-        CoM = list(plan[length_q*step_size][0:3])
-        print(f"[{length_q}] COM [{CoM}]")
-
-        visual_body_id = p.createMultiBody(baseVisualShapeIndex=visual_shape_id,
-                                            basePosition=CoM,
-                                            baseOrientation=self.CoM_orientation)
-        self.CoM_id.enqueue(visual_body_id)
+        if length_remaining_traj > length_q*self.step_size:
+            visual_shape_id = p.createVisualShape(shapeType=p.GEOM_SPHERE,
+                                            radius=self.CoM_radius,
+                                            rgbaColor=[0.1, 1, 0, 1])
+            CoM = list(plan[length_q*self.step_size][0:3])
+            print(f"[{length_q}] COM [{CoM}]")
+            visual_body_id = p.createMultiBody(baseVisualShapeIndex=visual_shape_id,
+                                                basePosition=CoM,
+                                                baseOrientation=self.CoM_orientation)
+            self.CoM_id.enqueue(visual_body_id)
+        elif not self.CoM_goal_flag:
+            self.CoM_goal_flag = True
+            visual_shape_id = p.createVisualShape(shapeType=p.GEOM_SPHERE,
+                                            radius=self.CoM_radius*2,
+                                            rgbaColor=[0.1, 0.0, 1, 1])
+            last_CoM = plan[-1][0:3]
+            print(f"[{length_q}] Last CoM [{last_CoM}]")
+            visual_body_id = p.createMultiBody(baseVisualShapeIndex=visual_shape_id,
+                                                basePosition=last_CoM,
+                                                baseOrientation=self.CoM_orientation)
+            self.CoM_id.enqueue(visual_body_id)
+        else:
+            pass #Done planning ahead
 
     def plot_foot_plan(self):
         raise NotImplemented
@@ -96,6 +110,4 @@ class Visual_Planner:
         self.delete_CoM_one()
 
 if __name__ == "__main__":
-    timestep = 0.395
-    # plan = load_plan(TRAJ, timestep)
     pass

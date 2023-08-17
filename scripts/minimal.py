@@ -15,6 +15,7 @@ config_fname = "./data/config/solo12.yml"
 config_sim_fname = "./data/config/simulation.yml"
 terrain_fname = "./data/heightmaps/heightfield.txt"
 traj_fname = "./data/traj/towr.csv"
+# traj_fname = "./data/traj/test.csv"
 URDF = "./data/urdf/solo12.urdf"
 #traj_fname = "data/traj/lift_one_foot.csv"
 # traj_fname = "data/traj/lift_two_feet.csv"
@@ -42,7 +43,7 @@ plane = pybullet.loadURDF("plane.urdf")
 robot = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
 reader = csv.reader(open(traj_fname, 'r', newline=''))
 
-step_size = 500
+step_size = 100
 look_ahead = 5000
 v_planner = Visual_Planner(traj_fname, step_size, look_ahead)
 v_planner.plot_CoM_plan_init(0)
@@ -73,6 +74,7 @@ while (t_idx < sim_cfg["SIM_STEPS"]):
    pybullet.stepSimulation()
    t_idx += 1
    robot.time_step += 1
-   v_planner.CoM_step(robot.time)
+   if t_idx % step_size == 0:
+      v_planner.CoM_step(robot.time)
  
 pybullet.disconnect()
