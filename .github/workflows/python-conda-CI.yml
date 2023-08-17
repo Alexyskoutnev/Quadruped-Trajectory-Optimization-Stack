@@ -25,7 +25,7 @@ jobs:
     - name : Installing pip requirements
       run: |
           pip install --upgrade pip
-          pip -r install requirements.txt
+          pip install -r requirements.txt
 
     - name : Setting up fake display
       run : |
