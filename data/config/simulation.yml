@@ -20,7 +20,7 @@ SIM_STEPS : 110000
 
 HZ : 1000
 TIMESTEPS : 0.001
-stance_phase : False
+stance_phase : True
 stance_period : 10
 skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : True
@@ -28,10 +28,10 @@ base_stable : False
 track : True
 track_rate : 200
 height_map : True
-map_id : ['plane', 'plane']
+map_id : ['step', 'plane']
 
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 100
 v_look_ahead : 5000
-show_com_plan : False
+show_com_plan : True
 show_feet_plan : True

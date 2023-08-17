@@ -99,7 +99,7 @@ class Visual_Planner:
         plan = self.load_plan(timestep)
         orientation = self.CoM_orientation
         num_com_points = self.look_ahead // self.step_size
-        for i in range(1, num_com_points):
+        for i in range(0, num_com_points):
             visual_shape_id_ee_1 = p.createVisualShape(shapeType=p.GEOM_SPHERE,
                                         radius=self.foot_radius,
                                         rgbaColor=[1.0, 0.75, 0.8, 1]) # pink
