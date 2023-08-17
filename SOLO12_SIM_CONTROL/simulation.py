@@ -36,7 +36,7 @@ class Simulation(object):
             p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1),.0,height_shift+0.001], [0,0,0,1.0]) # fix
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
             p.changeVisualShape(terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
-            p.changeDynamics(terrain, -1, lateralFriction=1.0)
+            p.changeDynamics(terrain, -1, lateralFriction=cfg['friction'])
 
         elif cfg['enviroment'] == 'custom_test':
             py_client = p.connect(p.DIRECT)

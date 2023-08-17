@@ -91,7 +91,7 @@ def simulation(args={}):
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
     last_loop_time = time.time()
-    sim_step = 0
+    sim_step = 1
     RECORD_TRAJ = False
     
     """============SIM-CONFIGURATION============"""
@@ -218,6 +218,7 @@ def simulation(args={}):
                         for _ in range(sim_cfg['skip_forward_idx'] + 1):
                             ROBOT.time_step += 1
                             sim_step += 1
+                        sim_step -= 1
                     else:
                         ROBOT.time_step += 1
 
