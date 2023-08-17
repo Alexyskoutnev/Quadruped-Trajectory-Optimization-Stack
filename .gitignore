@@ -5,3 +5,4 @@
 /logs
 data/tracking_info/
 *.png
+*.vscode

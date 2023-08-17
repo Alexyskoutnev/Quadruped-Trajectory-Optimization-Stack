@@ -63,9 +63,10 @@ def shift_z(v, shift):
 
 class Loader:
     def __init__(self, urdf_path, config, fixed = 0) -> None:
-        _load = pin.buildModelFromUrdf(urdf_path)
-        self.model = _load
-        self.data = _load.createData()
+        if config['use_pinocchio']:
+            _load = pin.buildModelFromUrdf(urdf_path)
+            self.model = _load
+            self.data = _load.createData()
         self.robot = p.loadURDF(urdf_path, config['start_pos'], config['start_ang'], useFixedBase=fixed)
         self.q0 = np.zeros(12)
     

@@ -8,9 +8,7 @@ class Logger(object):
         self.path = file_path
         self.type = log_type
         self.runtime = time.time()
-        if os.path.isdir(self.path):
-            pass
-        else:
+        if not os.path.isdir(self.path):
             os.mkdir(self.path)
         self.log = open(self.path + "/" + str(log_type) + ".out", "w")
         if log_type:

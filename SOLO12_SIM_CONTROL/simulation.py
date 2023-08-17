@@ -1,4 +1,4 @@
-from SOLO12_SIM_CONTROL.generateHeightField import Height_Map_Generator, txt_2_np_reader
+from SOLO12_SIM_CONTROL.generateHeightField import Height_Map_Generator
 
 import time
 
@@ -6,17 +6,10 @@ import pybullet as p
 import pybullet_data
 from scipy.spatial.transform import Rotation
 
-URDF = "./data/urdf/"
-# HEIGHT_FIELD = "heightmaps/staircase.txt"
 HEIGHT_FIELD = "heightmaps/heightfield.txt"
 HEIGHT_FIELD_TEST = "./data/heightmaps/heightfield_test.txt"
 HEIGHT_FIELD_FILE = "./data/heightmaps/heightfield_test.txt"
-# HEIGHT_FIELD = "heightmaps/walls.txt"
-# HEIGHT_FIELD_FILE = "./data/heightmaps/staircase.txt"
-# HEIGHT_FIELD_FILE = "./data/heightmaps/walls.txt"
-# HEIGHT_FIELD_OUT = "./data/heightmaps/staircase.out"
 HEIGHT_FIELD_OUT = "./data/heightmaps/heightfield.out"
-# HEIGHT_FIELD_OUT = "./data/heightmaps/walls.out"
 
 class Simulation(object):
 
@@ -27,17 +20,10 @@ class Simulation(object):
         self.p = self.setup(cfg)
 
     def setup(self, cfg):
+        
         py_client = None
 
-        test = False
-
-        if test:
-            py_client = p.connect(p.GUI)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-10.0)
-            self.setup_terrain()
-
-        elif cfg['enviroment'] == "custom":
+        if cfg['enviroment'] == "custom":
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
