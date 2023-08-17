@@ -29,4 +29,4 @@ base_stable : False
 track : True
 track_rate : 200
 height_map : True
-map_id : ['plane', 'step_2', 'step_3', 'step_1', 'plane']
+map_id : ['step', 'step_3', 'step_3', 'step_1', 'plane']
