@@ -18,6 +18,7 @@ jobs:
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
+
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name soloSIM
@@ -26,11 +27,15 @@ jobs:
       run: |
           conda activate my_env
 
+    - name : Installing pip requirements
+      run: |
+          pip3 install -r requirements.txt
+
     - name : Setting up fake display
       run : |
             sudo apt-get update
             sudo apt-get -y install xvfb python3 python3-pip
-            
+
     - name : Setup Xvfb
       run : 
           Xvfb :99 -screen 0 1024x768x24 & export DISPLAY=:99
