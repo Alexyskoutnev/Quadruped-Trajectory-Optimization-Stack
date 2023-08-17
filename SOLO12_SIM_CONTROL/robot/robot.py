@@ -118,7 +118,8 @@ class SOLO12(object):
         jointTorques = [0.0 for m in revoluteJointIndices]
         p.setJointMotorControlArray(self.robot, revoluteJointIndices, controlMode=p.TORQUE_CONTROL, forces=jointTorques)
 
-        self.offsets = [0.15, 0.0, 0.0, -0.15, 0.0, 0.0, 0.15, 0.0, 0.0, -0.15, 0.0, 0.0]
+        # self.offsets = [0.15, 0.0, 0.0, -0.15, 0.0, 0.0, 0.15, 0.0, 0.0, -0.15, 0.0, 0.0]
+        self.offsets = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self._kp = config['kp']
         self._kd = config['kd']
         self._motor = MotorModel(self._kp, self._kd, config['hip_gain_scale'], config['knee_gain_scale'], config['ankle_gain_scale'], toq_max=config['t_max'])
