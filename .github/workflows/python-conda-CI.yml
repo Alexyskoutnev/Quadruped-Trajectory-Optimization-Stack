@@ -19,14 +19,12 @@ jobs:
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
 
-    - name: Install dependencies
+    - name: Setting up Conda enviroment
       run: |
-        conda create -n soloSIM
-
-    - name : Setting up Conda enviroment
-      run: |
-          conda init bash
-          conda activate my_env
+        conda create -n soloSIM python=3.10 -y
+        conda init bash
+        source ~/.bashrc
+        conda activate soloSIM
 
     - name : Installing pip requirements
       run: |
