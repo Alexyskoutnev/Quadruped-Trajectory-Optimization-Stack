@@ -23,7 +23,7 @@ jobs:
       run: |
         conda create -n soloSIM python=3.10 -y
         conda init bash
-        source ~/.bashrc
+        source $HOME/.bashrc
         conda activate soloSIM
 
     - name : Installing pip requirements
