@@ -1,0 +1,15 @@
+---
+  robot: "SOLO12"
+  joint_count: 12
+  q_init : [0.008, 0.38, -0.845, -0.008, 0.38, -0.845, 0.0082, -0.38, 0.845, -0.082, -0.2805, 0.845]
+  start_pos : [0,0,0.31]
+  start_ang : [0.0, 0.0, 0.0, 1.0]
+  t_max : 3.0
+  mode : 'PD' #position-velocity control
+  kp : 0.5 #values for p-control or pd-control
+  kd : 0.1 #values for p-control or pd-control
+  hip_gain_scale : 1.0
+  knee_gain_scale : 1.0
+  ankle_gain_scale : 1.0
+  timestep : 0.001
+  use_pinocchio : False

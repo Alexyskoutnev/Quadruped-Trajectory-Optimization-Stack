@@ -5,6 +5,7 @@ import os
 import sys
 import math
 import csv
+import argparse
 from threading import Thread, Lock
 
 #third party
@@ -35,6 +36,12 @@ BEZIER_TRAJ = "./data/traj/bezier_traj"
 # global keypressed
 key_press_init_phase = True
 mutex = Lock()
+
+def parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--test', action="store_true", help="Sets testing flag for CI")
+    args = parser.parse_args()
+    return args
 
 def update_file_name(file, cfg, sim_cfg):
     step_period = str(sim_cfg['step_period'])
@@ -234,13 +241,22 @@ def simulation(args={}):
                 else:
                     break
 
-
-
-    TRACK_RECORD.plot()
-    p.disconnect()
+    if sim_cfg.get('track'):
+        TRACK_RECORD.plot()
     if RECORD_TRAJ:
         print(f"TRAJ RECORD PATH -> {record_file}")
+        
+    p.disconnect()
 
 if __name__ == "__main__":
-    simulation()
+    args = parser()
+    if args.test:
+        config = "./test/data/config/solo12_test.yml"
+        config_sim = "./test/data/config/simulation_towr_test.yml"
+        cfg = yaml.safe_load(open(config, 'r'))
+        sim_cfg = yaml.safe_load(open(config_sim, 'r'))
+        TOWR = "./test/data/traj/towr.csv"
+        simulation()
+    else:
+        simulation()
 

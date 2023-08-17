@@ -41,7 +41,7 @@ jobs:
 
     - name : SOLO12_SIMULATION Test Script
       run: |
-          python scripts/run.py
+          python scripts/run.py -t
           
 
     

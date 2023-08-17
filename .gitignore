@@ -1,7 +1,7 @@
 /tutorial
 *.pyc
 *.ipynb*
-/test
 /thirdparty
 /logs
 data/tracking_info/
+*.png

@@ -1,0 +1,29 @@
+mode : "towr"
+enviroment : "custom_test"
+py_interface : False
+fix-base : False
+#==BEZIER INIT CONFIGURATION==
+pos : [0, 0, 0]
+angle : 0.0
+velocity: 1.0
+angle_velocity : 0.0
+step_period : 1.0
+trot_2_stance_ratio : 0.5
+#============================
+terrain_offset : [1.5, 0, 0]
+
+TRAJ_SIZE : 100
+SIM_STEPS : 110
+
+HZ : 1000
+TIMESTEPS : 0.001
+stance_phase : False
+stance_period : 10
+skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
+record : False
+base_stable : False
+track : False
+track_rate : 100
+#==Custom Map CONFIGURATION==
+height_map : True
+map_id : ['plane', 'plane', 'plane']
