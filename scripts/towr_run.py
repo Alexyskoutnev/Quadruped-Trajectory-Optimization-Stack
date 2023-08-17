@@ -11,11 +11,13 @@ import csv
 import run
 import collect_towr_data
 import numpy as np
+import yaml
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter, transformation_mtx, transformation_inv, transformation_multi
 from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
 from SOLO12_SIM_CONTROL.logger import Logger
+from SOLO12_SIM_CONTROL.simulation import Simulation
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'copy': 'docker cp <id>:root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
@@ -30,6 +32,8 @@ _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t'
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
+config_sim = "./data/config/simulation.yml"
+sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 
 lock = Lock()
 
@@ -163,6 +167,7 @@ def _cmd_args(args):
     return _cmd
 
 def _run(args):
+    sim = Simulation(sim_cfg)
     TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
     TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
     log = Logger("./logs", "towr_log")
@@ -170,6 +175,7 @@ def _run(args):
     p = subprocess.run(TOWR_RM_HEIGHTFIELD_SCRIPT)
     p = subprocess.run(TOWR_COPY_HEIGHTFIELD_SCRIPT)
     args = _step(args)
+    args['sim'] = sim
     towr_runtime_0 = time.process_time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
@@ -183,7 +189,7 @@ def _run(args):
             if args.get('record'):
                 run.simulation(args)
             else:
-                run.simulation()
+                run.simulation(args)
         else: 
             print("Error in copying Towr Trajectory")
     else:
@@ -220,6 +226,7 @@ def test_mpc(args):
             print("Error in copying Towr Trajectory")
 
 def test_mpc_single_loop(args):
+    # sim = Simulation(sim_cfg)
     TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
     TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
     log = open("./logs/towr_log.out", "w")

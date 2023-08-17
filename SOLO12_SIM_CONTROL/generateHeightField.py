@@ -61,6 +61,9 @@ class Maps(object):
 
     calibration_file = "./data/heightfields/calibration.txt"
     step_file = "./data/heightfields/step.txt"
+    step_1_file = "./data/heightfields/step_1.txt"
+    step_2_file = "./data/heightfields/step_2.txt"
+    step_3_file = "./data/heightfields/step_3.txt"
     wall_1_file = "./data/heightfields/wall_1.txt"
     wall_2_file = "./data/heightfields/wall_2.txt"
     wall_3_file = "./data/heightfields/wall_3.txt"
@@ -69,13 +72,16 @@ class Maps(object):
     plane_file =  "./data/heightfields/plane.txt"
     calibration = txt_2_np_reader(calibration_file)
     step = txt_2_np_reader(step_file)
+    step_1 = txt_2_np_reader(step_1_file)
+    step_2 = txt_2_np_reader(step_2_file)
+    step_3 = txt_2_np_reader(step_3_file)
     wall_1 = txt_2_np_reader(wall_1_file)
     wall_2 = txt_2_np_reader(wall_2_file)
     wall_3 = txt_2_np_reader(wall_3_file)
     stairs = txt_2_np_reader(stairs_file)
     plane = txt_2_np_reader(plane_file)
     test = txt_2_np_reader(test_file)
-    name_2_np_arr = {'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
+    name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
                      'test': test, 'stairs': stairs}
 
     def __init__(self, maps=['plane'], dim=20):

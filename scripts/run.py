@@ -84,7 +84,8 @@ def simulation(args={}):
     
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
-    Simulation(sim_cfg)
+    if not args.get('sim'):
+        Simulation(sim_cfg)
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
@@ -245,7 +246,7 @@ def simulation(args={}):
         TRACK_RECORD.plot()
     if RECORD_TRAJ:
         print(f"TRAJ RECORD PATH -> {record_file}")
-        
+
     p.disconnect()
 
 if __name__ == "__main__":
