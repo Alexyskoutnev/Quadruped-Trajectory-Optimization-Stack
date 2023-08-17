@@ -226,7 +226,7 @@ def test_mpc(args):
             print("Error in copying Towr Trajectory")
 
 def test_mpc_single_loop(args):
-    # sim = Simulation(sim_cfg)
+    sim = Simulation(sim_cfg)
     TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
     TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
     log = open("./logs/towr_log.out", "w")

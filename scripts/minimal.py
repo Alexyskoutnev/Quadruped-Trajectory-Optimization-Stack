@@ -45,7 +45,7 @@ reader = csv.reader(open(traj_fname, 'r', newline=''))
 
 step_size = 100
 look_ahead = 5000
-v_planner = Visual_Planner(traj_fname, step_size, look_ahead)
+v_planner = Visual_Planner(traj_fname, sim_cfg)
 """main loop """
 t_idx = 0
 
@@ -73,7 +73,6 @@ while (t_idx < sim_cfg["SIM_STEPS"]):
    pybullet.stepSimulation()
    t_idx += 1
    robot.time_step += 1
-   if t_idx % step_size == 0:
-      v_planner.CoM_step(robot.time)
+   v_planner.step(t_idx, robot.time)
  
 pybullet.disconnect()
