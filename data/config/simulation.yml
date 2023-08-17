@@ -29,3 +29,9 @@ track : True
 track_rate : 200
 height_map : True
 map_id : ['plane', 'step_2']
+
+#==Visual Planner CONFIGURATIONS==
+v_step_size : 100
+v_look_ahead : 5000
+show_com_plan : True
+show_feet_plan : False

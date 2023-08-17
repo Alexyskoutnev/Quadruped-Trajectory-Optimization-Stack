@@ -22,6 +22,7 @@ from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
 from SOLO12_SIM_CONTROL.logger import Logger
 from SOLO12_SIM_CONTROL.tracking import Tracking
+from SOLO12_SIM_CONTROL.visual import Visual_Planner
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
@@ -99,6 +100,7 @@ def simulation(args={}):
         reader = csv.reader(csv_file, delimiter=',')
         TRAJ_SIZE = sum(1 for row in reader)
         traj = np.genfromtxt(TOWR, delimiter=',')
+        v_planner = Visual_Planner(TOWR, sim_cfg)
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
         if args.get('record') or sim_cfg.get('record'):
@@ -224,6 +226,7 @@ def simulation(args={}):
 
                     p.stepSimulation()
                     _global_update(ROBOT, ROBOT.state)
+                    v_planner.step(sim_step, ROBOT.time)
 
                 last_loop_time = time.time()
                 sim_step += 1

@@ -46,7 +46,6 @@ reader = csv.reader(open(traj_fname, 'r', newline=''))
 step_size = 100
 look_ahead = 5000
 v_planner = Visual_Planner(traj_fname, step_size, look_ahead)
-v_planner.plot_CoM_plan_init(0)
 """main loop """
 t_idx = 0
 

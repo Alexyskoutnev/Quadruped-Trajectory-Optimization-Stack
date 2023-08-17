@@ -28,15 +28,23 @@ class FIFOQueue:
         return len(self.queue)
 
 class Visual_Planner:
-    def __init__(self, traj_file, step_size=100, lookahead=5000) -> None:
+    def __init__(self, traj_file, cfg) -> None:
         self.CoM_id = FIFOQueue()
         self.CoM_radius = 0.010
         self.CoM_orientation = [0, 0, 0, 1]
         self.CoM_goal_flag = False
         self.foot_id = FIFOQueue()
+        self.foot_id_flag = False
         self.traj_file = traj_file
-        self.step_size = step_size
-        self.look_ahead = lookahead
+        self.step_size = cfg['v_step_size']
+        self.look_ahead = cfg['v_look_ahead']
+        self.show_com = cfg['show_com_plan']
+        self.show_feet = cfg['show_feet_plan']
+        if self.show_com:
+            self.plot_CoM_plan_init(0)
+        if self.show_feet:
+            self.plot_foot_plan_init(0)
+
 
     def load_plan(self, timestep, lookahead=5000):
         data = np.loadtxt(self.traj_file, delimiter=',')
@@ -86,7 +94,7 @@ class Visual_Planner:
         else:
             pass #Done planning ahead
 
-    def plot_foot_plan(self):
+    def plot_foot_plan_init(self):
         raise NotImplemented
 
     def delete_CoM_one(self):
@@ -105,9 +113,27 @@ class Visual_Planner:
         if not self.foot_id.is_empty():
             p.removeBody(self.foot_id.dequeue())
 
-    def CoM_step(self, timestep):
-        self.plot_Com_plan(timestep)
-        self.delete_CoM_one()
+    def step(self, idx, timestamp):
+        if self.show_com:
+            self.CoM_step(idx, timestamp)
+        if self.show_feet:
+            self.feet_step(idx, timestamp)
+        else:
+            pass
+
+    def CoM_step(self, idx, timestamp):
+        if idx % self.step_size == 0:
+            self.plot_Com_plan(timestamp)
+            self.delete_CoM_one()
+        else:
+            pass
+
+    def feet_step(self, idx, timestamp):
+        if idx % self.step_size == 0:
+            self.plot_Com_plan(timestamp)
+            self.delete_CoM_one()
+        else:
+            pass
 
 if __name__ == "__main__":
     pass
