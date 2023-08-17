@@ -1,5 +1,6 @@
 import time
 import datetime
+import os
 
 class Logger(object):
 
@@ -7,6 +8,7 @@ class Logger(object):
         self.path = file_path
         self.type = log_type
         self.runtime = time.time()
+        os.mkdir(self.path)
         self.log = open(self.path + "/" + str(log_type) + ".out", "w")
         if log_type:
             self.log = open(self.path + "/" + str(log_type) + ".out", "w")
