@@ -24,7 +24,7 @@ jobs:
 
     - name : Installing pip requirements
       run: |
-          pip3 install --upgrade pip3
+          pip install --upgrade pip3
           pip3 install appnope==0.1.3
           pip3 install asttokens==2.2.1
           pip3 install backcall==0.2.0
