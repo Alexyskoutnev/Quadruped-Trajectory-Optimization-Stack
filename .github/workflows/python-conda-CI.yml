@@ -25,6 +25,7 @@ jobs:
 
     - name : Setting up Conda enviroment
       run: |
+          conda init bash
           conda activate my_env
 
     - name : Installing pip requirements
