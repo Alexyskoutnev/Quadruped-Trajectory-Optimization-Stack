@@ -22,3 +22,23 @@ jobs:
       run: |
         conda env update --file environment.yml --name soloSIM
 
+    - name : Setting up Conda enviroment
+      run: |
+          conda activate my_env
+
+    - name : Setting up fake display
+      run : |
+            sudo apt-get update
+            sudo apt-get -y install xvfb python3 python3-pip
+            
+    - name : Setup Xvfb
+      run : 
+          Xvfb :99 -screen 0 1024x768x24 & export DISPLAY=:99
+
+    - name : SOLO12_SIMULATION Script Tests
+      run: |
+          python scripts/run.py
+          
+
+    
+
