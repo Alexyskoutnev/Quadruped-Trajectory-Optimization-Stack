@@ -2,7 +2,6 @@
 mode : "towr"
 enviroment : "custom"
 # enviroment : "plane"
-# enviroment: "towr_track_no_con"
 
 py_interface : False
 fix-base : False
@@ -29,4 +28,4 @@ base_stable : False
 track : True
 track_rate : 200
 height_map : True
-map_id : ['step', 'step_3', 'step_3', 'step_1', 'plane']
+map_id : ['plane', 'step_2']

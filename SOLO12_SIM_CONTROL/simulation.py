@@ -20,7 +20,7 @@ class Simulation(object):
         self.p = self.setup(cfg)
 
     def setup(self, cfg):
-        
+
         py_client = None
 
         if cfg['enviroment'] == "custom":
@@ -101,5 +101,7 @@ class Simulation(object):
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,0)
             p.loadURDF("plane.urdf")
+
+        p.setAdditionalSearchPath(pybullet_data.getDataPath()) 
 
         return py_client
