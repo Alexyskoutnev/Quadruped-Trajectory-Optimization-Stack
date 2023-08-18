@@ -1,31 +1,13 @@
 from collections import deque
 
 import SOLO12_SIM_CONTROL.config.global_cfg
+from SOLO12_SIM_CONTROL.containers import FIFOQueue
 
 import numpy as np
 import pybullet as p
 import pybullet_data
 
 TRAJ = "../data/traj/towr.csv"
-
-class FIFOQueue:
-    def __init__(self):
-        self.queue =deque()
-
-    def enqueue(self, item):
-        self.queue.append(item)
-
-    def dequeue(self):
-        if not self.is_empty():
-            return self.queue.popleft()
-        else:
-            raise IndexError("Visual Queue ID is empty")
-
-    def is_empty(self):
-        return len(self.queue) == 0
-
-    def size(self):
-        return len(self.queue)
 
 class Visual_Planner:
     def __init__(self, traj_file, cfg) -> None:
@@ -86,7 +68,6 @@ class Visual_Planner:
                                             radius=self.CoM_radius*2,
                                             rgbaColor=[0.1, 0.0, 1, 1])
             last_CoM = plan[-1][0:3]
-            print(f"[{length_q}] Last CoM [{last_CoM}]")
             visual_body_id = p.createMultiBody(baseVisualShapeIndex=visual_shape_id,
                                                 basePosition=last_CoM,
                                                 baseOrientation=self.CoM_orientation)

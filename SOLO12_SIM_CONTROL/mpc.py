@@ -8,6 +8,7 @@ import pandas as pd
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 from SOLO12_SIM_CONTROL.utils import *
+from SOLO12_SIM_CONTROL.planner import Global_Planner
 
 
 class MPC_THREAD(threading.Thread):
@@ -33,11 +34,11 @@ class MPC(object):
         self.next_traj_step = 0
         self.hz = hz
         self.decimal_precision = math.log10(hz)
+        self.global_planner = Global_Planner(args['map'])
     
     def combine(self):
         """Combines the old and new csv trajectories together
         """
-        # breakpoint()
         time_combine = time.process_time()
         _old_traj = open(self.current_traj, "r")
         _new_traj = open(self.new_traj, "r")
@@ -74,8 +75,11 @@ class MPC(object):
         """
         self.cutoff_idx = int(global_cfg.RUN.step)
         self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
-        # print(self.last_timestep)
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
+        
+
+        #Updating the global planner
+        # self.global_planner.update()
 
     def update_timestep(self):
         """

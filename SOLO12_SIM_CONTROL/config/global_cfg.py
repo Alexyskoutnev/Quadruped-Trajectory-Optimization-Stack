@@ -1,5 +1,7 @@
 import sys
 
+from SOLO12_SIM_CONTROL.containers import FIFOQueue
+
 class ROBOT_CFG:
     robot = None
     joint_state = {'q_cmd': [0.0]*12, 'q_vel': [0.0]*12, 'q_toq': [0.0]*12}
@@ -17,6 +19,11 @@ class RUN:
     _stance = False
     TOWR_POS = [0, 0, 0]
     _run_update_thread = True
+
+class PLANNER:
+    set_straight_correction = False
+    mpc_goal_points = FIFOQueue()
+
 
 def print_vars(stream = sys.__stdout__):
     sys.stdout = stream

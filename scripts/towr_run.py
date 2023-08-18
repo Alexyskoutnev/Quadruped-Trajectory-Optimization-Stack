@@ -167,6 +167,11 @@ def _cmd_args(args):
     return _cmd
 
 def _run(args):
+    """I NEED TO REFOMATE THIS SO ITS CLEANER
+
+    Args:
+        args (_type_): _description_
+    """
     sim = Simulation(sim_cfg)
     args['-g'][0] = (sim.num_tiles - 1) * 1.0 + 0.5
     TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
@@ -177,6 +182,7 @@ def _run(args):
     p = subprocess.run(TOWR_COPY_HEIGHTFIELD_SCRIPT)
     args = _step(args)
     args['sim'] = sim
+    args['map'] = sim.height_map
     towr_runtime_0 = time.process_time()
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)

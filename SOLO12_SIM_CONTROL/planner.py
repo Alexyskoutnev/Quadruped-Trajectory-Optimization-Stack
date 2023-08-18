@@ -4,7 +4,57 @@ import matplotlib.pyplot as plt
 import heapq
 from scipy.optimize import minimize
 
+
+from SOLO12_SIM_CONTROL.config.global_cfg import PLANNER
+from SOLO12_SIM_CONTROL.containers import FIFOQueue
+
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
+
+
+class Global_Planner(object):
+    
+    def __init__(self, map, lookahead=6000):
+        self.error_bound = 0.1
+        self.lookahead = lookahead
+        # self.robot_pose = robot.pose
+        # self.plan_robot_pose = plan[timestep]
+        # self.plan_desired_p1 = plan[lookahead] #3d pos
+        # self.plan_desired_p2 = plan[lookahead] + goal_step #3d pos
+
+    def error_pose(self, robot_pose, plan_pose):
+        return np.linalg.norm(robot_pose - plan_pose)
+
+    def proj(self, A, B):
+        dot_p = np.dot(A, B)
+        sq_magnitude = np.dot(B, B)
+        proj_vec = (dot_p / sq_magnitude) * B
+        return proj_vec
+
+    def update(self, timestep, plan, goal_step):
+        """Template to update the state of the planner
+
+        Args:
+            timestep (_type_): _description_
+            plan (_type_): _description_
+            goal_step (_type_): _description_
+        """
+        self.plan_robot_pose = plan[timestep]
+        self.plan_desired_p1 = plan[self.lookahead] #3d pos
+        self.plan_desired_p2 = plan[self.lookahead] + goal_step #3d pos
+        if self.error_pose(self.robot_pose, self.plan_robot_pose) > self.error_bound:
+            PLANNER.set_straight_correction = True
+            PLANNER.mpc_goal_points.enqueue(self.plan_desired_p1)
+            PLANNER.mpc_goal_points.enqueue(self.plan_desired_p2)
+        else:
+            pass
+    
+    def _plan(self):
+        """Function that replans the future trajectory
+        """
+        pass
+
+class Solver(object):
+    pass
 
 def heuristic(a, b):
     return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
