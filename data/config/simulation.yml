@@ -22,17 +22,17 @@ HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : True
 stance_period : 100
-skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
+skip_forward_idx : 5 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : True
 base_stable : False
-track : False
-track_rate : 200
+track : True
+track_rate : 100
 height_map : True
-map_id : ['plane', 'plane']
+map_id : ['plane', 'plane', 'plane']
 friction : 0.99
 
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 100
 v_look_ahead : 5000
-show_com_plan : True
-show_feet_plan : True
+show_com_plan : False
+show_feet_plan : False

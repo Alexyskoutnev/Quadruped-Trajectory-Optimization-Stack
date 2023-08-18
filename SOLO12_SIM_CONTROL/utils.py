@@ -217,7 +217,7 @@ def convert12arr_2_16arr(arr):
         idx += 1
     return arr16
 
-def towr_transform(robot, traj, towr=True):
+def towr_transform(robot, traj, towr=True, ee_shift=0.01):
     """Helper function to transform 'raw towr data' from world frame to 
        base frame on robot. Then the base frame is converted back to world 
        frame in Pybullet enviroment to help fix misalignment if towr trajectory runs
@@ -239,6 +239,7 @@ def towr_transform(robot, traj, towr=True):
             vec = np.concatenate((traj[t]['P'], np.ones(1)))
             t_vec = tfMtx @ vec
             traj[t]['P'] = t_vec[0:3]
+            traj[t]['P'][2] += ee_shift
     traj = trajectory_2_world_frame(robot, traj, towr=towr, original_traj=original_traj)
     del traj['COM']
     return traj
