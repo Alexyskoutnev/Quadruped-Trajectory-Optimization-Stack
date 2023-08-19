@@ -9,7 +9,7 @@ config_sim = "./data/config/simulation.yml"
 cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 
-def builder():
+def builder(cfg=cfg, sim_cfg=sim_cfg):
     SIMULATION = Simulation(sim_cfg)
     ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
     return {"robot": ROBOT, "sim": SIMULATION}

@@ -79,7 +79,7 @@ def keypress():
             key_press_init_phase = False
             break
 
-def simulation(args={}):
+def simulation(args):
     """Main simulation interface that runs the bullet engine
     
     """
@@ -265,13 +265,15 @@ def simulation(args={}):
 if __name__ == "__main__":
     args = parser()
     if args.test:
+        print("End-to-End Test")
         config = "./test/data/config/solo12_test.yml"
         config_sim = "./test/data/config/simulation_towr_test.yml"
         cfg = yaml.safe_load(open(config, 'r'))
         sim_cfg = yaml.safe_load(open(config_sim, 'r'))
         TOWR = "./test/data/traj/towr.csv"
-        simulation()
+        args = builder(cfg=cfg, sim_cfg=sim_cfg)
+        simulation(args)
     else:
         args = builder()
-        simulation()
+        simulation(args)
 
