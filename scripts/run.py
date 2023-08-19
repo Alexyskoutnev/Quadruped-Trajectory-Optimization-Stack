@@ -23,6 +23,7 @@ from SOLO12_SIM_CONTROL.simulation import Simulation
 from SOLO12_SIM_CONTROL.logger import Logger
 from SOLO12_SIM_CONTROL.tracking import Tracking
 from SOLO12_SIM_CONTROL.visual import Visual_Planner
+from SOLO12_SIM_CONTROL.builder import builder
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
@@ -85,9 +86,7 @@ def simulation(args={}):
     
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
-    if not args.get('sim'):
-        Simulation(sim_cfg)
-    ROBOT = SOLO12(URDF, cfg, fixed=sim_cfg['fix-base'], sim_cfg=sim_cfg)
+    ROBOT = args['robot']
     gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
     last_loop_time = time.time()
@@ -273,5 +272,6 @@ if __name__ == "__main__":
         TOWR = "./test/data/traj/towr.csv"
         simulation()
     else:
+        args = builder()
         simulation()
 

@@ -1,3 +1,5 @@
+from SOLO12_SIM_CONTROL.utils import is_numeric
+
 import time
 
 import numpy as np
@@ -5,14 +7,8 @@ import numpy as np
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
 
-def is_numeric(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
-def txt_2_np_reader(file, delimiter=','):
+def heighmap_2_np_reader(file, delimiter=','):
     data = []
     with open(file, 'r') as f:
         reader = f.readlines()
@@ -70,17 +66,17 @@ class Maps(object):
     test_file = "./data/heightfields/heightfield_test.txt"
     stairs_file = "./data/heightfields/staircase.txt"
     plane_file =  "./data/heightfields/plane.txt"
-    calibration = txt_2_np_reader(calibration_file)
-    step = txt_2_np_reader(step_file)
-    step_1 = txt_2_np_reader(step_1_file)
-    step_2 = txt_2_np_reader(step_2_file)
-    step_3 = txt_2_np_reader(step_3_file)
-    wall_1 = txt_2_np_reader(wall_1_file)
-    wall_2 = txt_2_np_reader(wall_2_file)
-    wall_3 = txt_2_np_reader(wall_3_file)
-    stairs = txt_2_np_reader(stairs_file)
-    plane = txt_2_np_reader(plane_file)
-    test = txt_2_np_reader(test_file)
+    calibration = heighmap_2_np_reader(calibration_file)
+    step = heighmap_2_np_reader(step_file)
+    step_1 = heighmap_2_np_reader(step_1_file)
+    step_2 = heighmap_2_np_reader(step_2_file)
+    step_3 = heighmap_2_np_reader(step_3_file)
+    wall_1 = heighmap_2_np_reader(wall_1_file)
+    wall_2 = heighmap_2_np_reader(wall_2_file)
+    wall_3 = heighmap_2_np_reader(wall_3_file)
+    stairs = heighmap_2_np_reader(stairs_file)
+    plane = heighmap_2_np_reader(plane_file)
+    test = heighmap_2_np_reader(test_file)
     name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
                      'test': test, 'stairs': stairs}
 
@@ -107,6 +103,7 @@ class Height_Map_Generator(Maps):
     def __init__(self, dim=20, maps='plane'):
         super(Height_Map_Generator, self).__init__(maps, dim)
         self.towr_map =  np.transpose(self.map)
+        # self.towr_map = self.map
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map)
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0

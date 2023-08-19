@@ -318,3 +318,21 @@ def zero_filter(x, tol=1e-4):
         if abs(val) < tol:
             x[i] = 0
     return x
+
+def is_numeric(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def txt_2_np_reader(file, delimiter=','):
+    data = []
+    with open(file, 'r') as f:
+        reader = f.readlines()
+        for row in reader:
+            _row = row.strip().split(delimiter)
+            _row = [float(x) for x in _row if is_numeric(x)]
+            data.append(_row)
+    # return np.transpose(np.array(data))
+    return np.array(data)

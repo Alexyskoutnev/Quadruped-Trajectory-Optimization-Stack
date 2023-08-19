@@ -35,7 +35,13 @@ class MPC(object):
         self.hz = hz
         self.decimal_precision = math.log10(hz)
         self.global_planner = Global_Planner(args['map'])
-    
+        self.traj_plan = txt_2_np_reader(self.current_traj)
+
+    @property
+    def plan_state(self):
+        state = self.traj_plan[np.where(self.traj_plan[:, 0] == self.last_timestep)[0]]
+        return state
+
     def combine(self):
         """Combines the old and new csv trajectories together
         """
@@ -45,6 +51,7 @@ class MPC(object):
         df_old = self._truncate_csv(_old_traj).to_numpy()
         df_new = pd.read_csv(self.new_traj).to_numpy()
         combined_df = np.concatenate((df_old, df_new), axis=0)
+        self.traj_plan = combined_df
         combined_df = pd.DataFrame(combined_df)
         combined_df.to_csv(self.new_traj, index=False, header=None)
 
@@ -57,6 +64,7 @@ class MPC(object):
         Returns:
             self.args (dic) : input argument to Towr script
         """
+        # current_plan_state = self.plan_state
         _state_dic = self._state()
         self.args['-s'] = _state_dic["CoM"]
         self.args['-s_ang'] = _state_dic['orientation']

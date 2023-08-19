@@ -5,8 +5,10 @@ import subprocess
 import shlex
 import argparse
 import copy
-from threading import Thread, Lock
+import sys
 import csv
+from threading import Thread, Lock
+
 
 import run
 import collect_towr_data
@@ -18,6 +20,7 @@ from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahe
 from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
 from SOLO12_SIM_CONTROL.logger import Logger
 from SOLO12_SIM_CONTROL.simulation import Simulation
+from SOLO12_SIM_CONTROL.builder import builder
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'copy': 'docker cp <id>:root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
@@ -106,9 +109,7 @@ def _plan(args):
 
 def mpc_update_thread(mpc):
     while True:
-        print("update")
         mpc.update()
-
 
 def _update(args, log):
     """
@@ -149,6 +150,14 @@ def _update(args, log):
                             print("towr thread waiting")
             
 def _cmd_args(args):
+    """Commandline parser to run python subprocesses correctly
+
+    Args:
+        args (dict): user + config inputs for simulation and solver
+
+    Return:
+        _cmd : parsed command line string that can be ran as a excutable
+    """
 
     def _bracket_rm(s):
         return s.replace("[", "").replace("]", "")
@@ -160,60 +169,56 @@ def _cmd_args(args):
         return _bracket_rm(_remove_comma(str(s)))
 
     _cmd = ""
+
     for key, value in args.items():
         if key in _flags and value:
             _cmd += key + " " + _filter(value)
             _cmd += " "
+
     return _cmd
 
-def _run(args):
-    """I NEED TO REFOMATE THIS SO ITS CLEANER
+def _init(args):
+    """Configure trajectory solver in proper start state
 
     Args:
-        args (_type_): _description_
+        args (dict): user + config inputs for simulation and solver
+
+    Returns:
+        log: logger to log the status/state of the trajectory solver + simulation
     """
-    sim = Simulation(sim_cfg)
-    args['-g'][0] = (sim.num_tiles - 1) * 1.0 + 0.5
-    TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
-    TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
     log = Logger("./logs", "towr_log")
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
-    p = subprocess.run(TOWR_RM_HEIGHTFIELD_SCRIPT)
-    p = subprocess.run(TOWR_COPY_HEIGHTFIELD_SCRIPT)
+    subprocess.run(shlex.split(args['scripts']['heightfield_rm']))
+    subprocess.run(shlex.split(args['scripts']['heightfield_copy']))
     args = _step(args)
-    args['sim'] = sim
-    args['map'] = sim.height_map
-    towr_runtime_0 = time.process_time()
+    args['map'] = args['sim'].height_map
+    return log
+
+def _run(args):
+    """launch function to start the simulation and the solver concurrently
+
+    Args:
+        args (dict): user + config inputs for simulation and solver
+    """
+    log = _init(args)
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-    towr_runtime_1 = time.process_time()
-    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:0.3f} seconds')
     if p.returncode == 0:
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
         if p.returncode == 0:
             towr_thread = Thread(target=_update, args=(args, log))
             towr_thread.start()
-            if args.get('record'):
-                run.simulation(args)
-            else:
-                run.simulation(args)
+            run.simulation(args)
         else: 
             print("Error in copying Towr Trajectory")
+            sys.exit(1)
     else:
-        print("Error input trajectory cmds")
-        print("running default commamd")
-        TOWR_SCRIPT = shlex.split(args['scripts']['run'] + "-g 0.5 0.0 0.21 -s 0.0 0.0 0.21")
-        p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-        if p.returncode == 0:
-            print("TOWR found a trajectory with default cmd")
-            p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-            if p.returncode == 0:
-                run.simulation()
-            else: 
-                print("Error in copying Towr Trajectory")
-            return
+        print("Error Generating Towr Trajectory")
+        sys.exit(1)
+
 
 def test_mpc(args):
+    """TO BE REMOVE"""
     log = open("./logs/towr_log.out", "w")
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
     args = _step(args)
@@ -233,6 +238,7 @@ def test_mpc(args):
             print("Error in copying Towr Trajectory")
 
 def test_mpc_single_loop(args):
+    """TO BE REMOVE"""
     sim = Simulation(sim_cfg)
     TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
     TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
@@ -279,4 +285,6 @@ if __name__ == "__main__":
     if test:
         test_mpc_single_loop(args)
     else:
+        args.update(builder())
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
         _run(args)
