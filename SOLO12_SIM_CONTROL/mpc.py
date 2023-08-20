@@ -34,12 +34,18 @@ class MPC(object):
         self.next_traj_step = 0
         self.hz = hz
         self.decimal_precision = math.log10(hz)
-        self.global_planner = Global_Planner(args['map'])
+        # self.global_planner = Global_Planner(args['map'])
         self.traj_plan = txt_2_np_reader(self.current_traj)
+        self.robot = args['robot']
 
     @property
     def plan_state(self):
         state = self.traj_plan[np.where(self.traj_plan[:, 0] == self.last_timestep)[0]]
+        return state
+
+    @property
+    def robot_state(self):
+        state = self.robot.state_np
         return state
 
     def combine(self):
@@ -84,10 +90,9 @@ class MPC(object):
         self.cutoff_idx = int(global_cfg.RUN.step)
         self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
-        
-
+        goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         #Updating the global planner
-        # self.global_planner.update()
+        # self.global_planner.update(self.last_timestep, self.plan, self.plan_state, self.robot_state, goal_step_vec)
 
     def update_timestep(self):
         """

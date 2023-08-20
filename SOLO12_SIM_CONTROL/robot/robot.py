@@ -145,6 +145,20 @@ class SOLO12(object):
         return {"linkWorldPosition": CoM_pos, "linkWorldOrientation": CoM_angle}
 
     @property
+    def state_np(self):
+        CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
+        EE = self.get_endeffector_pose()
+        CoM_pos = np.array(CoM_pos)
+        CoM_angle = np.array(CoM_angle)
+        EE_1 = np.array(EE['FL_FOOT']['linkWorldPosition'])
+        EE_2 = np.array(EE['FR_FOOT']['linkWorldPosition'])
+        EE_3 = np.array(EE['HL_FOOT']['linkWorldPosition'])
+        EE_4 = np.array(EE['HR_FOOT']['linkWorldPosition'])
+        time_step = np.array(self.time)
+        state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
+        return state
+     
+    @property
     def state(self):
         """Return the known state of the robot
 

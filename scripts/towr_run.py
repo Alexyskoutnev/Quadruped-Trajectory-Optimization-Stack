@@ -239,26 +239,16 @@ def test_mpc(args):
 
 def test_mpc_single_loop(args):
     """TO BE REMOVE"""
-    sim = Simulation(sim_cfg)
-    TOWR_RM_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_rm'])
-    TOWR_COPY_HEIGHTFIELD_SCRIPT = shlex.split(args['scripts']['heightfield_copy'])
-    log = open("./logs/towr_log.out", "w")
-    p = subprocess.run(TOWR_RM_HEIGHTFIELD_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
-    p = subprocess.run(TOWR_COPY_HEIGHTFIELD_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
-    global_cfg.ROBOT_CFG.robot_goal = args['-g']
-    args = _step(args)
-    towr_runtime_0 = time.time()
+    log = _init(args)
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    print(f"INPUT ARGS : {TOWR_SCRIPT}")
-    p = subprocess.run(TOWR_SCRIPT, stdout=log, stderr=subprocess.STDOUT)
-    towr_runtime_1 = time.time()
-    print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0} seconds')
+    p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     if p.returncode == 0:
-        print("TOWR found a trajectory")
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-        run.simulation()
+        if p.returncode == 0:
+            _update(args, log)
     else:
-        print("===============================NO SOLUTION===============================")
+        print("Error Generating Towr Trajectory")
+        sys.exit(1)
 
 if __name__ == "__main__":
     test = False
@@ -283,6 +273,8 @@ if __name__ == "__main__":
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
             "f_steps": p_args.f_steps, "record": p_args.record}
     if test:
+        args.update(builder())
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
         test_mpc_single_loop(args)
     else:
         args.update(builder())

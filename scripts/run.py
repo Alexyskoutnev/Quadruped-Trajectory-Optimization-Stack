@@ -83,7 +83,6 @@ def simulation(args):
     """Main simulation interface that runs the bullet engine
     
     """
-    
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
     ROBOT = args['robot']
