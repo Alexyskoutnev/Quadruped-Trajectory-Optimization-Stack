@@ -46,8 +46,7 @@ class MPC(object):
 
     @property
     def robot_state(self):
-        state = self.robot.state_np
-        return state
+        return self.robot.state_np
 
     def combine(self):
         """Combines the old and new csv trajectories together
@@ -71,24 +70,18 @@ class MPC(object):
         Returns:
             self.args (dic) : input argument to Towr script
         """
-        # current_plan_state = self.plan_state
 
-        if self.set_correct_flag:
-            #change the starting pos of the solver
+        if self.global_planner.P_correction and not self.global_planner.empty():
             _state_dic = self._state()
-
-            
-            self.args['-s'] = _state_dic["CoM"] #change to more realisitic position
-
-
+            start_pos, end_pos = self.global_planner.pop()
+            self.args['-s'] = start_pos
             self.args['-s_ang'] = _state_dic['orientation']
             self.args['-e1'] = _state_dic["FL_FOOT"]
             self.args['-e2'] = _state_dic["FR_FOOT"]
             self.args['-e3'] = _state_dic["HL_FOOT"]
             self.args['-e4'] = _state_dic["HR_FOOT"]
             self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
-            #change the ending pos of the solver 
-            self.args['-g'] = self.global_planner.next_goal_points.dequeue()
+            self.args['-g'] = end_pos
         else:
             _state_dic = self._state()
             self.args['-s'] = _state_dic["CoM"]
@@ -111,8 +104,9 @@ class MPC(object):
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         #Updating the global planner
-        # self.set_correct_flag = self.global_planner.set_correct_flag
-        self.global_planner.update(self.last_timestep, self.traj_plan, self.plan_state, self.robot_state, goal_step_vec)
+        # print(self.plan_state)
+        # print(self.robot_state) #FOR SOME REASON THIS THROWS A SEGFAULT ERROR???
+        # self.global_planner.update(self.last_timestep, self.traj_plan, self.plan_state, self.robot_state, goal_step_vec)
 
     def update_timestep(self):
         """

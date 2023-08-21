@@ -38,7 +38,7 @@ NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
 config_sim = "./data/config/simulation.yml"
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 
-lock = Lock()
+mutex = Lock()
 
 def strip(x):
     st = " "
@@ -118,7 +118,9 @@ def _update(args, log):
     _wait = False
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     while (global_cfg.RUN._run_update_thread):
+            mutex.acquire()
             mpc.update()
+            mutex.release()
             time.sleep(0.001)
             if mpc.goal_diff < 0.05:
                 print("Robot reach the goal!")
@@ -127,17 +129,15 @@ def _update(args, log):
                 global_cfg.RUN._update = False
             elif not _wait:
                 # global_cfg.RUN._wait = True
-                # breakpoint()
-
                 args = mpc.plan(args)
-                towr_runtime_0 = time.process_time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+                print(f"Updated with a new plan - \n {TOWR_SCRIPT}")
                 p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-                towr_runtime_1 = time.process_time()
-                print(f'TOWR Execution time: {towr_runtime_1 - towr_runtime_0:0.3f} seconds')
+                print(f"P_status {p_status}")
                 _wait = True
                 # breakpoint()
                 # global_cfg.RUN._wait = False
+                
             elif p_status.returncode == 0 and mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
                 p = subprocess.run(shlex.split(scripts['data'])) 
@@ -207,6 +207,7 @@ def _run(args):
     if p.returncode == 0:
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
         if p.returncode == 0:
+            print("Launching Simulation")
             towr_thread = Thread(target=_update, args=(args, log))
             towr_thread.start()
             run.simulation(args)
@@ -252,7 +253,7 @@ def test_mpc_single_loop(args):
         sys.exit(1)
 
 if __name__ == "__main__":
-    test = True
+    test = False
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
@@ -264,7 +265,7 @@ if __name__ == "__main__":
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
     parser.add_argument('-step', '--step', type=float, default=0.5)
-    parser.add_argument('-forced_steps', '--f_steps', type=int, default=5500)
+    parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
     parser.add_argument('-l', '--look', type=float, default=7500)
     parser.add_argument('-r', '--record', type=bool, default=False)
     p_args = parser.parse_args()
@@ -276,9 +277,6 @@ if __name__ == "__main__":
     if test:
         args.update(builder())
         args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
-
-        args['-g'][1] = -0.5
-
         test_mpc_single_loop(args)
     else:
         args.update(builder())

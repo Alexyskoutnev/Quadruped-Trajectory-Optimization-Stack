@@ -146,16 +146,24 @@ class SOLO12(object):
 
     @property
     def state_np(self):
+        # print("0")
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
+        # print("1")
         EE = self.get_endeffector_pose()
+        # print("2")
         CoM_pos = np.array(CoM_pos)
+        # print("3")
         CoM_angle = p.getEulerFromQuaternion(np.array(CoM_angle))
+        # print("4")
         EE_1 = np.array(EE['FL_FOOT']['linkWorldPosition'])
         EE_2 = np.array(EE['FR_FOOT']['linkWorldPosition'])
         EE_3 = np.array(EE['HL_FOOT']['linkWorldPosition'])
         EE_4 = np.array(EE['HR_FOOT']['linkWorldPosition'])
+        # print("5")
         time_step = np.array(self.time)
+        # print("6")
         state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
+        # print("7")
         return state
      
     @property

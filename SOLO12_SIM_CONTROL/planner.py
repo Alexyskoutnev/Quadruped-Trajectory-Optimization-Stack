@@ -19,15 +19,12 @@ class Global_Planner(object):
         self.lookahead = lookahead
         self.set_correct_flag = False
         self.start_goal_pts = Limited_Stack(start_goal_pts_history_sz)
-        self.control_P = True
-
+        self.P_correction = False # correction for proportional error btw planner and robot CoM
         self.plan_state = None
         self.robot_state = None
 
-        # self.robot_pose = robot.pose
-        # self.plan_robot_pose = plan[timestep]
-        # self.plan_desired_p1 = plan[lookahead] #3d pos
-        # self.plan_desired_p2 = plan[lookahead] + goal_step #3d pos
+        self.plan_desired_goal_pt = np.zeros(3)
+        self.plan_desired_start_pt = np.zeros(3)
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
         return np.linalg.norm(robot_pose - plan_pose) > self.error_bound + eps
@@ -58,22 +55,22 @@ class Global_Planner(object):
             plan (_type_): _description_
             goal_step (_type_): _description_
         """
+        pass
         ###Update the robot and trajectory state
-        self.plan_state = plan_state
-        self.robot_state = robot_state
+        # self.plan_state = plan_state
+        # self.robot_state = robot_state
         ###Calculate the error btw robot and trajectory
-        error = self.plan_robot_error(plan_state, robot_state)
-        plan_desired_state_p1 = plan[self.lookahead] #Desired next goal in trajectory
-        plan_desired_start_pt = plan_desired_state_p1[1:4]
-        goal_pt_xy = plan_desired_start_pt[0:2]
-        z = plan_desired_state_p1[3]
-        plan_desired_goal_pt = np.zeros(3)
-        plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt_xy, error)
-        plan_desired_goal_pt[2] = z
-        plan_desired_state_pt = plan_state[1:4]
-        plan_start_goal_tuple = (plan_desired_state_pt, plan_desired_goal_pt)
-        if self.control_P:
-            self.start_goal_pts.push(plan_start_goal_tuple)
+        # error = self.plan_robot_error(plan_state, robot_state)
+        # plan_desired_state_p1 = plan[self.lookahead].copy() #Desired next goal in trajectory
+        # plan_desired_start_pt = plan_desired_state_p1[1:4]
+        # goal_pt_xy = plan_desired_start_pt[0:2]
+        # z = plan_desired_state_p1[3]
+        # self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt_xy, error)
+        # self.plan_desired_goal_pt[2] = z
+        # plan_desired_state_pt = plan_state[1:4]
+        # plan_start_goal_tuple = (plan_desired_state_pt, self.plan_desired_goal_pt)
+        # if self.P_correction:
+        #     self.start_goal_pts.push(plan_start_goal_tuple)
 
         # if self.error_pose_test(plan_state[0:2], robot_state[0:2]) and not PLANNER.set_straight_correction:
         #     print("Correcting mpc goal")
@@ -94,14 +91,12 @@ class Global_Planner(object):
 
     def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
         return kp * (goal_pt + error)
-        
-        pass
 
-
-    def _plan(self):
-        """Function that replans the future trajectory
-        """
-        pass
+    def pop(self):
+        return self.start_goal_pts.pop()
+    
+    def empty(self):
+        return self.start_goal_pts.is_empty()
 
 class Solver(object):
     pass

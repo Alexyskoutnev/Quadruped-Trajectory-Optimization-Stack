@@ -1,5 +1,7 @@
 from collections import deque
 
+import numpy as np
+
 class FIFOQueue:
     def __init__(self):
         self.queue =deque()
@@ -25,7 +27,11 @@ class Limited_Stack(object):
         self.stack = deque()
 
     def push(self, item):
-        self.stack.append(item)
+        if type(item[0]) is np.ndarray or type(item[1]) is np.ndarray :
+            _item = (item[0].tolist(), item[1].tolist())
+        else:
+            _item = item
+        self.stack.append(_item)
         if len(self.stack) > self.max_size:
             self.stack.popleft()
 

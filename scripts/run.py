@@ -207,10 +207,6 @@ def simulation(args):
                     if global_cfg.RUN._stance:
                         _, _, joint_toq = ROBOT.default_stance_control()
                         p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
-                    if sim_cfg['base_stable']:
-                        joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
-                        ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-                        p.resetBasePositionAndOrientation(ROBOT.robot, COM[0:3], p.getQuaternionFromEuler(COM[3:6]))
                     else:
                         joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                         ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
@@ -232,7 +228,6 @@ def simulation(args):
 
                     if sim_cfg.get('track'):
                         TRACK_RECORD.update(ref_cmd, ROBOT.time_step)
-
                     p.stepSimulation()
                     _global_update(ROBOT, ROBOT.state)
                     v_planner.step(sim_step, ROBOT.time)
