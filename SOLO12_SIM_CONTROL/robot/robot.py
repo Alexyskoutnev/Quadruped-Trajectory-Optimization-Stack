@@ -149,7 +149,7 @@ class SOLO12(object):
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         EE = self.get_endeffector_pose()
         CoM_pos = np.array(CoM_pos)
-        CoM_angle = np.array(CoM_angle)
+        CoM_angle = p.getEulerFromQuaternion(np.array(CoM_angle))
         EE_1 = np.array(EE['FL_FOOT']['linkWorldPosition'])
         EE_2 = np.array(EE['FR_FOOT']['linkWorldPosition'])
         EE_3 = np.array(EE['HL_FOOT']['linkWorldPosition'])

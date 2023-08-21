@@ -128,6 +128,7 @@ def _update(args, log):
             elif not _wait:
                 # global_cfg.RUN._wait = True
                 # breakpoint()
+
                 args = mpc.plan(args)
                 towr_runtime_0 = time.process_time()
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
@@ -251,7 +252,7 @@ def test_mpc_single_loop(args):
         sys.exit(1)
 
 if __name__ == "__main__":
-    test = False
+    test = True
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
@@ -275,6 +276,9 @@ if __name__ == "__main__":
     if test:
         args.update(builder())
         args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
+
+        args['-g'][1] = -0.5
+
         test_mpc_single_loop(args)
     else:
         args.update(builder())

@@ -34,13 +34,14 @@ class MPC(object):
         self.next_traj_step = 0
         self.hz = hz
         self.decimal_precision = math.log10(hz)
-        # self.global_planner = Global_Planner(args['map'])
+        self.global_planner = Global_Planner(args['map'], self.lookahead)
         self.traj_plan = txt_2_np_reader(self.current_traj)
         self.robot = args['robot']
+        self.set_correct_flag = False
 
     @property
     def plan_state(self):
-        state = self.traj_plan[np.where(self.traj_plan[:, 0] == self.last_timestep)[0]]
+        state = np.squeeze(self.traj_plan[np.where(self.traj_plan[:, 0] == self.last_timestep)[0]])
         return state
 
     @property
@@ -71,15 +72,33 @@ class MPC(object):
             self.args (dic) : input argument to Towr script
         """
         # current_plan_state = self.plan_state
-        _state_dic = self._state()
-        self.args['-s'] = _state_dic["CoM"]
-        self.args['-s_ang'] = _state_dic['orientation']
-        self.args['-e1'] = _state_dic["FL_FOOT"]
-        self.args['-e2'] = _state_dic["FR_FOOT"]
-        self.args['-e3'] = _state_dic["HL_FOOT"]
-        self.args['-e4'] = _state_dic["HR_FOOT"]
-        self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
-        self._step(_state_dic["CoM"])
+
+        if self.set_correct_flag:
+            #change the starting pos of the solver
+            _state_dic = self._state()
+
+            
+            self.args['-s'] = _state_dic["CoM"] #change to more realisitic position
+
+
+            self.args['-s_ang'] = _state_dic['orientation']
+            self.args['-e1'] = _state_dic["FL_FOOT"]
+            self.args['-e2'] = _state_dic["FR_FOOT"]
+            self.args['-e3'] = _state_dic["HL_FOOT"]
+            self.args['-e4'] = _state_dic["HR_FOOT"]
+            self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
+            #change the ending pos of the solver 
+            self.args['-g'] = self.global_planner.next_goal_points.dequeue()
+        else:
+            _state_dic = self._state()
+            self.args['-s'] = _state_dic["CoM"]
+            self.args['-s_ang'] = _state_dic['orientation']
+            self.args['-e1'] = _state_dic["FL_FOOT"]
+            self.args['-e2'] = _state_dic["FR_FOOT"]
+            self.args['-e3'] = _state_dic["HL_FOOT"]
+            self.args['-e4'] = _state_dic["HR_FOOT"]
+            self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
+            self._step(_state_dic["CoM"])
         print("ARRGS", self.args)
         return self.args
 
@@ -92,7 +111,8 @@ class MPC(object):
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         #Updating the global planner
-        # self.global_planner.update(self.last_timestep, self.plan, self.plan_state, self.robot_state, goal_step_vec)
+        # self.set_correct_flag = self.global_planner.set_correct_flag
+        self.global_planner.update(self.last_timestep, self.traj_plan, self.plan_state, self.robot_state, goal_step_vec)
 
     def update_timestep(self):
         """

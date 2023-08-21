@@ -1,4 +1,5 @@
 
+from collections import deque
 import numpy as np
 import matplotlib.pyplot as plt
 import heapq
@@ -6,29 +7,48 @@ from scipy.optimize import minimize
 
 
 from SOLO12_SIM_CONTROL.config.global_cfg import PLANNER
-from SOLO12_SIM_CONTROL.containers import FIFOQueue
+from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack
 
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
 
 
 class Global_Planner(object):
     
-    def __init__(self, map, lookahead=6000):
+    def __init__(self, map, lookahead=6000, start_goal_pts_history_sz = 10):
         self.error_bound = 0.1
         self.lookahead = lookahead
+        self.set_correct_flag = False
+        self.start_goal_pts = Limited_Stack(start_goal_pts_history_sz)
+        self.control_P = True
+
+        self.plan_state = None
+        self.robot_state = None
+
         # self.robot_pose = robot.pose
         # self.plan_robot_pose = plan[timestep]
         # self.plan_desired_p1 = plan[lookahead] #3d pos
         # self.plan_desired_p2 = plan[lookahead] + goal_step #3d pos
 
-    def error_pose(self, robot_pose, plan_pose):
-        return np.linalg.norm(robot_pose - plan_pose)
+    def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
+        return np.linalg.norm(robot_pose - plan_pose) > self.error_bound + eps
 
     def proj(self, A, B):
         dot_p = np.dot(A, B)
         sq_magnitude = np.dot(B, B)
         proj_vec = (dot_p / sq_magnitude) * B
         return proj_vec
+
+    def plan_robot_error(self, plan_state, robot_state):
+        """Error Between the plan and the current estimate position of the robot
+
+        Args:
+            plan_state (np.array(2 or 3)): The 2d position in the trajectory node
+            robot_state (np.array(2 or 3)): The estimated 2d position of the robot 
+
+        Returns:
+            np.array(): The error vector between the robot position and trajectory position
+        """
+        return plan_state[1:3] - robot_state[1:3]
 
     def update(self, timestep, plan, plan_state, robot_state, goal_step_vec):
         """Template to update the state of the planner
@@ -38,19 +58,46 @@ class Global_Planner(object):
             plan (_type_): _description_
             goal_step (_type_): _description_
         """
-        # breakpoint()
+        ###Update the robot and trajectory state
         self.plan_state = plan_state
         self.robot_state = robot_state
-        self.plan_desired_p1 = plan[self.lookahead] #3d pos
-        self.plan_desired_p2 = plan[self.lookahead] + goal_step_vec #3d pos
-        # breakpoint()
-        if self.error_pose(self.robot_pose[1:4], self.plan_robot_pose[1:4]) > self.error_bound:
-            PLANNER.set_straight_correction = True
-            PLANNER.mpc_goal_points.enqueue(self.plan_desired_p1)
-            PLANNER.mpc_goal_points.enqueue(self.plan_desired_p2)
-        else:
-            pass
+        ###Calculate the error btw robot and trajectory
+        error = self.plan_robot_error(plan_state, robot_state)
+        plan_desired_state_p1 = plan[self.lookahead] #Desired next goal in trajectory
+        plan_desired_start_pt = plan_desired_state_p1[1:4]
+        goal_pt_xy = plan_desired_start_pt[0:2]
+        z = plan_desired_state_p1[3]
+        plan_desired_goal_pt = np.zeros(3)
+        plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt_xy, error)
+        plan_desired_goal_pt[2] = z
+        plan_desired_state_pt = plan_state[1:4]
+        plan_start_goal_tuple = (plan_desired_state_pt, plan_desired_goal_pt)
+        if self.control_P:
+            self.start_goal_pts.push(plan_start_goal_tuple)
+
+        # if self.error_pose_test(plan_state[0:2], robot_state[0:2]) and not PLANNER.set_straight_correction:
+        #     print("Correcting mpc goal")
+        #     # PLANNER.set_straight_correction = True
+        #     self.set_correct_flag = True
+        #     # PLANNER.mpc_goal_points.enqueue(self.plan_desired_p1)
+        #     self.next_goal_points.enqueue(self.desire_p2)
+        #     # PLANNER.mpc_goal_points.enqueue(self.plan_desired_p2)
+        # elif PLANNER.set_straight_correction and self.error_pose_test(plan_state[0:2], robot_state[0:2], eps=-0.05):
+        #     print("Remove previous correction plan")
+        #     # PLANNER.mpc_goal_points.dequeue(self.plan_desired_p1)
+        #     # PLANNER.mpc_goal_points.dequeue()
+        #     # PLANNER.set_straight_correction = False
+        #     self.set_correct_flag = False
+        # else:
+        #      pass
     
+
+    def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
+        return kp * (goal_pt + error)
+        
+        pass
+
+
     def _plan(self):
         """Function that replans the future trajectory
         """
