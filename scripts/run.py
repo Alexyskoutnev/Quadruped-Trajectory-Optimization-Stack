@@ -231,6 +231,7 @@ def simulation(args):
                     p.stepSimulation()
                     _global_update(ROBOT, ROBOT.state)
                     v_planner.step(sim_step, ROBOT.time)
+                    ROBOT.update()
 
                 last_loop_time = time.time()
                 sim_step += 1

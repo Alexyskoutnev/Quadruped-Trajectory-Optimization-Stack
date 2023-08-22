@@ -5,10 +5,12 @@ import time
 
 import numpy as np
 import pandas as pd
+import pybullet as p
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 from SOLO12_SIM_CONTROL.utils import *
 from SOLO12_SIM_CONTROL.planner import Global_Planner
+
 
 
 class MPC_THREAD(threading.Thread):
@@ -46,7 +48,8 @@ class MPC(object):
 
     @property
     def robot_state(self):
-        return self.robot.state_np
+        state = global_cfg.ROBOT_CFG.state
+        return state
 
     def combine(self):
         """Combines the old and new csv trajectories together
@@ -104,9 +107,7 @@ class MPC(object):
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         #Updating the global planner
-        # print(self.plan_state)
-        # print(self.robot_state) #FOR SOME REASON THIS THROWS A SEGFAULT ERROR???
-        # self.global_planner.update(self.last_timestep, self.traj_plan, self.plan_state, self.robot_state, goal_step_vec)
+        self.global_planner.update(self.last_timestep, self.traj_plan, self.plan_state, self.robot_state, goal_step_vec)
 
     def update_timestep(self):
         """

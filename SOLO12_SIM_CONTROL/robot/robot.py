@@ -6,6 +6,7 @@ import pinocchio as pin
 
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd, trajectory_2_local_frame
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
+import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 def links_to_id(robot):
     """Helper function to retrieve the joint info of a robot into a dictionary
@@ -146,24 +147,16 @@ class SOLO12(object):
 
     @property
     def state_np(self):
-        # print("0")
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
-        # print("1")
         EE = self.get_endeffector_pose()
-        # print("2")
         CoM_pos = np.array(CoM_pos)
-        # print("3")
         CoM_angle = p.getEulerFromQuaternion(np.array(CoM_angle))
-        # print("4")
         EE_1 = np.array(EE['FL_FOOT']['linkWorldPosition'])
         EE_2 = np.array(EE['FR_FOOT']['linkWorldPosition'])
         EE_3 = np.array(EE['HL_FOOT']['linkWorldPosition'])
         EE_4 = np.array(EE['HR_FOOT']['linkWorldPosition'])
-        # print("5")
         time_step = np.array(self.time)
-        # print("6")
         state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
-        # print("7")
         return state
      
     @property
@@ -572,6 +565,11 @@ class SOLO12(object):
 
         return q_cmd, q_vel, q_toq
 
+    def update(self):
+        """Updates the global varaibles corresponding to robot
+        """
+        global_cfg.ROBOT_CFG.state = self.state_np
+
     def _update(self):
         """Current joint angles, joint velocity, base state, and base velocity of the robot 
             in the bullet simulator.
@@ -581,5 +579,4 @@ class SOLO12(object):
         self._joint_state = p.getJointStates(self.robot, self.jointidx['idx'])
         self._joint_ang = np.array([state[0] for state in self._joint_state])
         self._joint_vel = np.array([state[1] for state in self._joint_state])
-        self.q = np.hstack((np.array(base_state[0]), np.array(base_state[1]), self._joint_ang)) #Underactuated system representation
-        self.qdot = np.hstack((np.array(base_vel[0]), np.array(base_vel[1]), self._joint_vel)) #Underactuated system representation
+        

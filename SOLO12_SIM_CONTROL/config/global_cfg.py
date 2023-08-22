@@ -1,5 +1,7 @@
 import sys
 
+import numpy as np
+
 from SOLO12_SIM_CONTROL.containers import FIFOQueue
 
 class ROBOT_CFG:
@@ -11,6 +13,7 @@ class ROBOT_CFG:
     robot_goal = [0, 0, 0]
     EE = {"FL_FOOT": [0.20590930477664196, 0.14927536747689948, 0.0], "FR_FOOT": [0.2059042161427424, -0.14926921805769638, 0.0], "HL_FOOT": [-0.20589422629511542, 0.14933201572367907, 0.0] , "HR_FOOT": [-0.2348440184502048, -0.17033609357109808, 0.0]}
     runtime = 0.0
+    state = np.zeros(19)
 
 class RUN:
     step = 0

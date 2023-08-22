@@ -279,7 +279,7 @@ class Height_Map_Generator(Maps):
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
-        self.bool_map = PATH_MAP(self.towr_map)
+        # self.bool_map = PATH_MAP(self.towr_map)
 
     def create_height_file(self, file, h_data):
             rows = len(h_data)

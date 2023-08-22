@@ -1,6 +1,6 @@
 # mode : "bezier"
 mode : "towr"
-enviroment : "custom_test"
+enviroment : "custom"
 # enviroment : "plane"
 
 py_interface : False
@@ -28,7 +28,7 @@ base_stable : False
 track : False
 track_rate : 100
 height_map : True
-map_id : ['feasibility']
+map_id : ['plane', 'plane']
 friction : 0.99
 
 #==Visual Planner CONFIGURATIONS==

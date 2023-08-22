@@ -121,7 +121,7 @@ def _update(args, log):
             mutex.acquire()
             mpc.update()
             mutex.release()
-            time.sleep(0.001)
+            time.sleep(0.01)
             if mpc.goal_diff < 0.05:
                 print("Robot reach the goal!")
                 global_cfg.RUN._stance = True
@@ -243,7 +243,6 @@ def test_mpc_single_loop(args):
     """TO BE REMOVE"""
     log = _init(args)
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    breakpoint()
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     if p.returncode == 0:
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
@@ -254,7 +253,7 @@ def test_mpc_single_loop(args):
         sys.exit(1)
 
 if __name__ == "__main__":
-    test = True
+    test = False
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
