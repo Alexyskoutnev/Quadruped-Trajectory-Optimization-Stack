@@ -12,7 +12,7 @@ np.set_printoptions(threshold=np.inf)
 
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
-NUM_PROCESSES = 4
+NUM_PROCESSES = 32
 
 scripts =  {'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr'}
@@ -137,6 +137,9 @@ class PATH_MAP(object):
         self.scripts = parse_scripts(scripts, self.docker_id)
         self.bool_map = np.ones((map.shape[0], map.shape[1]), dtype=int)
         self.data_queue = multiprocessing.Queue()
+        self.lock = multiprocessing.Lock()
+        self.shared_arr = multiprocessing.Array('i', map.shape[0] * map.shape[1])
+        self.num_cols = map.shape[1]
         self.probe_map(map)
         self.run()
         
@@ -166,13 +169,15 @@ class PATH_MAP(object):
     def run(self):
         processes = []
         for i in range(NUM_PROCESSES):
-            process = multiprocessing.Process(target=self.worker_f, args=(self.map, self.data_queue))
+            process = multiprocessing.Process(target=self.worker_f, args=(self.shared_arr, self.data_queue, self.num_cols))
             processes.append(process)
             process.start()
         for process in processes:
             process.join()
+            
+        self.bool_map = np.frombuffer(self.shared_arr.get_obj(), dtype=np.float32).reshape(self.map.shape[0], self.map.shape[1]).astype('int')
 
-    def worker_f(self, map, queue):
+    def worker_f(self, map, queue, num_cols):
 
         def state_config(args, start_pt, goal_pt):
             args['-s'] = [start_pt[0], start_pt[1], 0.24]
@@ -192,17 +197,20 @@ class PATH_MAP(object):
             start_idx = data.map_idx_start
             goal_idx = data.map_idx_goal
             state_config(args, start_pt, goal_pt)
+            local_array = np.frombuffer(map.get_obj(), dtype=np.float32).reshape(-1, num_cols)
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if p_status.returncode == 0:
                 print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
-                map[start_idx] = 0
-                map[goal_idx] = 0
+                with self.lock:
+                    local_array[start_idx] = 1
+                    local_array[goal_idx] = 1
             else:
                 print(f"FAIL TO FIND A SOLUTION [{start_idx}] -> [{goal_idx}]")
-                map[goal_idx] = 1
-                map[start_idx] = 1
-            # print(map)
+                with self.lock:
+                    local_array[goal_idx] = 0
+                    local_array[start_idx] = 0
+            print(local_array)
 
 class RandomMaps(object):
     pass
