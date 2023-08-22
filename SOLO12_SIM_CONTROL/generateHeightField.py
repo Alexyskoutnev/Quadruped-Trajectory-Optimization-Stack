@@ -12,10 +12,12 @@ np.set_printoptions(threshold=np.inf)
 
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
-NUM_PROCESSES = 32
+NUM_PROCESSES = 16
 
 scripts =  {'run': 'docker exec <id> ./main',
-            'info': 'docker ps -f ancestor=towr'}
+            'info': 'docker ps -f ancestor=towr',
+            'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
+            'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t']
 
@@ -135,6 +137,7 @@ class PATH_MAP(object):
         self.map = map
         self.docker_id = DockerInfo()
         self.scripts = parse_scripts(scripts, self.docker_id)
+        self.setup()
         self.bool_map = np.ones((map.shape[0], map.shape[1]), dtype=int)
         self.data_queue = multiprocessing.Queue()
         self.lock = multiprocessing.Lock()
@@ -143,6 +146,10 @@ class PATH_MAP(object):
         self.probe_map(map)
         self.run()
         
+    def setup(self):
+        subprocess.run(shlex.split(self.scripts['heightfield_rm']))
+        subprocess.run(shlex.split(self.scripts['heightfield_copy']))
+
         
     def probe_map(self, map, mesh_resolution_meters = 0.1):
         step_x = mesh_resolution_meters
@@ -174,7 +181,7 @@ class PATH_MAP(object):
             process.start()
         for process in processes:
             process.join()
-            
+
         self.bool_map = np.frombuffer(self.shared_arr.get_obj(), dtype=np.float32).reshape(self.map.shape[0], self.map.shape[1]).astype('int')
 
     def worker_f(self, map, queue, num_cols):
@@ -228,6 +235,7 @@ class Maps(object):
     test_file = "./data/heightfields/heightfield_test.txt"
     stairs_file = "./data/heightfields/staircase.txt"
     plane_file =  "./data/heightfields/plane.txt"
+    feasibility = "./data/heightfields/feasibility_test.txt"
     calibration = heighmap_2_np_reader(calibration_file)
     step = heighmap_2_np_reader(step_file)
     step_1 = heighmap_2_np_reader(step_1_file)
@@ -239,8 +247,9 @@ class Maps(object):
     stairs = heighmap_2_np_reader(stairs_file)
     plane = heighmap_2_np_reader(plane_file)
     test = heighmap_2_np_reader(test_file)
+    feasibility = heighmap_2_np_reader(feasibility)
     name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
-                     'test': test, 'stairs': stairs}
+                     'test': test, 'stairs': stairs, 'feasibility' : feasibility}
 
     def __init__(self, maps=['plane'], dim=20):
         self.dim = 20
