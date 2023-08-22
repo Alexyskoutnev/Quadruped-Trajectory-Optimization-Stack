@@ -19,23 +19,6 @@ scripts =  {'run': 'docker exec <id> ./main',
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t']
 
-
-def start_config(args):
-    args['-s'] = [0, 0, 0.24]
-    args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
-    args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
-    args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
-    args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
-    args['-s_ang'] = [0, 0, 0]
-
-def goal_config(args):
-    args['-g'] = [0.5, 0, 0.24]
-
-def step(args):
-    start_config(args)
-    goal_config(args)
-    return args
-
 def strip(x):
     st = " "
     for s in x:
@@ -92,6 +75,7 @@ class Map_2_Idx(object):
         self.map_idx_start = map_idx_start
         self.map_coords_goal = map_coords_goal
         self.map_idx_goal =  map_idx_goal
+        
 
     def __repr__(self) -> str:
         return f"Map_2_Idx(map_coords_start={self.map_coords_start}, map_coords_goal={self.map_coords_goal}, map_idx_start={self.map_idx_start}, map_idx_goal={self.map_idx_goal})"
@@ -150,11 +134,12 @@ class PATH_MAP(object):
     def __init__(self, map):
         self.map = map
         self.docker_id = DockerInfo()
+        self.scripts = parse_scripts(scripts, self.docker_id)
         self.bool_map = np.ones((map.shape[0], map.shape[1]), dtype=int)
         self.data_queue = multiprocessing.Queue()
         self.probe_map(map)
         self.run()
-        breakpoint()
+        
         
     def probe_map(self, map, mesh_resolution_meters = 0.1):
         step_x = mesh_resolution_meters
@@ -197,6 +182,8 @@ class PATH_MAP(object):
             args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], 0.24]
+            args['-n'] = 't'
+
         while not queue.empty():
             args = {}
             data = queue.get()
@@ -205,18 +192,17 @@ class PATH_MAP(object):
             start_idx = data.map_idx_start
             goal_idx = data.map_idx_goal
             state_config(args, start_pt, goal_pt)
-            TOWR_SCRIPT = shlex.split(scripts['run'] + " " + cmd_args(args))
-            p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-            # print(p_status)
+            TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
+            p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if p_status.returncode == 0:
                 print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 map[start_idx] = 0
                 map[goal_idx] = 0
             else:
-                # print(f"FAIL TO FIND A SOLUTION [{start_idx}] -> [{goal_idx}]")
+                print(f"FAIL TO FIND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 map[goal_idx] = 1
                 map[start_idx] = 1
-            print(map)
+            # print(map)
 
 class RandomMaps(object):
     pass
