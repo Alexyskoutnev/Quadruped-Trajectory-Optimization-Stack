@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import math
 import heapq
 from scipy.optimize import minimize
+from scipy.interpolate import CubicSpline
+from scipy.interpolate import BSpline
 
 
 from SOLO12_SIM_CONTROL.config.global_cfg import PLANNER
@@ -12,6 +14,7 @@ from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
+GLOBAL_TRAJ_MAP = "./data/plots/global_plan.png"
 
 
 class Global_Planner(object):
@@ -28,8 +31,7 @@ class Global_Planner(object):
         self.plan_desired_goal_pt = np.zeros(3)
         self.plan_desired_start_pt = np.zeros(3)
         self.args = args
-        path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal)
-        breakpoint()
+        path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
         return np.linalg.norm(robot_pose - plan_pose) > self.error_bound + eps
@@ -95,9 +97,11 @@ class Global_Planner(object):
 
 class PATH_Solver(object):
     
-    def __init__(self, map, start, goal, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=True) -> None:
+    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=False) -> None:
         self.in_map = map
+        self.args = args
         self.grid_res = grid_res
+        self.solution_flag = False
         self.origin_x_shift = origin_x_shift
         self.origin_y_shift = origin_y_shift
         self.start_pos_x_y = start[0:2]
@@ -105,14 +109,16 @@ class PATH_Solver(object):
         self.start_idx_x_y = self.convert_2_idx(self.start_pos_x_y[0], self.start_pos_x_y[1])
         self.goal_idx_x_y = self.convert_2_idx(self.goal_pos_x_y[0], self.goal_pos_x_y[1])
         self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
-        self.solution_flag = False
-        if self.path is None:
-            print("Failed to find a solution")
-        else:
+        self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
+        
+        if self.solution_flag:
             self.solution_flag = True
+            self._solve()
             if visual:
                 self.visualize_path()
-
+        else:
+            print("Failed to find a solution")
+        
     def convert_2_idx(self, x, y):
         row = math.floor((y + self.origin_y_shift) / self.grid_res)
         column = math.floor((x + self.origin_x_shift) / self.grid_res)
@@ -121,7 +127,7 @@ class PATH_Solver(object):
     def heuristic(self, a, b):
         return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
 
-    def astar(self, start, goal, height_bound=0.15):
+    def astar(self, start, goal, height_bound=0):
 
         neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         close_set = set()
@@ -131,7 +137,6 @@ class PATH_Solver(object):
         oheap = []
         heapq.heappush(oheap, (fscore[start], start))
         i = 0
-
         while oheap:
             current = heapq.heappop(oheap)[1]
             if current == goal:
@@ -140,13 +145,14 @@ class PATH_Solver(object):
                 while current in came_from:
                     data.append(current)
                     current = came_from[current]
+                self.solution_flag = True
                 return [start] + data[::-1]
             close_set.add(current)
             for i, j in neighbors:
                 neighbor = current[0] + i, current[1] + j
                 _g_score = gscore[current] + self.heuristic(current,  neighbor) #Current min cost from start node [start node] to current [n]
                 if 0 <= neighbor[0] < self.in_map.shape[0] and 0 <= neighbor[1] < self.in_map.shape[1]: #Check for a feasible solution
-                    if self.in_map[neighbor[0]][neighbor[1]] >= height_bound:
+                    if self.in_map[neighbor[0]][neighbor[1]] > height_bound:
                         continue
                 else:
                     continue
@@ -159,10 +165,34 @@ class PATH_Solver(object):
                     heapq.heappush(oheap, (fscore[neighbor], neighbor))
         return None
 
-    def solve(self):
-        pass
+    def _solve(self):
+        t = np.linspace(0, self.predicted_t, len(self.path))
+        path_x = [pos[1] * self.grid_res for pos in self.path]
+        path_y = [pos[0] * self.grid_res for pos in self.path]
+        self.spine_x = CubicSpline(t, path_x)
+        self.spine_y = CubicSpline(t, path_y)
 
-    def visualize_path(self):
+    def solve(self, start, goal, plot=False):
+        self.start_pos_x_y = start[0:2]
+        self.goal_pos_x_y = goal[0:2]
+        self.start_idx_x_y = self.convert_2_idx(start[0], start[1])
+        self.goal_idx_x_y = self.convert_2_idx(goal[0], goal[1])
+        self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
+        self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
+        if self.solution_flag:
+            t = np.linspace(0, self.predicted_t, len(self.path))
+            path_x = [pos[1] * self.grid_res for pos in self.path]
+            path_y = [pos[0] * self.grid_res for pos in self.path]
+            self.spine_x = CubicSpline(t, path_x)
+            self.spine_y = CubicSpline(t, path_y)
+        else:
+            print("Failed to solve")
+
+        if plot:
+            self.visualize_path()
+
+
+    def visualize_path(self, k=5, plot_spline=True, plot_nodes=False):
 
         x_range = np.arange(0, self.in_map.shape[1]) * self.grid_res
         y_range = np.arange(0, self.in_map.shape[0]) * self.grid_res
@@ -175,104 +205,25 @@ class PATH_Solver(object):
         plt.scatter(self.goal_pos_x_y[0] + self.origin_x_shift, self.goal_pos_x_y[1] + self.origin_y_shift, color='red', marker='x', label='Goal')
 
         if self.path:
+
             path_x = [pos[1] * self.grid_res for pos in self.path]
             path_y = [pos[0] * self.grid_res for pos in self.path]
-            plt.plot(path_x, path_y, color='blue', label='Path')
 
+            if plot_nodes:
+                plt.plot(path_x, path_y, color='blue', label='Path')
 
+            if plot_spline:
+                t_new = np.linspace(0, self.predicted_t, 100)
+                path_x_new = self.spine_x(t_new)
+                path_y_new = self.spine_y(t_new)
+                plt.plot(path_x_new, path_y_new, color='blue', label='Trajectory Spline')
+            
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.title('Global Trajectory Path')
+        plt.axis('off')
         plt.legend()
-        plt.gca().invert_yaxis() 
-        plt.show()
-
-def obj_function(path, map, start, goal):
-    total_cost = 0
-    current = start
-    for i in path:
-        total_cost += np.linalg.norm(np.array(current) - np.array(i))
-        current = i
-    total_cost += np.linalg.norm(np.array(current) - np.array(goal))
-    return total_cost
-
-def path_optimizer(map, start, goal):
-    bounds = [(0, map.shape[0] - 1), (0, map.shape[1] - 1)] * (map.size - 2)
-    breakpoint()
-    initial_guess = [start] * (map.size - 2)
-
-    result = minimize(obj_function, initial_guess, args=(map, start, goal), bounds=bounds, method='TNC')
-
-    if result.success:
-        path = [start] + result.x + [goal]
-        return path
-    else:
-        return None
-
-def is_numeric(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-def plot_height_map(start_pos, end_pos, map, path):
-    # Create a grid of x and y coordinates for the map
-    x = np.arange(0, map.shape[1], 1)
-    y = np.arange(0, map.shape[0], 1)
-
-    # Create a meshgrid for x and y coordinates
-    X, Y = np.meshgrid(x, y)
-
-    # Plot the grid map using Matplotlib's contourf function
-    plt.figure(figsize=(8, 6))
-    plt.contourf(X, Y, map, cmap='terrain')
-
-    dots_x = [start_pos[0], end_pos[0]]
-    dots_y = [start_pos[1], end_pos[1]]
-    plt.scatter(dots_x, dots_y, color='red', marker='o', label='Dots')
-
-    plt.colorbar(label='Height')
-    plt.xlabel('X Coordinate')
-    plt.ylabel('Y Coordinate')
-    plt.show()
-
-
-def txt_2_np_reader(file, delimiter=','):
-    data = []
-    with open(file, 'r') as f:
-        reader = f.readlines()
-        for row in reader:
-            _row = row.strip().split(delimiter)
-            _row = [float(x) for x in _row if is_numeric(x)]
-            data.append(_row)
-    return np.transpose(np.array(data))
+        plt.savefig(GLOBAL_TRAJ_MAP)
 
 if __name__ == "__main__":
-    # map = txt_2_np_reader(TOWR_HEIGHT_MAP)
-    # start = (0, 10)
-    # goal = (30, 10) 
-    map = np.array([[0, 0, 0, 0, 0],
-                     [0, 1, 0, 1, 0],
-                     [0, 0, 0, 0, 0],
-                     [0, 1, 0, 1, 0],
-                     [0, 0, 0, 0, 0]])
-
-    start = (0, 0)
-    goal = (4, 4)
-    path = astar(map, start, goal)
-    
-
-    plot_height_map(start, goal, map, path)
-
-
-    heights = np.array([[0.0, 0.0, 0.0, 0.4],
-                    [0.5, 0.0, 0.7, 0.8],
-                    [0.9, 0.0, 1.1, 1.2],
-                    [1.3, 0.0, 0.2, 1.6]])
-
-    start = (0, 0)
-    goal = (3, 3)
-    path = astar(map, start, goal, height_bound=0.5)
-    # plot_height_map(start_pos, goal_pos, map)
-    breakpoint()
+   pass
