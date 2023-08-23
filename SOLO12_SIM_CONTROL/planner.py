@@ -19,10 +19,11 @@ GLOBAL_TRAJ_MAP = "./data/plots/global_plan.png"
 
 class Global_Planner(object):
     
-    def __init__(self, args, lookahead=6000, start_goal_pts_history_sz = 10):
+    def __init__(self, args, lookahead=7500, hz=1000, start_goal_pts_history_sz = 10):
         self.error_bound = 0.1
         self.lookahead = lookahead
         self.forced_num = None
+        self.hz = hz
         self.set_correct_flag = False
         self.start_goal_pts = Limited_Stack(start_goal_pts_history_sz)
         self.P_correction = True # correction for proportional error btw planner and robot CoM
@@ -32,6 +33,7 @@ class Global_Planner(object):
         self.plan_desired_start_pt = np.zeros(3)
         self.args = args
         self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
+        
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
         return np.linalg.norm(robot_pose - plan_pose) > self.error_bound + eps
@@ -57,12 +59,12 @@ class Global_Planner(object):
     def goal_step(self, CoM):
         step_size = self.args['step_size']
         goal = global_cfg.ROBOT_CFG.robot_goal
-        diff_vec = np.clip(goal - CoM, -step_size, CoM)
+        diff_vec = np.clip(goal - CoM, -step_size, step_size)
         return CoM + diff_vec
 
 
     def lookahead_timestamp(self, time):
-        return time + self.lookahead / 1000.0
+        return time + round(self.lookahead / self.hz, 3)
 
 
     def update(self, timestep, plan_state_xy, robot_state_xy, goal_step_vec):
@@ -76,16 +78,17 @@ class Global_Planner(object):
         ###Update the robot and trajectory state
         self.plan_state = np.array(plan_state_xy)
         self.robot_state = np.array(robot_state_xy)
-        # breakpoint()
         ###Calculate the error btw robot and trajectory
         error = self.plan_robot_error(self.plan_state, self.robot_state)
         lookahead_time = self.lookahead_timestamp(timestep)
         plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0.24])
         goal_pt = self.goal_step(plan_desired_start_pt)
         z = 0.24 #Might need to add info about the grid map to query height map + 0.24 (optimal height z-height for robot)
-        self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
-        self.plan_desired_goal_pt[2] = z
+        # self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
+        self.plan_desired_goal_pt = goal_pt
+        # self.plan_desired_goal_pt[2] = z
         plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
+        # breakpoint()
         if self.P_correction:
             self.start_goal_pts.push(plan_start_goal_tuple)
 

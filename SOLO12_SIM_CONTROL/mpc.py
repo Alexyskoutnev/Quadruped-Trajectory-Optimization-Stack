@@ -32,11 +32,11 @@ class MPC(object):
         self.new_traj = new_traj
         self.cutoff_idx = 0
         self.last_timestep = 0.0
-        self.lookahead = lookahead if lookahead else 6000
+        self.lookahead = lookahead if lookahead else 7500
         self.next_traj_step = 0
         self.hz = hz
         self.decimal_precision = math.log10(hz)
-        self.global_planner = Global_Planner(args, self.lookahead)
+        self.global_planner = Global_Planner(args, self.lookahead, hz)
         self.global_solver = self.global_planner.path_solver
         self.spine_x = self.global_solver.spine_x_track
         self.spine_y = self.global_solver.spine_y_track
@@ -109,7 +109,7 @@ class MPC(object):
         if self.global_planner.P_correction and not self.global_planner.empty():
             _state_dic = self._state()
             start_pos, end_pos = self.global_planner.pop()
-            self.args['-s'] = start_pos
+            self.args['-s'] = _state_dic["CoM"]
             self.args['-s_ang'] = _state_dic['orientation']
             self.args['-e1'] = _state_dic["FL_FOOT"]
             self.args['-e2'] = _state_dic["FR_FOOT"]
@@ -153,7 +153,6 @@ class MPC(object):
         """
         step_size = self.args['step_size']
         global_pos = np.array(CoM)
-        z_height = global_pos[2]
         goal = global_cfg.ROBOT_CFG.robot_goal
         diff_vec = np.clip(goal - global_pos, -step_size, step_size)
         diff_vec[2] = 0.0

@@ -231,7 +231,7 @@ def test_mpc_single_loop(args):
     if p.returncode == 0:
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
         if p.returncode == 0:
-            _update(args, log)
+            _update(args, log, mpc)
     else:
         print("Error Generating Towr Trajectory")
         sys.exit(1)
@@ -265,5 +265,4 @@ if __name__ == "__main__":
     else:
         args.update(builder())
         args['-g'][0] = (args['sim'].num_tiles) * 1.0 + 0.5
-        # args['-g'][1] = -1.0 
         _run(args)
