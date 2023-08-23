@@ -2,29 +2,34 @@
 from collections import deque
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 import heapq
 from scipy.optimize import minimize
 
 
 from SOLO12_SIM_CONTROL.config.global_cfg import PLANNER
 from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack
+import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
 
 
 class Global_Planner(object):
     
-    def __init__(self, map, lookahead=6000, start_goal_pts_history_sz = 10):
+    def __init__(self, args, lookahead=6000, start_goal_pts_history_sz = 10):
         self.error_bound = 0.1
         self.lookahead = lookahead
+        self.forced_num = None
         self.set_correct_flag = False
         self.start_goal_pts = Limited_Stack(start_goal_pts_history_sz)
-        self.P_correction = False # correction for proportional error btw planner and robot CoM
+        self.P_correction = True # correction for proportional error btw planner and robot CoM
         self.plan_state = None
         self.robot_state = None
-
         self.plan_desired_goal_pt = np.zeros(3)
         self.plan_desired_start_pt = np.zeros(3)
+        self.args = args
+        path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal)
+        breakpoint()
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
         return np.linalg.norm(robot_pose - plan_pose) > self.error_bound + eps
@@ -45,7 +50,16 @@ class Global_Planner(object):
         Returns:
             np.array(): The error vector between the robot position and trajectory position
         """
+        print("plan ", plan_state)
+        print("robot state ", robot_state)
+        print("error vec ", plan_state[1:3] - robot_state[1:3])
         return plan_state[1:3] - robot_state[1:3]
+
+    def goal_step(self, CoM):
+        step_size = self.args['step_size']
+        goal = global_cfg.ROBOT_CFG.robot_goal
+        diff_vec = np.clip(goal - CoM, -step_size, CoM)
+        return CoM + diff_vec
 
     def update(self, timestep, plan, plan_state, robot_state, goal_step_vec):
         """Template to update the state of the planner
@@ -55,42 +69,23 @@ class Global_Planner(object):
             plan (_type_): _description_
             goal_step (_type_): _description_
         """
-        pass
         ###Update the robot and trajectory state
-        # self.plan_state = plan_state
-        # self.robot_state = robot_state
+        self.plan_state = plan_state
+        self.robot_state = robot_state
         ###Calculate the error btw robot and trajectory
-        # error = self.plan_robot_error(plan_state, robot_state)
-        # plan_desired_state_p1 = plan[self.lookahead].copy() #Desired next goal in trajectory
-        # plan_desired_start_pt = plan_desired_state_p1[1:4]
-        # goal_pt_xy = plan_desired_start_pt[0:2]
-        # z = plan_desired_state_p1[3]
-        # self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt_xy, error)
-        # self.plan_desired_goal_pt[2] = z
-        # plan_desired_state_pt = plan_state[1:4]
-        # plan_start_goal_tuple = (plan_desired_state_pt, self.plan_desired_goal_pt)
-        # if self.P_correction:
-        #     self.start_goal_pts.push(plan_start_goal_tuple)
-
-        # if self.error_pose_test(plan_state[0:2], robot_state[0:2]) and not PLANNER.set_straight_correction:
-        #     print("Correcting mpc goal")
-        #     # PLANNER.set_straight_correction = True
-        #     self.set_correct_flag = True
-        #     # PLANNER.mpc_goal_points.enqueue(self.plan_desired_p1)
-        #     self.next_goal_points.enqueue(self.desire_p2)
-        #     # PLANNER.mpc_goal_points.enqueue(self.plan_desired_p2)
-        # elif PLANNER.set_straight_correction and self.error_pose_test(plan_state[0:2], robot_state[0:2], eps=-0.05):
-        #     print("Remove previous correction plan")
-        #     # PLANNER.mpc_goal_points.dequeue(self.plan_desired_p1)
-        #     # PLANNER.mpc_goal_points.dequeue()
-        #     # PLANNER.set_straight_correction = False
-        #     self.set_correct_flag = False
-        # else:
-        #      pass
-    
+        error = self.plan_robot_error(plan_state, robot_state)
+        plan_desired_state_1 = plan[self.lookahead].copy() #Desired next goal in trajectory
+        plan_desired_start_pt = plan_desired_state_1[1:4]
+        goal_pt = self.goal_step(plan_desired_start_pt)
+        z = plan_desired_state_1[3]
+        self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
+        self.plan_desired_goal_pt[2] = z
+        plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
+        if self.P_correction:
+            self.start_goal_pts.push(plan_start_goal_tuple)
 
     def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
-        return kp * (goal_pt + error)
+        return goal_pt + kp * error
 
     def pop(self):
         return self.start_goal_pts.pop()
@@ -98,49 +93,99 @@ class Global_Planner(object):
     def empty(self):
         return self.start_goal_pts.is_empty()
 
-class Solver(object):
-    pass
+class PATH_Solver(object):
+    
+    def __init__(self, map, start, goal, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=True) -> None:
+        self.in_map = map
+        self.grid_res = grid_res
+        self.origin_x_shift = origin_x_shift
+        self.origin_y_shift = origin_y_shift
+        self.start_pos_x_y = start[0:2]
+        self.goal_pos_x_y = goal[0:2]
+        self.start_idx_x_y = self.convert_2_idx(self.start_pos_x_y[0], self.start_pos_x_y[1])
+        self.goal_idx_x_y = self.convert_2_idx(self.goal_pos_x_y[0], self.goal_pos_x_y[1])
+        self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
+        self.solution_flag = False
+        if self.path is None:
+            print("Failed to find a solution")
+        else:
+            self.solution_flag = True
+            if visual:
+                self.visualize_path()
 
-def heuristic(a, b):
-    return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
+    def convert_2_idx(self, x, y):
+        row = math.floor((y + self.origin_y_shift) / self.grid_res)
+        column = math.floor((x + self.origin_x_shift) / self.grid_res)
+        return row, column
 
-def astar(map, start, goal, height_bound=1.0):
+    def heuristic(self, a, b):
+        return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
 
-    neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-    close_set = set()
-    came_from = {}
-    gscore = {start: 0 }
-    fscore = {start: heuristic(start, goal)}
-    oheap = []
-    heapq.heappush(oheap, (fscore[start], start))
-    i = 0
+    def astar(self, start, goal, height_bound=0.15):
 
-    while oheap:
-        current = heapq.heappop(oheap)[1]
-        if current == goal:
-            print("Found a path")
-            data = []
-            while current in came_from:
-                data.append(current)
-                current = came_from[current]
-            return [start] + data[::-1]
-        close_set.add(current)
-        for i, j in neighbors:
-            neighbor = current[0] + i, current[1] + j
-            _g_score = gscore[current] + heuristic(current,  neighbor) #Current min cost from start node [start node] to current [n]
-            if 0 <= neighbor[0] < map.shape[0] and 0 <= neighbor[1] < map.shape[1]: #Check for a feasible solution
-                if map[neighbor[0]][neighbor[1]] >= height_bound:
+        neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        close_set = set()
+        came_from = {}
+        gscore = {start: 0 }
+        fscore = {start: self.heuristic(start, goal)}
+        oheap = []
+        heapq.heappush(oheap, (fscore[start], start))
+        i = 0
+
+        while oheap:
+            current = heapq.heappop(oheap)[1]
+            if current == goal:
+                print("Found a path")
+                data = []
+                while current in came_from:
+                    data.append(current)
+                    current = came_from[current]
+                return [start] + data[::-1]
+            close_set.add(current)
+            for i, j in neighbors:
+                neighbor = current[0] + i, current[1] + j
+                _g_score = gscore[current] + self.heuristic(current,  neighbor) #Current min cost from start node [start node] to current [n]
+                if 0 <= neighbor[0] < self.in_map.shape[0] and 0 <= neighbor[1] < self.in_map.shape[1]: #Check for a feasible solution
+                    if self.in_map[neighbor[0]][neighbor[1]] >= height_bound:
+                        continue
+                else:
                     continue
-            else:
-                continue
-            if neighbor in close_set and _g_score >= gscore.get(neighbor, 0): #skipping if neighbor has been visited again
-                continue
-            if _g_score < gscore.get(neighbor, 0) or neighbor not in [i[1] for i in oheap]: #
-                came_from[neighbor] = current #store the path where n+1 node came from 
-                gscore[neighbor] = _g_score
-                fscore[neighbor] = _g_score + heuristic(neighbor, goal) # f(n) = g(n) + h(n) Compute the total cost of the node 
-                heapq.heappush(oheap, (fscore[neighbor], neighbor))
-    return None
+                if neighbor in close_set and _g_score >= gscore.get(neighbor, 0): #skipping if neighbor has been visited again
+                    continue
+                if _g_score < gscore.get(neighbor, 0) or neighbor not in [i[1] for i in oheap]: #
+                    came_from[neighbor] = current #store the path where n+1 node came from 
+                    gscore[neighbor] = _g_score
+                    fscore[neighbor] = _g_score + self.heuristic(neighbor, goal) # f(n) = g(n) + h(n) Compute the total cost of the node 
+                    heapq.heappush(oheap, (fscore[neighbor], neighbor))
+        return None
+
+    def solve(self):
+        pass
+
+    def visualize_path(self):
+
+        x_range = np.arange(0, self.in_map.shape[1]) * self.grid_res
+        y_range = np.arange(0, self.in_map.shape[0]) * self.grid_res
+        X, Y = np.meshgrid(x_range, y_range)
+
+        plt.figure()
+        plt.pcolormesh(X, Y, self.in_map, cmap='gray', shading='auto')
+
+        plt.scatter(self.start_pos_x_y[0] + self.origin_x_shift, self.start_pos_x_y[1] + self.origin_y_shift, color='green', marker='o', label='Start')
+        plt.scatter(self.goal_pos_x_y[0] + self.origin_x_shift, self.goal_pos_x_y[1] + self.origin_y_shift, color='red', marker='x', label='Goal')
+
+        if self.path:
+            path_x = [pos[1] * self.grid_res for pos in self.path]
+            path_y = [pos[0] * self.grid_res for pos in self.path]
+            plt.plot(path_x, path_y, color='blue', label='Path')
+
+
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.title('Global Trajectory Path')
+        plt.legend()
+        plt.gca().invert_yaxis() 
+        plt.show()
 
 def obj_function(path, map, start, goal):
     total_cost = 0

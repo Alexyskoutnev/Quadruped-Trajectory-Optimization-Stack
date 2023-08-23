@@ -36,14 +36,14 @@ class MPC(object):
         self.next_traj_step = 0
         self.hz = hz
         self.decimal_precision = math.log10(hz)
-        self.global_planner = Global_Planner(args['map'], self.lookahead)
+        self.global_planner = Global_Planner(args, self.lookahead)
         self.traj_plan = txt_2_np_reader(self.current_traj)
         self.robot = args['robot']
         self.set_correct_flag = False
 
     @property
     def plan_state(self):
-        state = np.squeeze(self.traj_plan[np.where(self.traj_plan[:, 0] == self.last_timestep)[0]])
+        state = np.squeeze(self.traj_plan[np.where(self.traj_plan[:, 0] == round(self.last_timestep, int(self.decimal_precision)))[0]])
         return state
 
     @property
@@ -62,7 +62,30 @@ class MPC(object):
         combined_df = np.concatenate((df_old, df_new), axis=0)
         self.traj_plan = combined_df
         combined_df = pd.DataFrame(combined_df)
+        breakpoint()
         combined_df.to_csv(self.new_traj, index=False, header=None)
+
+    def plan_init(self, args):
+
+        def start_config(args):
+            args['-s'] = [0, 0, 0.24]
+            args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
+            args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
+            args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
+            args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
+            args['-s_ang'] = [0, 0, 0]
+                
+        start_config(args)
+        step_size = args['step_size'] #try implementing in config-file
+        global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
+        goal = global_cfg.ROBOT_CFG.robot_goal
+        diff_vec = np.clip(goal - global_pos, -step_size, step_size)
+        diff_vec[2] = 0.0
+        args['-g'] = list(global_pos + diff_vec)
+        args['-g'][2] = 0.24
+
+        return args
+
 
     def plan(self, args):
         """
@@ -126,7 +149,7 @@ class MPC(object):
         diff_vec = np.clip(goal - global_pos, -step_size, step_size)
         diff_vec[2] = 0.0
         self.args['-g'] = list(global_pos + diff_vec)
-        self.args['-g'][2] = 0.28
+        self.args['-g'][2] = 0.24
 
     def _state(self):
         """Returns the updated robot state back to the optimizer
