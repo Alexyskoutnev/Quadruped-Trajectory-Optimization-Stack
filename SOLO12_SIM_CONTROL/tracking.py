@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from collections import namedtuple
 
 
-from SOLO12_SIM_CONTROL.utils import vec_to_cmd
+from SOLO12_SIM_CONTROL.utils import vec_to_cmd, vec_to_cmd_pose
 
 SAVE_FILE = "./data/tracking_info/ref_sim_track.png"
 SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error.png"
@@ -13,6 +13,7 @@ class COMMAND:
     def __init__(self, timestep, cmd) -> None:
         self.timestep = timestep
         self.cmd = cmd
+        self.CoM = {"CoM_pos": tuple(self.cmd['COM'][0:3]), "CoM_ang": tuple(self.cmd['COM'][3:6])}
         self.position = {"FL_FOOT": tuple(self.cmd['FL_FOOT']['P']), "FR_FOOT": tuple(self.cmd['FR_FOOT']['P']), "HL_FOOT": tuple(self.cmd['HL_FOOT']['P']), "HR_FOOT": tuple(self.cmd['HR_FOOT']['P'])}
         self.velocity = {"FL_FOOT": tuple(self.cmd['FL_FOOT']['D']), "FR_FOOT": tuple(self.cmd['FR_FOOT']['D']), "HL_FOOT": tuple(self.cmd['HL_FOOT']['D']), "HR_FOOT": tuple(self.cmd['HR_FOOT']['D'])}
 
@@ -28,6 +29,8 @@ class Tracking:
         self.FR_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.HL_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.HR_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
+        self.CoM_Pos = {"reference": [], "sim": []}
+        self.CoM_Ang = {"reference": [], "sim": []}
         self.timeseries = np.linspace(0, 10, num_traj)
         self.total_error = 0.0
         self.track_rate = cfg['track_rate']
@@ -44,51 +47,55 @@ class Tracking:
                 self.plot()
         
     def _update(self):
-        for EE_NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
-            r_x, r_y, r_z = self.traj['reference'][self.idx].position[EE_NAME]
-            s_x, s_y, s_z = self.traj['sim'][self.idx].position[EE_NAME]
-            error = np.linalg.norm(np.array(self.traj['reference'][self.idx].position[EE_NAME]) - np.array(self.traj['sim'][self.idx].position[EE_NAME]))
-            self.total_error += error
-            if EE_NAME == 'FL_FOOT':
-                self.FL_FOOT['reference'].append([r_x, r_y, r_z])
-                self.FL_FOOT['sim'].append([s_x, s_y, s_z])
-                self.FL_FOOT['r_x'].append(r_x)
-                self.FL_FOOT['r_y'].append(r_y)
-                self.FL_FOOT['r_z'].append(r_z)
-                self.FL_FOOT['s_x'].append(s_x)
-                self.FL_FOOT['s_y'].append(s_y)
-                self.FL_FOOT['s_z'].append(s_z)
-                self.FL_FOOT['error'].append(error)
-            elif EE_NAME == 'FR_FOOT':
-                self.FR_FOOT['reference'].append([r_x, r_y, r_z])
-                self.FR_FOOT['sim'].append([s_x, s_y, s_z])
-                self.FR_FOOT['r_x'].append(r_x)
-                self.FR_FOOT['r_y'].append(r_y)
-                self.FR_FOOT['r_z'].append(r_z)
-                self.FR_FOOT['s_x'].append(s_x)
-                self.FR_FOOT['s_y'].append(s_y)
-                self.FR_FOOT['s_z'].append(s_z)
-                self.FR_FOOT['error'].append(error)
-            elif EE_NAME == 'HL_FOOT':
-                self.HL_FOOT['reference'].append([r_x, r_y, r_z])
-                self.HL_FOOT['sim'].append([s_x, s_y, s_z])
-                self.HL_FOOT['r_x'].append(r_x)
-                self.HL_FOOT['r_y'].append(r_y)
-                self.HL_FOOT['r_z'].append(r_z)
-                self.HL_FOOT['s_x'].append(s_x)
-                self.HL_FOOT['s_y'].append(s_y)
-                self.HL_FOOT['s_z'].append(s_z)
-                self.HL_FOOT['error'].append(error)
-            elif EE_NAME == 'HR_FOOT':
-                self.HR_FOOT['reference'].append([r_x, r_y, r_z])
-                self.HR_FOOT['sim'].append([s_x, s_y, s_z])
-                self.HR_FOOT['r_x'].append(r_x)
-                self.HR_FOOT['r_y'].append(r_y)
-                self.HR_FOOT['r_z'].append(r_z)
-                self.HR_FOOT['s_x'].append(s_x)
-                self.HR_FOOT['s_y'].append(s_y)
-                self.HR_FOOT['s_z'].append(s_z)
-                self.HR_FOOT['error'].append(error)
+        for NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'CoM_pos'):
+            if NAME in ('CoM_pos'):
+                # r_com_x, r_com_y, r_com_z = self.traj['reference'][self.idx].CoM[NAME]
+                pass
+            elif NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
+                r_x, r_y, r_z = self.traj['reference'][self.idx].position[NAME]
+                s_x, s_y, s_z = self.traj['sim'][self.idx].position[NAME]
+                error = np.linalg.norm(np.array(self.traj['reference'][self.idx].position[NAME]) - np.array(self.traj['sim'][self.idx].position[NAME]))
+                self.total_error += error
+                if NAME == 'FL_FOOT':
+                    self.FL_FOOT['reference'].append([r_x, r_y, r_z])
+                    self.FL_FOOT['sim'].append([s_x, s_y, s_z])
+                    self.FL_FOOT['r_x'].append(r_x)
+                    self.FL_FOOT['r_y'].append(r_y)
+                    self.FL_FOOT['r_z'].append(r_z)
+                    self.FL_FOOT['s_x'].append(s_x)
+                    self.FL_FOOT['s_y'].append(s_y)
+                    self.FL_FOOT['s_z'].append(s_z)
+                    self.FL_FOOT['error'].append(error)
+                elif NAME == 'FR_FOOT':
+                    self.FR_FOOT['reference'].append([r_x, r_y, r_z])
+                    self.FR_FOOT['sim'].append([s_x, s_y, s_z])
+                    self.FR_FOOT['r_x'].append(r_x)
+                    self.FR_FOOT['r_y'].append(r_y)
+                    self.FR_FOOT['r_z'].append(r_z)
+                    self.FR_FOOT['s_x'].append(s_x)
+                    self.FR_FOOT['s_y'].append(s_y)
+                    self.FR_FOOT['s_z'].append(s_z)
+                    self.FR_FOOT['error'].append(error)
+                elif NAME == 'HL_FOOT':
+                    self.HL_FOOT['reference'].append([r_x, r_y, r_z])
+                    self.HL_FOOT['sim'].append([s_x, s_y, s_z])
+                    self.HL_FOOT['r_x'].append(r_x)
+                    self.HL_FOOT['r_y'].append(r_y)
+                    self.HL_FOOT['r_z'].append(r_z)
+                    self.HL_FOOT['s_x'].append(s_x)
+                    self.HL_FOOT['s_y'].append(s_y)
+                    self.HL_FOOT['s_z'].append(s_z)
+                    self.HL_FOOT['error'].append(error)
+                elif NAME == 'HR_FOOT':
+                    self.HR_FOOT['reference'].append([r_x, r_y, r_z])
+                    self.HR_FOOT['sim'].append([s_x, s_y, s_z])
+                    self.HR_FOOT['r_x'].append(r_x)
+                    self.HR_FOOT['r_y'].append(r_y)
+                    self.HR_FOOT['r_z'].append(r_z)
+                    self.HR_FOOT['s_x'].append(s_x)
+                    self.HR_FOOT['s_y'].append(s_y)
+                    self.HR_FOOT['s_z'].append(s_z)
+                    self.HR_FOOT['error'].append(error)
 
     def plot_reference_vs_sim(self, plot_graph=False):
         plt.figure(figsize=(10, 6))
@@ -222,7 +229,7 @@ class Tracking:
         
     def get_sim_cmd(self):
         vec = self.robot.traj_vec
-        return vec_to_cmd(vec)
+        return vec_to_cmd_pose(vec)
         
 
 

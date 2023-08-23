@@ -198,7 +198,8 @@ class SOLO12(object):
             np.array: numpy array of end effector positions
         """
         EE = self.get_endeffector_pose()
-        traj_vec = np.concatenate((EE['FL_FOOT']['linkWorldPosition'], EE['FR_FOOT']['linkWorldPosition'], EE['HL_FOOT']['linkWorldPosition'], EE['HR_FOOT']['linkWorldPosition']))
+        CoM = self.CoM_states()
+        traj_vec = np.concatenate((CoM['linkWorldPosition'],  p.getEulerFromQuaternion(CoM['linkWorldOrientation']), EE['FL_FOOT']['linkWorldPosition'], EE['FR_FOOT']['linkWorldPosition'], EE['HL_FOOT']['linkWorldPosition'], EE['HR_FOOT']['linkWorldPosition']))
         return traj_vec
 
     @property
