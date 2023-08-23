@@ -213,7 +213,7 @@ class Tracking:
             plt.show()
 
     def plot_CoM(self):
-        pass
+        raise NotImplemented
 
     def plot(self, plot_graph=False):
         self.plot_reference_vs_sim(plot_graph)
