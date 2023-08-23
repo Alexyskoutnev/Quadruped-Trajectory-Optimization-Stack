@@ -37,9 +37,19 @@ class MPC(object):
         self.hz = hz
         self.decimal_precision = math.log10(hz)
         self.global_planner = Global_Planner(args, self.lookahead)
+        self.global_solver = self.global_planner.path_solver
+        self.spine_x = self.global_solver.spine_x_track
+        self.spine_y = self.global_solver.spine_y_track
         self.traj_plan = txt_2_np_reader(self.current_traj)
         self.robot = args['robot']
         self.set_correct_flag = False
+
+    @property
+    def global_plan_state(self):
+        x_ref = self.spine_x(self.last_timestep)
+        y_ref = self.spine_y(self.last_timestep)
+        # x_ref, y_ref = 0, 0
+        return [x_ref.item(), y_ref.item()]
 
     @property
     def plan_state(self):
@@ -62,7 +72,6 @@ class MPC(object):
         combined_df = np.concatenate((df_old, df_new), axis=0)
         self.traj_plan = combined_df
         combined_df = pd.DataFrame(combined_df)
-        breakpoint()
         combined_df.to_csv(self.new_traj, index=False, header=None)
 
     def plan_init(self, args):
@@ -130,7 +139,7 @@ class MPC(object):
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         #Updating the global planner
-        self.global_planner.update(self.last_timestep, self.traj_plan, self.plan_state, self.robot_state, goal_step_vec)
+        self.global_planner.update(self.last_timestep, self.global_plan_state, self.robot_state[1:3], goal_step_vec)
 
     def update_timestep(self):
         """

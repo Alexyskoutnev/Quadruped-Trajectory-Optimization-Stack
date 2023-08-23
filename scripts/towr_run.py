@@ -128,16 +128,16 @@ def _update(args, log, mpc):
                 global_cfg.RUN._wait = False
                 global_cfg.RUN._update = False
             elif not _wait:
-                global_cfg.RUN._wait = True
-                breakpoint()
+                # global_cfg.RUN._wait = True
+                # breakpoint()
                 args = mpc.plan(args)
                 TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
                 print(f"Updated with a new plan - \n {TOWR_SCRIPT}")
                 p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
                 print(f"P_status {p_status}")
                 _wait = True
-                breakpoint()
-                global_cfg.RUN._wait = False
+                # breakpoint()
+                # global_cfg.RUN._wait = False
                 
             elif p_status.returncode == 0 and mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
@@ -260,9 +260,10 @@ if __name__ == "__main__":
             "f_steps": p_args.f_steps, "record": p_args.record}
     if test:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
+        args['-g'][0] = (args['sim'].num_tiles) * 1.0 + 0.5
         test_mpc_single_loop(args)
     else:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
+        args['-g'][0] = (args['sim'].num_tiles) * 1.0 + 0.5
+        # args['-g'][1] = -1.0 
         _run(args)

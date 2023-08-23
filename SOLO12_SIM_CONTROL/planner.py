@@ -31,7 +31,7 @@ class Global_Planner(object):
         self.plan_desired_goal_pt = np.zeros(3)
         self.plan_desired_start_pt = np.zeros(3)
         self.args = args
-        path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
+        self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
         return np.linalg.norm(robot_pose - plan_pose) > self.error_bound + eps
@@ -52,10 +52,7 @@ class Global_Planner(object):
         Returns:
             np.array(): The error vector between the robot position and trajectory position
         """
-        print("plan ", plan_state)
-        print("robot state ", robot_state)
-        print("error vec ", plan_state[1:3] - robot_state[1:3])
-        return plan_state[1:3] - robot_state[1:3]
+        return plan_state - robot_state
 
     def goal_step(self, CoM):
         step_size = self.args['step_size']
@@ -63,7 +60,12 @@ class Global_Planner(object):
         diff_vec = np.clip(goal - CoM, -step_size, CoM)
         return CoM + diff_vec
 
-    def update(self, timestep, plan, plan_state, robot_state, goal_step_vec):
+
+    def lookahead_timestamp(self, time):
+        return time + self.lookahead / 1000.0
+
+
+    def update(self, timestep, plan_state_xy, robot_state_xy, goal_step_vec):
         """Template to update the state of the planner
 
         Args:
@@ -72,22 +74,27 @@ class Global_Planner(object):
             goal_step (_type_): _description_
         """
         ###Update the robot and trajectory state
-        self.plan_state = plan_state
-        self.robot_state = robot_state
+        self.plan_state = np.array(plan_state_xy)
+        self.robot_state = np.array(robot_state_xy)
+        # breakpoint()
         ###Calculate the error btw robot and trajectory
-        error = self.plan_robot_error(plan_state, robot_state)
-        plan_desired_state_1 = plan[self.lookahead].copy() #Desired next goal in trajectory
-        plan_desired_start_pt = plan_desired_state_1[1:4]
+        error = self.plan_robot_error(self.plan_state, self.robot_state)
+        lookahead_time = self.lookahead_timestamp(timestep)
+        plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0.24])
         goal_pt = self.goal_step(plan_desired_start_pt)
-        z = plan_desired_state_1[3]
+        z = 0.24 #Might need to add info about the grid map to query height map + 0.24 (optimal height z-height for robot)
         self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
         self.plan_desired_goal_pt[2] = z
         plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
         if self.P_correction:
             self.start_goal_pts.push(plan_start_goal_tuple)
 
-    def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
-        return goal_pt + kp * error
+    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.1):
+        print(f"ERROR {error}")
+        print(f"goal_pt {goal_pt}")
+        print(f"result {goal_pt + (kp * error)}")
+        return goal_pt + (kp * error)
+
 
     def pop(self):
         return self.start_goal_pts.pop()
@@ -97,7 +104,7 @@ class Global_Planner(object):
 
 class PATH_Solver(object):
     
-    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=False) -> None:
+    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=True) -> None:
         self.in_map = map
         self.args = args
         self.grid_res = grid_res
@@ -167,10 +174,15 @@ class PATH_Solver(object):
 
     def _solve(self):
         t = np.linspace(0, self.predicted_t, len(self.path))
-        path_x = [pos[1] * self.grid_res for pos in self.path]
-        path_y = [pos[0] * self.grid_res for pos in self.path]
-        self.spine_x = CubicSpline(t, path_x)
-        self.spine_y = CubicSpline(t, path_y)
+        path_x_track = [(pos[1] * self.grid_res) - self.origin_x_shift for pos in self.path]
+        path_y_track = [(pos[0] * self.grid_res) - self.origin_y_shift for pos in self.path]
+        path_x_plot = [pos[1] * self.grid_res for pos in self.path]
+        path_y_plot = [pos[0] * self.grid_res for pos in self.path]
+        self.spine_x_track = CubicSpline(t, path_x_track)
+        self.spine_y_track = CubicSpline(t, path_y_track)
+        self.spine_x_plot = CubicSpline(t, path_x_plot)
+        self.spine_y_plot = CubicSpline(t, path_y_plot)
+
 
     def solve(self, start, goal, plot=False):
         self.start_pos_x_y = start[0:2]
@@ -181,13 +193,16 @@ class PATH_Solver(object):
         self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
         if self.solution_flag:
             t = np.linspace(0, self.predicted_t, len(self.path))
-            path_x = [pos[1] * self.grid_res for pos in self.path]
-            path_y = [pos[0] * self.grid_res for pos in self.path]
-            self.spine_x = CubicSpline(t, path_x)
-            self.spine_y = CubicSpline(t, path_y)
+            path_x_track = [(pos[1] * self.grid_res) - self.origin_x_shift for pos in self.path]
+            path_y_track = [(pos[0] * self.grid_res) - self.origin_y_shift for pos in self.path]
+            path_x_plot = [pos[1] * self.grid_res for pos in self.path]
+            path_y_plot = [pos[0] * self.grid_res for pos in self.path]
+            self.spine_x_track = CubicSpline(t, path_x_track)
+            self.spine_y_track = CubicSpline(t, path_y_track)
+            self.spine_x_plot = CubicSpline(t, path_x_plot)
+            self.spine_y_plot = CubicSpline(t, path_y_plot)
         else:
             print("Failed to solve")
-
         if plot:
             self.visualize_path()
 
@@ -214,8 +229,8 @@ class PATH_Solver(object):
 
             if plot_spline:
                 t_new = np.linspace(0, self.predicted_t, 100)
-                path_x_new = self.spine_x(t_new)
-                path_y_new = self.spine_y(t_new)
+                path_x_new = self.spine_x_plot(t_new)
+                path_y_new = self.spine_y_plot(t_new)
                 plt.plot(path_x_new, path_y_new, color='blue', label='Trajectory Spline')
             
         plt.xlabel('X')
