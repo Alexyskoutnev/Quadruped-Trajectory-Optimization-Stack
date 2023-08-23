@@ -25,7 +25,7 @@ stance_period : 100
 skip_forward_idx : 5 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : True
 base_stable : False
-track : False
+track : True
 track_rate : 100
 height_map : True
 map_id : ['plane', 'plane']

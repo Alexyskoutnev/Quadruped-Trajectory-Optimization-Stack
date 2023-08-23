@@ -33,6 +33,7 @@ class Global_Planner(object):
         self.plan_desired_start_pt = np.zeros(3)
         self.args = args
         self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
+        self.error_tol = 0.15
         
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
@@ -80,24 +81,29 @@ class Global_Planner(object):
         self.robot_state = np.array(robot_state_xy)
         ###Calculate the error btw robot and trajectory
         error = self.plan_robot_error(self.plan_state, self.robot_state)
+        total_err = np.linalg.norm(error)
         lookahead_time = self.lookahead_timestamp(timestep)
         plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0.24])
         goal_pt = self.goal_step(plan_desired_start_pt)
         z = 0.24 #Might need to add info about the grid map to query height map + 0.24 (optimal height z-height for robot)
-        # self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
-        self.plan_desired_goal_pt = goal_pt
-        # self.plan_desired_goal_pt[2] = z
-        plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
-        # breakpoint()
-        if self.P_correction:
+        if self.P_correction and total_err > self.error_tol:
+            self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
+            self.plan_desired_goal_pt[2] = z
+            plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
+            self.start_goal_pts.push(plan_start_goal_tuple)
+        else:
+            self.start_goal_pts.clear()
+            self.plan_desired_goal_pt = goal_pt
+            plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
 
-    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.1):
-        print(f"ERROR {error}")
-        print(f"goal_pt {goal_pt}")
-        print(f"result {goal_pt + (kp * error)}")
+
+
+    def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
         return goal_pt + (kp * error)
 
+    def D_goal_point(self, goal_pt, d_error = [0, 0], kd=1.0):
+        return goal_pt + (kd * d_error)
 
     def pop(self):
         return self.start_goal_pts.pop()

@@ -53,3 +53,6 @@ class Limited_Stack(object):
     def size(self):
         return len(self.stack)
 
+    def clear(self):
+        self.stack.clear()
+
