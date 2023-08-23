@@ -7,6 +7,7 @@ from collections import namedtuple
 from SOLO12_SIM_CONTROL.utils import vec_to_cmd, vec_to_cmd_pose
 
 SAVE_FILE = "./data/tracking_info/ref_sim_track.png"
+SAVE_FILE_COM = "./data/tracking_info/CoM_track.png"
 SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error.png"
 
 class COMMAND:
@@ -29,10 +30,11 @@ class Tracking:
         self.FR_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.HL_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.HR_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
-        self.CoM_Pos = {"reference": [], "sim": []}
-        self.CoM_Ang = {"reference": [], "sim": []}
+        self.CoM_Pos = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
+        self.CoM_Ang = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.timeseries = np.linspace(0, 10, num_traj)
-        self.total_error = 0.0
+        self.total_error_feet_error = 0.0
+        self.total_error_com_error = 0.0
         self.track_rate = cfg['track_rate']
         self.track_flag = cfg['track']
     
@@ -49,13 +51,24 @@ class Tracking:
     def _update(self):
         for NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'CoM_pos'):
             if NAME in ('CoM_pos'):
-                # r_com_x, r_com_y, r_com_z = self.traj['reference'][self.idx].CoM[NAME]
-                pass
+                r_com_x, r_com_y, r_com_z = self.traj['reference'][self.idx].CoM[NAME]
+                s_com_x, s_com_y, s_com_z = self.traj['sim'][self.idx].CoM[NAME]
+                error = np.linalg.norm(np.array(self.traj['reference'][self.idx].CoM[NAME]) - np.array(self.traj['sim'][self.idx].CoM[NAME]))
+                self.total_error_com_error += error
+                self.CoM_Pos['reference'].append([r_com_x, r_com_y, r_com_z])
+                self.CoM_Pos['sim'].append([s_com_x, s_com_y, s_com_z])
+                self.CoM_Pos['r_x'].append(r_com_x)
+                self.CoM_Pos['r_y'].append(r_com_y)
+                self.CoM_Pos['r_z'].append(r_com_z)
+                self.CoM_Pos['s_x'].append(s_com_x)
+                self.CoM_Pos['s_y'].append(s_com_y)
+                self.CoM_Pos['s_z'].append(s_com_z)
+                self.CoM_Pos['error'].append(error)
             elif NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
                 r_x, r_y, r_z = self.traj['reference'][self.idx].position[NAME]
                 s_x, s_y, s_z = self.traj['sim'][self.idx].position[NAME]
                 error = np.linalg.norm(np.array(self.traj['reference'][self.idx].position[NAME]) - np.array(self.traj['sim'][self.idx].position[NAME]))
-                self.total_error += error
+                self.total_error_feet_error += error
                 if NAME == 'FL_FOOT':
                     self.FL_FOOT['reference'].append([r_x, r_y, r_z])
                     self.FL_FOOT['sim'].append([s_x, s_y, s_z])
@@ -219,13 +232,40 @@ class Tracking:
         if plot_graph:
             plt.show()
 
-    def plot_CoM(self):
-        raise NotImplemented
+    def plot_CoM(self, plot_graph=False):
+        plt.figure(figsize=(10, 6))
+        plt.tight_layout()
+        plt.subplot(1, 3, 1)
+        plt.plot(self.timeseries[0:len(self.CoM_Pos['r_x'])], self.CoM_Pos['r_x'], label='reference', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.CoM_Pos['s_x'])], self.CoM_Pos['s_x'], label='sim', color='blue')
+        plt.grid(True)
+        plt.legend()
+        plt.title('CoM X Position')
+        plt.subplot(1, 3, 2)
+        plt.plot(self.timeseries[0:len(self.CoM_Pos['r_y'])], self.CoM_Pos['r_y'], label='reference', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.CoM_Pos['s_y'])], self.CoM_Pos['s_y'], label='sim', color='blue')
+        plt.grid(True)
+        plt.ylim(-0.5,0.5)
+        plt.legend()
+        plt.title('CoM Y Position')
+        plt.subplot(1, 3, 3)
+        plt.plot(self.timeseries[0:len(self.CoM_Pos['r_z'])], self.CoM_Pos['r_z'], label='reference', color='green', linestyle="dashed")
+        plt.plot(self.timeseries[0:len(self.CoM_Pos['s_z'])], self.CoM_Pos['s_z'], label='sim', color='blue')
+        plt.ylim(-0.1,1.0)
+        plt.grid(True)
+        plt.legend()
+        plt.title('CoM Z Position')
+        plt.savefig(SAVE_FILE_COM)
+        plt.close()
+        if plot_graph:
+            plt.show()
 
     def plot(self, plot_graph=False):
+        self.plot_CoM(plot_graph)
         self.plot_reference_vs_sim(plot_graph)
         self.plot_error(plot_graph)
-        print(f"TOTAL ERROR -> [{self.total_error:.2f}]")
+        print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
+        print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
         
     def get_sim_cmd(self):
         vec = self.robot.traj_vec
