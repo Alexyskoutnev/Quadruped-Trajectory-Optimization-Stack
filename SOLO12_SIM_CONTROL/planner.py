@@ -32,8 +32,12 @@ class Global_Planner(object):
         self.plan_desired_goal_pt = np.zeros(3)
         self.plan_desired_start_pt = np.zeros(3)
         self.args = args
+        self.origin_x_shift = 1.0 #PUT IN CONFIG FILE
+        self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
+        self.grid_res = 0.1 #PUT IN CONFIG FILE
         self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
         self.error_tol = 0.15
+        self.map = args['map']
         
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
@@ -63,7 +67,6 @@ class Global_Planner(object):
         diff_vec = np.clip(goal - CoM, -step_size, step_size)
         return CoM + diff_vec
 
-
     def lookahead_timestamp(self, time):
         return time + round(self.lookahead / self.hz, 3)
 
@@ -83,12 +86,13 @@ class Global_Planner(object):
         error = self.plan_robot_error(self.plan_state, self.robot_state)
         total_err = np.linalg.norm(error)
         lookahead_time = self.lookahead_timestamp(timestep)
-        plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0.24])
+        plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0])
+        z = self.get_map_height(plan_desired_start_pt[0:2]) + 0.24
+        plan_desired_start_pt[2] = z
         goal_pt = self.goal_step(plan_desired_start_pt)
-        z = 0.24 #Might need to add info about the grid map to query height map + 0.24 (optimal height z-height for robot)
         if self.P_correction and total_err > self.error_tol:
             self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
-            self.plan_desired_goal_pt[2] = z
+            self.plan_desired_goal_pt[2] = self.get_map_height(self.plan_desired_goal_pt[0:2])
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
         else:
@@ -96,8 +100,6 @@ class Global_Planner(object):
             self.plan_desired_goal_pt = goal_pt
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
-
-
 
     def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
         return goal_pt + (kp * error)
@@ -111,9 +113,18 @@ class Global_Planner(object):
     def empty(self):
         return self.start_goal_pts.is_empty()
 
+    def convert_2_idx(self, x, y):
+        row = math.floor((y + self.origin_y_shift) / self.grid_res)
+        column = math.floor((x + self.origin_x_shift) / self.grid_res)
+        return row, column
+    
+    def get_map_height(self, pos):
+        row, col = self.convert_2_idx(pos[0], pos[1])
+        return self.args['map'][row, col]
+
 class PATH_Solver(object):
     
-    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=True) -> None:
+    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=False) -> None:
         self.in_map = map
         self.args = args
         self.grid_res = grid_res
@@ -126,7 +137,7 @@ class PATH_Solver(object):
         self.goal_idx_x_y = self.convert_2_idx(self.goal_pos_x_y[0], self.goal_pos_x_y[1])
         self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
         self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
-        
+
         if self.solution_flag:
             self.solution_flag = True
             self._solve()
@@ -140,10 +151,12 @@ class PATH_Solver(object):
         column = math.floor((x + self.origin_x_shift) / self.grid_res)
         return row, column
 
+    
+
     def heuristic(self, a, b):
         return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
 
-    def astar(self, start, goal, height_bound=0):
+    def astar(self, start, goal, height_bound=0.2):
 
         neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         close_set = set()

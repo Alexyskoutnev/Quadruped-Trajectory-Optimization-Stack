@@ -260,9 +260,9 @@ if __name__ == "__main__":
             "f_steps": p_args.f_steps, "record": p_args.record}
     if test:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles) * 1.0 + 0.5
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
         test_mpc_single_loop(args)
     else:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles) * 1.0 + 0.5
+        args['-g'][0] = (args['sim'].num_tiles ) * 1.0 + 1.0
         _run(args)
