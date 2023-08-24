@@ -28,7 +28,7 @@ base_stable : False
 track : True
 track_rate : 100
 height_map : True
-map_id : ['plane', 'plane', 'plane']
+map_id : ['plane', 'plane']
 friction : 0.99
 
 #==Visual Planner CONFIGURATIONS==

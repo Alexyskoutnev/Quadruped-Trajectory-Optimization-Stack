@@ -127,6 +127,8 @@ def _update(args, log, mpc):
                 global_cfg.RUN._stance = True
                 global_cfg.RUN._wait = False
                 global_cfg.RUN._update = False
+                global_cfg.RUN._done = True
+                break
             elif not _wait:
                 # global_cfg.RUN._wait = True
                 # breakpoint()
@@ -138,7 +140,6 @@ def _update(args, log, mpc):
                 _wait = True
                 # breakpoint()
                 # global_cfg.RUN._wait = False
-                
             elif p_status.returncode == 0 and mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
                 p = subprocess.run(shlex.split(scripts['data'])) 
@@ -252,12 +253,13 @@ if __name__ == "__main__":
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
     parser.add_argument('-l', '--look', type=float, default=7500)
     parser.add_argument('-r', '--record', type=bool, default=False)
+    parser.add_argument('-p', '--mpc_p', type=bool, default=False)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
             "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
-            "f_steps": p_args.f_steps, "record": p_args.record}
+            "f_steps": p_args.f_steps, "record": p_args.record, "mpc_p": p_args.mpc_p}
     if test:
         args.update(builder())
         args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5

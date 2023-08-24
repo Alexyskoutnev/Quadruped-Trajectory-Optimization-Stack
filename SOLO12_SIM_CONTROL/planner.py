@@ -10,7 +10,7 @@ from scipy.interpolate import BSpline
 
 
 from SOLO12_SIM_CONTROL.config.global_cfg import PLANNER
-from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack
+from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack, LimitedFIFOQueue
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
@@ -26,7 +26,8 @@ class Global_Planner(object):
         self.hz = hz
         self.set_correct_flag = False
         self.start_goal_pts = Limited_Stack(start_goal_pts_history_sz)
-        self.P_correction = True # correction for proportional error btw planner and robot CoM
+        # self.P_correction = True # correction for proportional error btw planner and robot CoM
+        self.P_correction = args['mpc_p']
         self.plan_state = None
         self.robot_state = None
         self.plan_desired_goal_pt = np.zeros(3)
@@ -38,7 +39,15 @@ class Global_Planner(object):
         self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
         self.error_tol = 0.15
         self.map = args['map']
-        
+
+        self.CoM_avg = 0.0
+        self.CoM_avg_container = LimitedFIFOQueue(1000)
+
+    def push_CoM(self, xy):
+        self.CoM_avg_container.enqueue(xy)
+
+    def get_avg_CoM(self):
+        return self.CoM_avg_container.average()
 
     def error_pose_test(self, robot_pose, plan_pose, eps=0.0):
         return np.linalg.norm(robot_pose - plan_pose) > self.error_bound + eps
@@ -82,8 +91,10 @@ class Global_Planner(object):
         ###Update the robot and trajectory state
         self.plan_state = np.array(plan_state_xy)
         self.robot_state = np.array(robot_state_xy)
+        self.push_CoM(robot_state_xy)
+        average_xy = self.get_avg_CoM()
         ###Calculate the error btw robot and trajectory
-        error = self.plan_robot_error(self.plan_state, self.robot_state)
+        error = self.plan_robot_error(self.plan_state, average_xy)
         total_err = np.linalg.norm(error)
         lookahead_time = self.lookahead_timestamp(timestep)
         plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0])
@@ -101,7 +112,7 @@ class Global_Planner(object):
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
 
-    def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
+    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.2):
         return goal_pt + (kp * error)
 
     def D_goal_point(self, goal_pt, d_error = [0, 0], kd=1.0):

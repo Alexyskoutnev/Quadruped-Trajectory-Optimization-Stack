@@ -174,6 +174,9 @@ def simulation(args):
                             break
                 elif sim_cfg['mode'] == "towr":
                     try:
+                        if global_cfg.RUN._done:
+                            print("ROBOT HAS REACHED THE GOAL")
+                            break
                         if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
                             time.sleep(0.001)
                             continue
@@ -240,6 +243,7 @@ def simulation(args):
             loop_time = time.time() - last_loop_time
             time_loop = time.time()
             if loop_time > sim_cfg['TIMESTEPS']:
+                print("DONE")
                 if sim_cfg['mode'] == "towr":
                     towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
                     joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)

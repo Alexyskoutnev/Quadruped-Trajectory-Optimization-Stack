@@ -1,3 +1,4 @@
+import datetime
 import numpy as np
 import pybullet
 import matplotlib.pyplot as plt
@@ -6,9 +7,14 @@ from collections import namedtuple
 
 from SOLO12_SIM_CONTROL.utils import vec_to_cmd, vec_to_cmd_pose
 
-SAVE_FILE = "./data/tracking_info/ref_sim_track.png"
-SAVE_FILE_COM = "./data/tracking_info/CoM_track.png"
-SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error.png"
+SAVE_FILE = "./data/tracking_info/ref_sim_track_"
+SAVE_FILE_COM = "./data/tracking_info/CoM_track_"
+SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error_"
+
+def date_salt(f_type=".png"):
+    current_datetime = datetime.datetime.now()
+    timestamp = current_datetime.strftime("%Y%m%d_%H%M%S")
+    return timestamp + f_type
 
 class COMMAND:
     def __init__(self, timestep, cmd) -> None:
@@ -37,6 +43,7 @@ class Tracking:
         self.total_error_com_error = 0.0
         self.track_rate = cfg['track_rate']
         self.track_flag = cfg['track']
+        self.date_time_salt = date_salt()
     
     def update(self, reference_cmd, timestep):
         sim_cmd = self.get_sim_cmd()
@@ -195,7 +202,7 @@ class Tracking:
         plt.legend()
         plt.title('HR Z Position')
 
-        plt.savefig(SAVE_FILE)
+        plt.savefig(SAVE_FILE + self.date_time_salt)
         plt.close()
         
         if plot_graph:
@@ -226,7 +233,7 @@ class Tracking:
         plt.grid(True)
         plt.legend()
         plt.title('HR X Error')
-        plt.savefig(SAVE_FILE_ERROR)
+        plt.savefig(SAVE_FILE_ERROR + self.date_time_salt)
         plt.close()
 
         if plot_graph:
@@ -251,11 +258,11 @@ class Tracking:
         plt.subplot(1, 3, 3)
         plt.plot(self.timeseries[0:len(self.CoM_Pos['r_z'])], self.CoM_Pos['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.CoM_Pos['s_z'])], self.CoM_Pos['s_z'], label='sim', color='blue')
-        plt.ylim(-0.1,1.0)
+        plt.ylim(-0.1,0.5)
         plt.grid(True)
         plt.legend()
         plt.title('CoM Z Position')
-        plt.savefig(SAVE_FILE_COM)
+        plt.savefig(SAVE_FILE_COM + self.date_time_salt)
         plt.close()
         if plot_graph:
             plt.show()

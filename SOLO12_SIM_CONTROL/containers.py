@@ -2,6 +2,30 @@ from collections import deque
 
 import numpy as np
 
+class LimitedFIFOQueue:
+    def __init__(self, max_size):
+        self.queue = deque()
+        self.max_size = max_size
+
+    def enqueue(self, item):
+        if len(self.queue) >= self.max_size:
+            self.queue.popleft()
+        self.queue.append(item)
+
+    def dequeue(self):
+        if self.queue:
+            return self.queue.popleft()
+        else:
+            raise IndexError("Queue is empty")
+
+    def __len__(self):
+        return len(self.queue)
+
+    def average(self):
+        if len(self.queue) == 0:
+            return 0
+        return sum(self.queue) / len(self.queue)
+
 class FIFOQueue:
     def __init__(self):
         self.queue =deque()

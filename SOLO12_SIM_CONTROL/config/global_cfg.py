@@ -22,6 +22,7 @@ class RUN:
     _stance = False
     TOWR_POS = [0, 0, 0]
     _run_update_thread = True
+    _done = False
 
 class PLANNER:
     set_straight_correction = False
