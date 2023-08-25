@@ -249,9 +249,9 @@ if __name__ == "__main__":
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=0.5)
-    parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
-    parser.add_argument('-l', '--look', type=float, default=7500)
+    parser.add_argument('-step', '--step', type=float, default=0.25)
+    parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
+    parser.add_argument('-l', '--look', type=float, default=3750)
     parser.add_argument('-r', '--record', type=bool, default=False)
     parser.add_argument('-p', '--mpc_p', type=bool, default=False)
     p_args = parser.parse_args()
@@ -266,5 +266,5 @@ if __name__ == "__main__":
         test_mpc_single_loop(args)
     else:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles ) * 1.0 + 1.0
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 1.0
         _run(args)
