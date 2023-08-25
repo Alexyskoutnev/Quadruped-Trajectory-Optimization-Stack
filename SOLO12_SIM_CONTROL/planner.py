@@ -37,11 +37,11 @@ class Global_Planner(object):
         self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
         self.grid_res = 0.1 #PUT IN CONFIG FILE
         self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
-        self.error_tol = 0.10
+        self.error_tol = 0.05
         self.map = args['map']
 
         self.CoM_avg = 0.0
-        self.CoM_avg_container = LimitedFIFOQueue(1000)
+        self.CoM_avg_container = LimitedFIFOQueue(500)
 
     def push_CoM(self, xy):
         self.CoM_avg_container.enqueue(xy)
@@ -94,7 +94,7 @@ class Global_Planner(object):
         self.push_CoM(robot_state_xy)
         average_xy = self.get_avg_CoM()
         ###Calculate the error btw robot and trajectory
-        error = self.plan_robot_error(self.plan_state, plan_state_xy)
+        error = self.plan_robot_error(self.plan_state, robot_state_xy)
         error_avg = self.plan_robot_error(self.plan_state, average_xy)
         total_err = np.linalg.norm(error_avg)
         lookahead_time = self.lookahead_timestamp(timestep)
@@ -103,7 +103,7 @@ class Global_Planner(object):
         plan_desired_start_pt[2] = z
         goal_pt = self.goal_step(plan_desired_start_pt)
         if self.P_correction and total_err > self.error_tol:
-            self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error)
+            self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error_avg)
             self.plan_desired_goal_pt[2] = self.get_map_height(self.plan_desired_goal_pt[0:2])
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
@@ -113,7 +113,7 @@ class Global_Planner(object):
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
 
-    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.25):
+    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.50):
         return goal_pt + (kp * error)
 
     def D_goal_point(self, goal_pt, d_error = [0, 0], kd=1.0):
@@ -136,7 +136,7 @@ class Global_Planner(object):
 
 class PATH_Solver(object):
     
-    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=False) -> None:
+    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=True) -> None:
         self.in_map = map
         self.args = args
         self.grid_res = grid_res
@@ -162,8 +162,6 @@ class PATH_Solver(object):
         row = math.floor((y + self.origin_y_shift) / self.grid_res)
         column = math.floor((x + self.origin_x_shift) / self.grid_res)
         return row, column
-
-    
 
     def heuristic(self, a, b):
         return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)

@@ -12,7 +12,7 @@ np.set_printoptions(threshold=np.inf)
 
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
-NUM_PROCESSES = 16
+NUM_PROCESSES = 1
 
 scripts =  {'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
@@ -160,9 +160,12 @@ class PATH_MAP(object):
         y_goal = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2
         _x_start, _y_start = x_start, y_start
         _x_goal, _y_goal = x_goal, y_goal
-        for x in range(map.shape[0] - 1):
-                _x_start += step_x
-                _x_goal += step_x
+        for x in range(map.shape[0]//2 - 1):
+                if x == 0:
+                    _x_start += step_x
+                else:
+                    _x_start = _x_goal
+                _x_goal += (2 * step_x)
                 _y_start, _y_goal = y_start, y_goal
                 for y in range(map.shape[1]):
                     _y_start += step_y
@@ -170,8 +173,11 @@ class PATH_MAP(object):
                     _x_start, _y_start = round(_x_start, 2), round(_y_start, 2)
                     _x_goal, _y_goal = round(_x_goal, 2), round(_y_goal, 2)
                     data = Map_2_Idx(map_coords_start=(_x_start, _y_start), map_coords_goal=(_x_goal, _y_goal),
-                                     map_idx_start=(x, y), map_idx_goal=(x+1, y))
+                                     map_idx_start=(x, y), map_idx_goal=(x+2, y))
                     self.data_queue.put(data)
+                    print(data)
+                print(f"x,y start: {_x_start, _y_start}")
+                print(f"x,y goal: {_x_goal, _y_goal}\n")
 
     def run(self):
         processes = []
@@ -194,7 +200,7 @@ class PATH_MAP(object):
             args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], 0.24]
-            args['-n'] = 't'
+            # args['-n'] = 't'
 
         while not queue.empty():
             args = {}
@@ -207,6 +213,8 @@ class PATH_MAP(object):
             local_array = np.frombuffer(map.get_obj(), dtype=np.float32).reshape(-1, num_cols)
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            # print(f"p_status -> {p_status}")
+            print(args)
             if p_status.returncode == 0:
                 print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
@@ -232,6 +240,7 @@ class Maps(object):
     wall_1_file = "./data/heightfields/wall_1.txt"
     wall_2_file = "./data/heightfields/wall_2.txt"
     wall_3_file = "./data/heightfields/wall_3.txt"
+    wall_4_file = "./data/heightfields/wall_4.txt"
     test_file = "./data/heightfields/heightfield_test.txt"
     stairs_file = "./data/heightfields/staircase.txt"
     plane_file =  "./data/heightfields/plane.txt"
@@ -244,12 +253,13 @@ class Maps(object):
     wall_1 = heighmap_2_np_reader(wall_1_file)
     wall_2 = heighmap_2_np_reader(wall_2_file)
     wall_3 = heighmap_2_np_reader(wall_3_file)
+    wall_4 = heighmap_2_np_reader(wall_4_file)
     stairs = heighmap_2_np_reader(stairs_file)
     plane = heighmap_2_np_reader(plane_file)
     test = heighmap_2_np_reader(test_file)
     feasibility = heighmap_2_np_reader(feasibility)
     name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
-                     'test': test, 'stairs': stairs, 'feasibility' : feasibility}
+                     'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'wall_4' : wall_4}
 
     def __init__(self, maps=['plane'], dim=20):
         self.dim = 20
@@ -279,7 +289,8 @@ class Height_Map_Generator(Maps):
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
-        # self.bool_map = PATH_MAP(self.towr_map)
+        self.bool_map = PATH_MAP(self.towr_map)
+        breakpoint()
 
     def create_height_file(self, file, h_data):
             rows = len(h_data)

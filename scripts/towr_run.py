@@ -238,7 +238,7 @@ def test_mpc_single_loop(args):
         sys.exit(1)
 
 if __name__ == "__main__":
-    test = False
+    test = True
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=0.50)
+    parser.add_argument('-step', '--step', type=float, default=0.6)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
     parser.add_argument('-l', '--look', type=float, default=3750)
     parser.add_argument('-r', '--record', type=bool, default=False)
