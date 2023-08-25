@@ -48,7 +48,6 @@ class MPC(object):
     def global_plan_state(self):
         x_ref = self.spine_x(self.last_timestep)
         y_ref = self.spine_y(self.last_timestep)
-        # x_ref, y_ref = 0, 0
         return [x_ref.item(), y_ref.item()]
 
     @property

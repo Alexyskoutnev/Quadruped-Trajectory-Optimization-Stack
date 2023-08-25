@@ -19,7 +19,7 @@ GLOBAL_TRAJ_MAP = "./data/plots/global_plan.png"
 
 class Global_Planner(object):
     
-    def __init__(self, args, lookahead=7500, hz=1000, start_goal_pts_history_sz = 10):
+    def __init__(self, args, lookahead=7500, hz=1000, start_goal_pts_history_sz = 500):
         self.error_bound = 0.1
         self.lookahead = lookahead
         self.forced_num = None
@@ -37,7 +37,7 @@ class Global_Planner(object):
         self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
         self.grid_res = 0.1 #PUT IN CONFIG FILE
         self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
-        self.error_tol = 0.15
+        self.error_tol = 0.10
         self.map = args['map']
 
         self.CoM_avg = 0.0
@@ -94,8 +94,9 @@ class Global_Planner(object):
         self.push_CoM(robot_state_xy)
         average_xy = self.get_avg_CoM()
         ###Calculate the error btw robot and trajectory
-        error = self.plan_robot_error(self.plan_state, average_xy)
-        total_err = np.linalg.norm(error)
+        error = self.plan_robot_error(self.plan_state, plan_state_xy)
+        error_avg = self.plan_robot_error(self.plan_state, average_xy)
+        total_err = np.linalg.norm(error_avg)
         lookahead_time = self.lookahead_timestamp(timestep)
         plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0])
         z = self.get_map_height(plan_desired_start_pt[0:2]) + 0.24
@@ -112,7 +113,7 @@ class Global_Planner(object):
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
 
-    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.2):
+    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.25):
         return goal_pt + (kp * error)
 
     def D_goal_point(self, goal_pt, d_error = [0, 0], kd=1.0):
