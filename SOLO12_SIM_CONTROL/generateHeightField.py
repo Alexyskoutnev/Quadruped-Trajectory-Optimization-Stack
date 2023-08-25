@@ -192,14 +192,15 @@ class PATH_MAP(object):
 
     def worker_f(self, map, queue, num_cols):
 
-        def state_config(args, start_pt, goal_pt):
+        def state_config(args, start_pt, goal_pt, shift=[0, 0]):
             args['-s'] = [start_pt[0], start_pt[1], 0.24]
-            args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
-            args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
-            args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
-            args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
+            args['-e1'] = (np.array([0.20590930477664196, 0.14927536747689948, 0.0]) + np.array(shift)).tolist()
+            args['-e2'] = (np.array([0.2059042161427424, -0.14926921805769638, 0.0]) + np.array(shift)).tolist()
+            args['-e3'] = (np.array([-0.20589422629511542, 0.14933201572367907, 0.0]) + np.array(shift)).tolist()
+            args['-e4'] = (np.array([-0.2348440184502048, -0.17033609357109808, 0.0]) + np.array(shift)).tolist()
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], 0.24]
+            print(args)
             # args['-n'] = 't'
 
         while not queue.empty():
@@ -207,9 +208,11 @@ class PATH_MAP(object):
             data = queue.get()
             start_pt = data.map_coords_start
             goal_pt = data.map_coords_goal
+            shift_vec = [start_pt[0], start_pt[1], 0]
+            print(shift_vec)
             start_idx = data.map_idx_start
             goal_idx = data.map_idx_goal
-            state_config(args, start_pt, goal_pt)
+            state_config(args, start_pt, goal_pt, shift=shift_vec)
             local_array = np.frombuffer(map.get_obj(), dtype=np.float32).reshape(-1, num_cols)
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
