@@ -194,7 +194,6 @@ def _init(args):
     subprocess.run(shlex.split(args['scripts']['heightfield_rm']))
     subprocess.run(shlex.split(args['scripts']['heightfield_copy']))
     args = _step(args)
-    args['map'] = args['sim'].height_map
     return log
 
 def _run(args):

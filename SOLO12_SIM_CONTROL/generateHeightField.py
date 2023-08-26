@@ -12,7 +12,7 @@ np.set_printoptions(threshold=np.inf)
 
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
-NUM_PROCESSES = 16
+NUM_PROCESSES = 32
 
 scripts =  {'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
@@ -226,40 +226,32 @@ class PATH_MAP(object):
             args['-e4'] = (np.array([-0.2348440184502048, -0.17033609357109808, 0.0]) + np.array(shift)).tolist()
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], 0.24]
-            print(args)
-            # args['-n'] = 't'
 
         while not queue.empty():
             args = {}
             data = queue.get()
-            print(data)
             start_pt = data.map_coords_start
             goal_pt = data.map_coords_goal
             shift_vec = [start_pt[0], start_pt[1], 0]
-            print(shift_vec)
             start_idx = data.map_idx_start
             goal_idx = data.map_idx_goal
             state_config(args, start_pt, goal_pt, shift=shift_vec)
             local_array = np.frombuffer(map.get_obj(), dtype=np.float32).reshape(-1, num_cols)
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            # print(f"p_status -> {p_status}")
-            # print(args)
             if p_status.returncode == 0:
-                # print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
                     local_array[start_idx] = 0
                     local_array[mid_idx_x][mid_idx_y] = 0
                     local_array[goal_idx] = 0
             else:
-                # print(f"FAIL TO FIND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
                     local_array[goal_idx] = 1
                     local_array[mid_idx_x][mid_idx_y] = 1
                     local_array[start_idx] = 1
-            print(np.transpose(local_array))
+            print(np.transpose(local_array), "\n")
             
 
 class RandomMaps(object):
@@ -326,8 +318,7 @@ class Height_Map_Generator(Maps):
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
         self.multi_map_shift = len(self.maps)
-        self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift)
-        # breakpoint()
+        self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift).bool_map
 
     def create_height_file(self, file, h_data):
             rows = len(h_data)

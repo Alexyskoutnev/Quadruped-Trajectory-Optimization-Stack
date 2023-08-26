@@ -36,10 +36,15 @@ class Global_Planner(object):
         self.origin_x_shift = 1.0 #PUT IN CONFIG FILE
         self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
         self.grid_res = 0.1 #PUT IN CONFIG FILE
-        self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
+        self.map = args['sim'].height_map
+        if args['sim'].bool_map is not None:
+            print("Using bool map")
+            self.path_solver = PATH_Solver(args['sim'].bool_map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
+        else:
+            print("Using basic A-star")
+            self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
         self.error_tol = 0.05
         self.map = args['map']
-
         self.CoM_avg = 0.0
         self.CoM_avg_container = LimitedFIFOQueue(500)
 

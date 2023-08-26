@@ -37,3 +37,6 @@ v_step_size : 50
 v_look_ahead : 5000
 show_com_plan : False
 show_feet_plan : False
+
+#==Search Proprocess==#
+bool_map_search : True
