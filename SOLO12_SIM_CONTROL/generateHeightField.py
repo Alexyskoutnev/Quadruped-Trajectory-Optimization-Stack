@@ -133,7 +133,7 @@ def max_height(file):
 
 class PATH_MAP(object):
     
-    def __init__(self, map):
+    def __init__(self, map, multi_map_shift=1):
         self.map = map
         self.origin_shift_x = 1.0
         self.origin_shift_y = 1.0
@@ -145,7 +145,7 @@ class PATH_MAP(object):
         self.lock = multiprocessing.Lock()
         self.shared_arr = multiprocessing.Array('i', map.shape[0] * map.shape[1])
         self.num_cols = map.shape[1]
-        self.probe_map(map)
+        self.probe_map(map, multi_map_shift)
         self.run()
 
         
@@ -165,13 +165,13 @@ class PATH_MAP(object):
                 return True
         return False
 
-    def probe_map(self, map, mesh_resolution_meters = 0.1):
+    def probe_map(self, map, multi_map_shift = 1, mesh_resolution_meters = 0.1):
         step_x = mesh_resolution_meters
         step_y = mesh_resolution_meters
-        x_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 
-        y_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 
-        x_goal =  - mesh_resolution_meters * (map.shape[1] / 2) + mesh_resolution_meters / 2 
-        y_goal = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 
+        x_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + ((multi_map_shift - 1) * self.origin_shift_x)
+        y_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + ((multi_map_shift - 1) * self.origin_shift_y)
+        x_goal =  - mesh_resolution_meters * (map.shape[1] / 2) + mesh_resolution_meters / 2 + ((multi_map_shift - 1) * self.origin_shift_x)
+        y_goal = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + ((multi_map_shift - 1) * self.origin_shift_y)
         _x_start, _y_start = x_start, y_start
         _x_goal, _y_goal = x_goal, y_goal
         _idx_x, _idx_y, _idx_y_offset = 0, 0, 2
@@ -244,16 +244,16 @@ class PATH_MAP(object):
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             # print(f"p_status -> {p_status}")
-            print(args)
+            # print(args)
             if p_status.returncode == 0:
-                print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
+                # print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
                     local_array[start_idx] = 0
                     local_array[mid_idx_x][mid_idx_y] = 0
                     local_array[goal_idx] = 0
             else:
-                print(f"FAIL TO FIND A SOLUTION [{start_idx}] -> [{goal_idx}]")
+                # print(f"FAIL TO FIND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
                     local_array[goal_idx] = 1
@@ -299,6 +299,7 @@ class Maps(object):
     def __init__(self, maps=['plane'], dim=20):
         self.dim = 20
         self.standard_map_dim = (self.dim, self.dim)
+        self.maps = maps
         if len(maps) == 0:
             self.map = self.plane
         elif len(maps) == 1:
@@ -324,7 +325,8 @@ class Height_Map_Generator(Maps):
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
-        self.bool_map = PATH_MAP(self.map)
+        self.multi_map_shift = len(self.maps)
+        self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift)
         # breakpoint()
 
     def create_height_file(self, file, h_data):
