@@ -138,11 +138,11 @@ class PATH_MAP(object):
         self.docker_id = DockerInfo()
         self.scripts = parse_scripts(scripts, self.docker_id)
         self.setup()
-        self.bool_map = np.ones((map.shape[0], map.shape[1]), dtype=int)
         self.data_queue = multiprocessing.Queue()
         self.lock = multiprocessing.Lock()
         self.shared_arr = multiprocessing.Array('i', map.shape[0] * map.shape[1])
         self.num_cols = map.shape[1]
+        self.map
         self.probe_map(map)
         self.run()
         
@@ -150,6 +150,20 @@ class PATH_MAP(object):
         subprocess.run(shlex.split(self.scripts['heightfield_rm']))
         subprocess.run(shlex.split(self.scripts['heightfield_copy']))
 
+    def neighbors_danger_test(self, map, x_idx, y_idx, sz=1):
+        neighbors = ((sz, 0), (-sz, 0), (0, sz), (0, -sz)) #check right, left, down, and up
+        for idx in neighbors:
+            # print(f"New [{x_idx + idx[0]}, {y_idx + idx[1]}] -> {map[x_idx + idx[0]][y_idx + idx[1]]}")
+            if x_idx + idx[0] < 0 or x_idx + idx[0] >= map.shape[0]:
+                # print("outta bounds1")
+                return True
+            elif y_idx + idx[1] >= map.shape[1] or y_idx + idx[1] < 0:
+                # print("outta bound2")
+                return True
+            elif map[x_idx + idx[0]][y_idx + idx[1]] > 0:
+                # print("over height")
+                return True
+        return False
         
     def probe_map(self, map, mesh_resolution_meters = 0.1):
         step_x = mesh_resolution_meters
@@ -161,6 +175,7 @@ class PATH_MAP(object):
         _x_start, _y_start = x_start, y_start
         _x_goal, _y_goal = x_goal, y_goal
         for x in range(map.shape[0]//2 - 1):
+                print(x)
                 if x == 0:
                     _x_start += step_x
                 else:
@@ -172,9 +187,12 @@ class PATH_MAP(object):
                     _y_goal += step_y
                     _x_start, _y_start = round(_x_start, 2), round(_y_start, 2)
                     _x_goal, _y_goal = round(_x_goal, 2), round(_y_goal, 2)
-                    data = Map_2_Idx(map_coords_start=(_x_start, _y_start), map_coords_goal=(_x_goal, _y_goal),
-                                     map_idx_start=(x, y), map_idx_goal=(x+2, y))
-                    self.data_queue.put(data)
+                    print(f"x, y [{x} , {y}]")
+                    print(self.neighbors_danger_test(map, x, y))
+                    if self.neighbors_danger_test(map, x, y):
+                        data = Map_2_Idx(map_coords_start=(_x_start, _y_start), map_coords_goal=(_x_goal, _y_goal),
+                                        map_idx_start=(x, y), map_idx_goal=(x+2, y))
+                        self.data_queue.put(data)
                     print(data)
                 print(f"x,y start: {_x_start, _y_start}")
                 print(f"x,y goal: {_x_goal, _y_goal}\n")
@@ -200,8 +218,6 @@ class PATH_MAP(object):
             args['-e4'] = (np.array([-0.2348440184502048, -0.17033609357109808, 0.0]) + np.array(shift)).tolist()
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], 0.24]
-            print(args)
-            # args['-n'] = 't'
 
         while not queue.empty():
             args = {}
@@ -209,15 +225,13 @@ class PATH_MAP(object):
             start_pt = data.map_coords_start
             goal_pt = data.map_coords_goal
             shift_vec = [start_pt[0], start_pt[1], 0]
-            print(shift_vec)
             start_idx = data.map_idx_start
             goal_idx = data.map_idx_goal
             state_config(args, start_pt, goal_pt, shift=shift_vec)
+            print(data)
             local_array = np.frombuffer(map.get_obj(), dtype=np.float32).reshape(-1, num_cols)
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            # print(f"p_status -> {p_status}")
-            print(args)
             if p_status.returncode == 0:
                 print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
@@ -264,9 +278,10 @@ class Maps(object):
     name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
                      'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'wall_4' : wall_4}
 
-    def __init__(self, maps=['plane'], dim=20):
+    def __init__(self, maps=['plane'], dim=20, args=None):
         self.dim = 20
         self.standard_map_dim = (self.dim, self.dim)
+        self.args = args
         if len(maps) == 0:
             self.map = self.plane
         elif len(maps) == 1:
@@ -284,7 +299,7 @@ class Maps(object):
 
 class Height_Map_Generator(Maps):
 
-    def __init__(self, dim=20, maps='plane'):
+    def __init__(self, dim=20, maps='plane', make_bool_map=False):
         super(Height_Map_Generator, self).__init__(maps, dim)
         self.towr_map =  np.transpose(self.map)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
@@ -292,8 +307,9 @@ class Height_Map_Generator(Maps):
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
-        self.bool_map = PATH_MAP(self.towr_map)
-        breakpoint()
+        if make_bool_map:
+            self.bool_map = PATH_MAP(self.map).bool_map
+            breakpoint()
 
     def create_height_file(self, file, h_data):
             rows = len(h_data)

@@ -37,3 +37,7 @@ v_step_size : 50
 v_look_ahead : 5000
 show_com_plan : False
 show_feet_plan : False
+
+
+#==Grid Map Search==#
+probe_grid_map : True

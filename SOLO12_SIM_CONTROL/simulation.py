@@ -20,6 +20,7 @@ class Simulation(object):
         self.height_map = None
         self.num_tiles = 0
         self.p = self.setup(cfg)
+        breakpoint()
 
     def setup(self, cfg):
 
@@ -29,7 +30,7 @@ class Simulation(object):
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-30.0)
-            height_map = Height_Map_Generator(maps=cfg['map_id'])
+            height_map = Height_Map_Generator(maps=cfg['map_id'], make_bool_map=cfg['probe_grid_map'])
             height_shift = height_map.height_shift
             tiles = len(cfg['map_id'])
             self.num_tiles = tiles
