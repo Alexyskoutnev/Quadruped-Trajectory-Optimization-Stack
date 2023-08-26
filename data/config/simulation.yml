@@ -15,8 +15,8 @@ trot_2_stance_ratio : 0.5
 #============================
 terrain_offset : [1.5, 0, 0]
 
-TRAJ_SIZE : 100000
-SIM_STEPS : 110000
+TRAJ_SIZE : 500000
+SIM_STEPS : 510000
 
 HZ : 1000
 TIMESTEPS : 0.001
@@ -29,8 +29,8 @@ track : True
 track_rate : 100
 height_map : True
 # map_id : ['feasibility']
-# map_id : ['feasibility', 'plane']
-map_id : ['step', 'plane']
+map_id : ['feasibility', 'plane']
+# map_id : ['step', 'plane']
 friction : 0.99
 
 #==Visual Planner CONFIGURATIONS==

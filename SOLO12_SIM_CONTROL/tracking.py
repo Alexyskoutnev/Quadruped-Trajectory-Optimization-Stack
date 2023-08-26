@@ -268,11 +268,14 @@ class Tracking:
             plt.show()
 
     def plot(self, plot_graph=False):
-        self.plot_CoM(plot_graph)
-        self.plot_reference_vs_sim(plot_graph)
-        self.plot_error(plot_graph)
-        print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
-        print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
+        try:
+            self.plot_CoM(plot_graph)
+            self.plot_reference_vs_sim(plot_graph)
+            self.plot_error(plot_graph)
+            print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
+            print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
+        except:
+            pass
         
     def get_sim_cmd(self):
         vec = self.robot.traj_vec
