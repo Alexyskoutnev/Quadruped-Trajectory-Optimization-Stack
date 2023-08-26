@@ -43,6 +43,7 @@ class MPC(object):
         self.traj_plan = txt_2_np_reader(self.current_traj)
         self.robot = args['robot']
         self.set_correct_flag = False
+        self.set_spine_flag = True
 
     @property
     def global_plan_state(self):
@@ -71,7 +72,7 @@ class MPC(object):
         combined_df = np.concatenate((df_old, df_new), axis=0)
         self.traj_plan = combined_df
         combined_df = pd.DataFrame(combined_df)
-        combined_df.to_csv(self.new_traj, index=False, header=None)
+        combined_df.to_csv(self.new_traj, index=False, header=None)    
 
     def plan_init(self, args):
 
@@ -82,15 +83,23 @@ class MPC(object):
             args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
             args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
             args['-s_ang'] = [0, 0, 0]
-                
         start_config(args)
         step_size = args['step_size'] #try implementing in config-file
-        global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
-        goal = global_cfg.ROBOT_CFG.robot_goal
-        diff_vec = np.clip(goal - global_pos, -step_size, step_size)
-        diff_vec[2] = 0.0
-        args['-g'] = list(global_pos + diff_vec)
-        args['-g'][2] = 0.24
+        if self.set_spine_flag:
+            print("spine")
+            global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
+            goal = self.spine_step(args['-s'], self.last_timestep)
+            diff_vec = np.clip(goal - global_pos, -step_size, step_size)
+            diff_vec[2] = 0.0
+            args['-g'] = list(global_pos + diff_vec)
+            args['-g'][2] = 0.24
+        else:
+            global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
+            goal = global_cfg.ROBOT_CFG.robot_goal
+            diff_vec = np.clip(goal - global_pos, -step_size, step_size)
+            diff_vec[2] = 0.0
+            args['-g'] = list(global_pos + diff_vec)
+            args['-g'][2] = 0.24
 
         return args
 
@@ -105,7 +114,19 @@ class MPC(object):
             self.args (dic) : input argument to Towr script
         """
 
-        if self.global_planner.P_correction and not self.global_planner.empty():
+        if self.set_spine_flag:
+            _state_dic = self._state()
+            start_pos, end_pos = self.global_planner.pop()
+            self.args['-s'] = _state_dic["CoM"]
+            self.args['-s_ang'] = _state_dic['orientation']
+            self.args['-e1'] = _state_dic["FL_FOOT"]
+            self.args['-e2'] = _state_dic["FR_FOOT"]
+            self.args['-e3'] = _state_dic["HL_FOOT"]
+            self.args['-e4'] = _state_dic["HR_FOOT"]
+            self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
+            self.args['-g'] = end_pos
+
+        elif self.global_planner.P_correction and not self.global_planner.empty():
             _state_dic = self._state()
             start_pos, end_pos = self.global_planner.pop()
             self.args['-s'] = _state_dic["CoM"]
@@ -129,11 +150,19 @@ class MPC(object):
         print("ARRGS", self.args)
         return self.args
 
+    def spine_step(self, CoM, timestep, total_traj_time=5.0):
+        step_size = self.args['step_size']
+        timestep_future = timestep + total_traj_time
+        goal = np.array([self.spine_x(timestep_future), self.spine_y(timestep_future), 0.24])
+        diff_vec = np.clip(goal - CoM, -step_size, step_size)
+        return CoM + diff_vec
+
     def update(self):
         """
         Updates the state of the MPC loop
         """
         self.cutoff_idx = int(global_cfg.RUN.step)
+        print(f"cutoff idx -> {self.cutoff_idx}")
         self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])

@@ -31,7 +31,7 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
             'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
 
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t']
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r']
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
@@ -140,7 +140,7 @@ def _update(args, log, mpc):
                 _wait = True
                 # breakpoint()
                 # global_cfg.RUN._wait = False
-            elif p_status.returncode == 0 and mpc.cutoff_idx >= args['f_steps']:
+            elif mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
                 p = subprocess.run(shlex.split(scripts['data'])) 
                 mpc.update()

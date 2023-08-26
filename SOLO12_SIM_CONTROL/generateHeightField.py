@@ -12,14 +12,14 @@ np.set_printoptions(threshold=np.inf)
 
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
-NUM_PROCESSES = 32
+NUM_PROCESSES = 16
 
 scripts =  {'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
             'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
             'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
 
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t']
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r']
 
 def strip(x):
     st = " "
@@ -231,6 +231,7 @@ class PATH_MAP(object):
             args['-e4'] = (np.array([-0.2348440184502048, -0.17033609357109808, 0.0]) + np.array(shift)).tolist()
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], 0.24]
+            args['-r'] = 2.0
 
         while not queue.empty():
             args = {}
@@ -263,7 +264,6 @@ class RandomMaps(object):
     pass
 
 class Maps(object):
-
     calibration_file = "./data/heightfields/calibration.txt"
     step_file = "./data/heightfields/step.txt"
     step_1_file = "./data/heightfields/step_1.txt"
