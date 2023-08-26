@@ -135,6 +135,8 @@ class PATH_MAP(object):
     
     def __init__(self, map):
         self.map = map
+        self.origin_shift_x = 1.0
+        self.origin_shift_y = 1.0
         self.docker_id = DockerInfo()
         self.scripts = parse_scripts(scripts, self.docker_id)
         self.setup()
@@ -145,6 +147,7 @@ class PATH_MAP(object):
         self.num_cols = map.shape[1]
         self.probe_map(map)
         self.run()
+
         
     def setup(self):
         subprocess.run(shlex.split(self.scripts['heightfield_rm']))
@@ -152,7 +155,7 @@ class PATH_MAP(object):
 
 
     def neighbors_danger_test(self, map, idx_x, idx_y, sz=1):
-        neighbor = ((sz, 0), (-sz, 0), (0, sz), (0, -sz))
+        neighbor = ((sz, 0), (-sz, 0), (0, sz), (0, -sz), (sz, sz), (sz, -sz), (-sz, -sz), (-sz, sz))
         for idx in neighbor:
             if idx[0] + idx_x >= map.shape[0] or idx[0] + idx_x < 0:
                 return True
@@ -162,32 +165,42 @@ class PATH_MAP(object):
                 return True
         return False
 
-        
     def probe_map(self, map, mesh_resolution_meters = 0.1):
         step_x = mesh_resolution_meters
         step_y = mesh_resolution_meters
-        x_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2
-        y_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2
-        x_goal =  - mesh_resolution_meters * (map.shape[1] / 2) + mesh_resolution_meters / 2
-        y_goal = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2
+        x_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2  + self.origin_shift_x 
+        y_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + self.origin_shift_y
+        x_goal =  - mesh_resolution_meters * (map.shape[1] / 2) + mesh_resolution_meters / 2 + self.origin_shift_x
+        y_goal = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + self.origin_shift_y
         _x_start, _y_start = x_start, y_start
         _x_goal, _y_goal = x_goal, y_goal
-        for x in range(map.shape[0]//2 - 1):
-                if x == 0:
-                    _x_start += step_x
-                else:
-                    _x_start = _x_goal
-                _x_goal += (2 * step_x)
-                _y_start, _y_goal = y_start, y_goal
-                for y in range(map.shape[1]):
-                    _y_start += step_y
-                    _y_goal += step_y
+        _idx_x, _idx_y, _idx_y_offset = 0, 0, 2
+        for x in range(map.shape[0]):
+                _y_start += step_y
+                _y_goal += step_y
+                _x_start, _x_goal = x_start, x_goal
+                for y in range(map.shape[1]//2  - 1):
+                    if y == 0:
+                        _x_start += step_x
+                        _idx_y = 0
+                        _idx_y_offset = 2
+                    else:
+                        _x_start = _x_goal
+                    
+                    _x_goal += (2 * step_x)
                     _x_start, _y_start = round(_x_start, 2), round(_y_start, 2)
                     _x_goal, _y_goal = round(_x_goal, 2), round(_y_goal, 2)
-                    data = Map_2_Idx(map_coords_start=(_x_start, _y_start), map_coords_goal=(_x_goal, _y_goal),
-                                     map_idx_start=(x, y), map_idx_goal=(x+2, y))
-                    self.data_queue.put(data)
+                    print(f"x_coord, y_coord [{_x_start}, {_y_start}] -> [{_x_goal}, {_y_goal}]")
+                    print(f"x, y [{x}, {y}] -> {self.neighbors_danger_test(map, _idx_x, _idx_y)}")
+                    if self.neighbors_danger_test(map, x, y):
+                        data = Map_2_Idx(map_coords_start=(_x_start, _y_start), map_coords_goal=(_x_goal, _y_goal),
+                                        map_idx_start=(_idx_x, _idx_y), map_idx_goal=(_idx_x, _idx_y_offset))
+                        self.data_queue.put(data)
+                    _idx_y += 2
+                    _idx_y_offset += 2
                     print(data)
+                _idx_x += 1
+                
                 print(f"x,y start: {_x_start, _y_start}")
                 print(f"x,y goal: {_x_goal, _y_goal}\n")
 
@@ -304,8 +317,8 @@ class Height_Map_Generator(Maps):
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
-        self.bool_map = PATH_MAP(self.towr_map)
-        breakpoint()
+        self.bool_map = PATH_MAP(self.map)
+        # breakpoint()
 
     def create_height_file(self, file, h_data):
             rows = len(h_data)
