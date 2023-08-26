@@ -125,21 +125,18 @@ highlight {
 </style>
 
 <div id="primarycontent">
-<center><h1><strong>Learning to Walk by Steering: Perceptive Quadrupedal Locomotion in Dynamic Environments</strong></h1></center>
+<center><h1><strong>Quadruped-Trajectory-Optimization-Stack</strong></h1></center>
 <center><h2>
-    <a href="https://mingyoseo.com/">Mingyo Seo<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
-    <a href="https://sites.utexas.edu/hcrl/people/">Ryan Gupta<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
-    <a href="https://zhuyifengzju.github.io/">Yifeng Zhu<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
-    <a href="https://alexyskoutnev.github.io/alexyskoutnev-github.io/">Alexy Skoutnev<sup>2</sup></a>&nbsp;&nbsp;&nbsp;
-    <a href="https://www.ae.utexas.edu/people/faculty/faculty-directory/sentis">Luis Sentis<sup>1</sup></a>&nbsp;&nbsp;&nbsp; 
-    <a href="https://cs.utexas.edu/~yukez">Yuke Zhu<sup>1</sup></a>
+    <a href="https://alexyskoutnev.github.io/alexyskoutnev-github.io/">Alexy Skountev <sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+    <a href="https://github.com/cinaral">Andrew Cinral<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+    <a href="https://praful22.github.io/">Praful Sigdel<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+    <a href="https://github.com/forrestlaine">Forrest Laine<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
   </h2>
   <h2>
-    <a href="https://www.utexas.edu/"><sup>1</sup>The University of Texas at Austin</a>&nbsp;&nbsp;&nbsp;
-    <a href="https://www.vanderbilt.edu/"><sup>2</sup>Vanderbilt University</a>
+    <a href="https://www.vanderbilt.edu/"><sup>1</sup>Vanderbilt University</a>
   </h2>
-  <h3>IEEE International Conference on Robotics and Automation (ICRA), 2023</h3>
-  <h2><a href="http://arxiv.org/abs/2209.09233">Paper</a> | <a href="https://github.com/UT-Austin-RPL/PRELUDE">Code</a></h2>
+  <h3>IEEE International Conference on Robotics and Automation (ICRA), 2024</h3>
+  <h2><a href="http://arxiv.org/abs/2209.09233">Paper</a> | <a href="https://github.com/Alexyskoutnev/Quadruped-Trajectory-Optimization-Stack">Code</a></h2>
   </center>
 
  <center><p><span style="font-size:20px;"></span></p></center>
@@ -189,7 +186,7 @@ highlight {
                 <tr>
                     <td>
 <p align="justify" width="20%">
-We tackle the problem of perceptive locomotion in dynamic environments. In this problem, a quadrupedal robot must exhibit robust and agile walking behaviors in response to environmental clutter and moving obstacles. We present a hierarchical learning framework, named <b>PRELUDE</b>, which decomposes the problem of perceptive locomotion into high-level decision-making to predict navigation commands and low-level gait generation to realize the target commands. In this framework, we train the high-level navigation controller with imitation learning on human demonstrations collected on a steerable cart and the low-level gait controller with reinforcement learning (RL). Therefore, our method can acquire complex navigation behaviors from human supervision and discover versatile gaits from trial and error. We demonstrate the effectiveness of our approach in simulation and with hardware experiments.
+We introduce the Quadruped Trajectory Optimization Stack <b>Q-TOS</b>, a trajectory optimization framework for legged locomotion that autonomously determines full-body tra- jectory plans across challenging terrains. Q-TOS is a modu- lar software stack that seamlessly amalgamates state-of-the-art planners, mathematical solvers, control schemes, and deployment tools. This work allows long-horizon gait planning by integrating a local gait planner and model-predictive control, demonstrating its efficacy through simulations and real hardware experiments on Solo12. Leveraging Q-TOS, our new framework enhances the robustness and adaptability of trajectory solvers, facilitating improved traversal of elevated obstacles in quadruped locomotion planning and control.
 </p></td></tr></table>
 </p>
   </div>
@@ -213,7 +210,7 @@ We tackle the problem of perceptive locomotion in dynamic environments. In this 
                 <tr>
                     <td>
   <p align="justify" width="20%">
-  We introduce a control hierarchy where the high-level controller, trained with imitation learning, sets navigation commands and the low-level gait controller, trained with reinforcement learning, realizes the target commands through joint-space actuation. This combination enables us to effectively deploy the entire hierarchy on quadrupedal robots in real-world environments.
+  Finish
 </p></td></tr></table>
 
   
@@ -224,7 +221,7 @@ valign="middle"><a href="./src/figure/pipeline.png"> <img
 src="./src/figure/pipeline.png" style="width:100%;"> </a></td>
 </tr> </tbody> </table>
 
-<table align=center width=800px><tr><td> <p align="justify" width="20%">The high-level navigation policy generates the target velocity command at 10Hz from the onboard RGB-D camera observation and robot heading. The target velocity command, including linear and angular velocities, is used as input to the low-level gait controller along with the buffer of recent robot states. The low-level gait policy predicts the joint-space actions as the desired joint positions at 38Hz and sends them to the quadruped robot for actuation. More implementation details can be found in <a href="https://github.com/UT-Austin-RPL/PRELUDE/blob/main/implementation.md">this page</a>.
+<table align=center width=800px><tr><td> <p align="justify" width="20%">finish</a>.
 </p></td></tr></table>
 <br>
 
@@ -331,9 +328,9 @@ src="./src/figure/pipeline.png" style="width:100%;"> </a></td>
     <td>
     <!-- <left> -->
     <pre><code style="display:block; overflow-x: auto">
-      @inproceedings{seo2022prelude,
-        title={},
-        author={Alexu},
+      @inproceedings{skoutnev2023qtos,
+        title={Quadruped-Trajectory-Optimization-Stack},
+        author={Alexy, Skoutnev},
         booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
         year={2024}
       }
