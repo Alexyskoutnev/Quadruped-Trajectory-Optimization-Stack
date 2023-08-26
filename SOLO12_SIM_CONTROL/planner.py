@@ -39,12 +39,11 @@ class Global_Planner(object):
         self.map = args['sim'].height_map
         if args['sim'].bool_map is not None:
             print("Using bool map")
-            self.path_solver = PATH_Solver(args['sim'].bool_map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
+            self.path_solver = PATH_Solver(self.map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args, bool_map=args['sim'].bool_map)
         else:
             print("Using basic A-star")
-            self.path_solver = PATH_Solver(args['map'], args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
+            self.path_solver = PATH_Solver(self.map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args)
         self.error_tol = 0.05
-        self.map = args['map']
         self.CoM_avg = 0.0
         self.CoM_avg_container = LimitedFIFOQueue(500)
 
@@ -74,6 +73,13 @@ class Global_Planner(object):
             np.array(): The error vector between the robot position and trajectory position
         """
         return plan_state - robot_state
+
+    def spine_step(self, CoM, timestep, total_traj_time=5.0):
+        step_size = self.args['step_size']
+        timestep_future = timestep + total_traj_time
+        goal = np.array([self.path_solver.spine_x_track(timestep_future), self.path_solver.spine_y_track(timestep_future), 0.24])
+        diff_vec = np.clip(goal - CoM, -step_size, step_size)
+        return CoM + diff_vec
 
     def goal_step(self, CoM):
         step_size = self.args['step_size']
@@ -106,7 +112,8 @@ class Global_Planner(object):
         plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0])
         z = self.get_map_height(plan_desired_start_pt[0:2]) + 0.24
         plan_desired_start_pt[2] = z
-        goal_pt = self.goal_step(plan_desired_start_pt)
+        # goal_pt = self.goal_step(plan_desired_start_pt)
+        goal_pt = self.spine_step(plan_desired_start_pt, lookahead_time)
         if self.P_correction and total_err > self.error_tol:
             self.plan_desired_goal_pt[0:2] = self.P_goal_point(goal_pt[0:2], error_avg)
             self.plan_desired_goal_pt[2] = self.get_map_height(self.plan_desired_goal_pt[0:2])
@@ -137,12 +144,16 @@ class Global_Planner(object):
     
     def get_map_height(self, pos):
         row, col = self.convert_2_idx(pos[0], pos[1])
-        return self.args['map'][row, col]
+        return self.map[row, col]
 
 class PATH_Solver(object):
     
-    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=True) -> None:
-        self.in_map = map
+    def __init__(self, map, start, goal, args, grid_res = 0.1, origin_x_shift=1, origin_y_shift=1, visual=True, bool_map=None) -> None:
+        self.visual_map = map
+        if bool_map is None:
+            self.bool_map = self.visual_map
+        else:
+            self.bool_map = bool_map
         self.args = args
         self.grid_res = grid_res
         self.solution_flag = False
@@ -195,8 +206,8 @@ class PATH_Solver(object):
             for i, j in neighbors:
                 neighbor = current[0] + i, current[1] + j
                 _g_score = gscore[current] + self.heuristic(current,  neighbor) #Current min cost from start node [start node] to current [n]
-                if 0 <= neighbor[0] < self.in_map.shape[0] and 0 <= neighbor[1] < self.in_map.shape[1]: #Check for a feasible solution
-                    if self.in_map[neighbor[0]][neighbor[1]] > height_bound:
+                if 0 <= neighbor[0] < self.bool_map.shape[0] and 0 <= neighbor[1] < self.bool_map.shape[1]: #Check for a feasible solution
+                    if self.bool_map[neighbor[0]][neighbor[1]] > height_bound:
                         continue
                 else:
                     continue
@@ -246,12 +257,12 @@ class PATH_Solver(object):
 
     def visualize_path(self, k=5, plot_spline=True, plot_nodes=False):
 
-        x_range = np.arange(0, self.in_map.shape[1]) * self.grid_res
-        y_range = np.arange(0, self.in_map.shape[0]) * self.grid_res
+        x_range = np.arange(0, self.visual_map.shape[1]) * self.grid_res
+        y_range = np.arange(0, self.visual_map.shape[0]) * self.grid_res
         X, Y = np.meshgrid(x_range, y_range)
 
         plt.figure()
-        plt.pcolormesh(X, Y, self.in_map, cmap='gray', shading='auto')
+        plt.pcolormesh(X, Y, self.visual_map, cmap='gray', shading='auto')
 
         plt.scatter(self.start_pos_x_y[0] + self.origin_x_shift, self.start_pos_x_y[1] + self.origin_y_shift, color='green', marker='o', label='Start')
         plt.scatter(self.goal_pos_x_y[0] + self.origin_x_shift, self.goal_pos_x_y[1] + self.origin_y_shift, color='red', marker='x', label='Goal')

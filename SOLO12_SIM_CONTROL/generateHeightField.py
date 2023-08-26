@@ -140,15 +140,20 @@ class PATH_MAP(object):
         self.docker_id = DockerInfo()
         self.scripts = parse_scripts(scripts, self.docker_id)
         self.setup()
-        self.bool_map = np.ones((map.shape[0], map.shape[1]), dtype=int)
+        self.bool_map = np.zeros((map.shape[0], map.shape[1]), dtype=int)
         self.data_queue = multiprocessing.Queue()
         self.lock = multiprocessing.Lock()
         self.shared_arr = multiprocessing.Array('i', map.shape[0] * map.shape[1])
         self.num_cols = map.shape[1]
         self.probe_map(map, multi_map_shift)
-        self.run()
+        if self.check_flat_ground(map):
+            pass
+        else:
+            self.run()
 
-        
+    def check_flat_ground(self, map):
+        return np.all(map == 0) or np.all(map == 0.0)
+
     def setup(self):
         subprocess.run(shlex.split(self.scripts['heightfield_rm']))
         subprocess.run(shlex.split(self.scripts['heightfield_copy']))
