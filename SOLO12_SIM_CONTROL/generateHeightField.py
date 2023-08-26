@@ -150,6 +150,18 @@ class PATH_MAP(object):
         subprocess.run(shlex.split(self.scripts['heightfield_rm']))
         subprocess.run(shlex.split(self.scripts['heightfield_copy']))
 
+
+    def neighbors_danger_test(self, map, idx_x, idx_y, sz=1):
+        neighbor = ((sz, 0), (-sz, 0), (0, sz), (0, -sz))
+        for idx in neighbor:
+            if idx[0] + idx_x >= map.shape[0] or idx[0] + idx_x < 0:
+                return True
+            elif idx[1] + idx_y >= map.shape[1] or idx[1] + idx_y < 0:
+                return True
+            elif map[idx[0] + idx_x][idx[1] + idx_y] > 0:
+                return True
+        return False
+
         
     def probe_map(self, map, mesh_resolution_meters = 0.1):
         step_x = mesh_resolution_meters
