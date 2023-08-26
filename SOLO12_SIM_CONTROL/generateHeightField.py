@@ -146,6 +146,9 @@ class PATH_MAP(object):
         self.shared_arr = multiprocessing.Array('i', map.shape[0] * map.shape[1])
         self.num_cols = map.shape[1]
         self.probe_map(map, multi_map_shift)
+        self.neighbors_start = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1))
+        self.neighbors_mid = ((-1, 0), (1, 0), (0, 1), (0, -1))
+        self.neighbors_end = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1))
         if self.check_flat_ground(map):
             pass
         else:
@@ -163,9 +166,9 @@ class PATH_MAP(object):
         neighbor = ((sz, 0), (-sz, 0), (0, sz), (0, -sz), (sz, sz), (sz, -sz), (-sz, -sz), (-sz, sz))
         for idx in neighbor:
             if idx[0] + idx_x >= map.shape[0] or idx[0] + idx_x < 0:
-                return True
+                return False
             elif idx[1] + idx_y >= map.shape[1] or idx[1] + idx_y < 0:
-                return True
+                return False
             elif map[idx[0] + idx_x][idx[1] + idx_y] > 0:
                 return True
         return False
@@ -254,9 +257,13 @@ class PATH_MAP(object):
             else:
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
-                    local_array[goal_idx] = 1
-                    local_array[mid_idx_x][mid_idx_y] = 1
-                    local_array[start_idx] = 1
+                    for idx in self.neighbors_start:
+                        local_array[start_idx[0] + idx[0]][start_idx[1] + idx[1]] = 1
+                    for idx in self.neighbors_mid:
+                        local_array[mid_idx_x + idx[0]][mid_idx_y + idx[1]]
+                    for idx in self.neighbors_end:
+                        local_array[goal_idx[0] + idx[0]][goal_idx[1] + idx[1]] = 1
+                    
             print(np.transpose(local_array), "\n")
             
 

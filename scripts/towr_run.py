@@ -207,18 +207,14 @@ def _run(args):
     mpc.plan_init(args)
     TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+    p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
     if p.returncode == 0:
-        p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-        if p.returncode == 0:
-            print("Launching Simulation")
-            towr_thread = Thread(target=_update, args=(args, log, mpc))
-            towr_thread.start()
-            run.simulation(args)
-        else: 
-            print("Error in copying Towr Trajectory")
-            sys.exit(1)
-    else:
-        print("Error Generating Towr Trajectory")
+        print("Launching Simulation")
+        towr_thread = Thread(target=_update, args=(args, log, mpc))
+        towr_thread.start()
+        run.simulation(args)
+    else: 
+        print("Error in copying Towr Trajectory")
         sys.exit(1)
 
 def test_mpc_single_loop(args):
@@ -265,5 +261,5 @@ if __name__ == "__main__":
         test_mpc_single_loop(args)
     else:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 1.0
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 1.5
         _run(args)
