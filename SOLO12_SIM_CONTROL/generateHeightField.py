@@ -12,7 +12,7 @@ np.set_printoptions(threshold=np.inf)
 
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
-NUM_PROCESSES = 1
+NUM_PROCESSES = 16
 
 scripts =  {'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
@@ -168,10 +168,10 @@ class PATH_MAP(object):
     def probe_map(self, map, mesh_resolution_meters = 0.1):
         step_x = mesh_resolution_meters
         step_y = mesh_resolution_meters
-        x_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2  + self.origin_shift_x 
-        y_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + self.origin_shift_y
-        x_goal =  - mesh_resolution_meters * (map.shape[1] / 2) + mesh_resolution_meters / 2 + self.origin_shift_x
-        y_goal = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + self.origin_shift_y
+        x_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 
+        y_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 
+        x_goal =  - mesh_resolution_meters * (map.shape[1] / 2) + mesh_resolution_meters / 2 
+        y_goal = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 
         _x_start, _y_start = x_start, y_start
         _x_goal, _y_goal = x_goal, y_goal
         _idx_x, _idx_y, _idx_y_offset = 0, 0, 2
@@ -232,6 +232,7 @@ class PATH_MAP(object):
         while not queue.empty():
             args = {}
             data = queue.get()
+            print(data)
             start_pt = data.map_coords_start
             goal_pt = data.map_coords_goal
             shift_vec = [start_pt[0], start_pt[1], 0]
@@ -247,14 +248,19 @@ class PATH_MAP(object):
             if p_status.returncode == 0:
                 print(f"FOUND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
-                    local_array[start_idx] = 1
-                    local_array[goal_idx] = 1
+                    mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
+                    local_array[start_idx] = 0
+                    local_array[mid_idx_x][mid_idx_y] = 0
+                    local_array[goal_idx] = 0
             else:
                 print(f"FAIL TO FIND A SOLUTION [{start_idx}] -> [{goal_idx}]")
                 with self.lock:
-                    local_array[goal_idx] = 0
-                    local_array[start_idx] = 0
-            print(local_array)
+                    mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
+                    local_array[goal_idx] = 1
+                    local_array[mid_idx_x][mid_idx_y] = 1
+                    local_array[start_idx] = 1
+            print(np.transpose(local_array))
+            
 
 class RandomMaps(object):
     pass
