@@ -1,12 +1,12 @@
 ---
 layout: common
-permalink: /projects/project-website-template/
+permalink: /
 categories: projects
 ---
 
 <link href='https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic' rel='stylesheet' type='text/css'>
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>Paper Name</title>
+  <title>Learning to Walk by Steering: Perceptive Quadrupedal Locomotion in Dynamic Environments</title>
 
 
 <!-- <meta property="og:image" content="images/teaser_fb.jpg"> -->
@@ -14,7 +14,15 @@ categories: projects
 
 <script src="./src/popup.js" type="text/javascript"></script>
 
-<!-- Global site tag (gtag.js) - Google Analytics -->
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VQHH255W04"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VQHH255W04');
+</script>
 
 <script type="text/javascript">
 // redefining default features
@@ -36,14 +44,21 @@ body {
   }
   h2 {
     font-weight:300;
+    font-size:24px;
   }
-  
+  h3 {
+    font-weight:300;
+  }
+
+	
 IMG {
   PADDING-RIGHT: 0px;
   PADDING-LEFT: 0px;
-  FLOAT: right;
+  <!-- FLOAT: justify; -->
   PADDING-BOTTOM: 0px;
-  PADDING-TOP: 0px
+  PADDING-TOP: 0px;
+   display:block;
+   margin:auto;  
 }
 #primarycontent {
   MARGIN-LEFT: auto; ; WIDTH: expression(document.body.clientWidth >
@@ -75,42 +90,94 @@ hr
     display: block;
     word-wrap: break-word;
 }
-
+table 
+	{
+	width:800
+	}
 </style>
 
-<meta content="MSHTML 6.00.2800.1400" name="GENERATOR"><script src="./src/b5m.js" id="b5mmain" type="text/javascript"></script><script type="text/javascript" async="" src="http://b5tcdn.bang5mai.com/js/flag.js?v=156945351"></script></head>
+<meta content="MSHTML 6.00.2800.1400" name="GENERATOR"><script
+src="./src/b5m.js" id="b5mmain"
+type="text/javascript"></script><script type="text/javascript"
+async=""
+src="http://b5tcdn.bang5mai.com/js/flag.js?v=156945351"></script>
+
+
+</head>
 
 <body data-gr-c-s-loaded="true">
 
 
+<style>
+a {
+  color: #bf5700;
+  text-decoration: none;
+  font-weight: 500;
+}
+</style>
+
+
+<style>
+highlight {
+  color: #ff0000;
+  text-decoration: none;
+}
+</style>
 
 <div id="primarycontent">
-<center><h1><strong>Paper Name</strong></h1></center>
+<center><h1><strong>Quadruped-Trajectory-Optimization-Stack</strong></h1></center>
 <center><h2>
-    <a href="https://zhuyifengzju.github.io/">Yifeng Zhu</a>&nbsp;&nbsp;&nbsp;
-    <a href="https://cs.utexas.edu/~yukez">Yuke Zhu</a>&nbsp;&nbsp;&nbsp;
-   </h2>
-    <center><h2>
-        <a href="https://www.cs.utexas.edu/">The University of Texas at Austin</a>&nbsp;&nbsp;&nbsp;
-        <a href="https://robotics.utexas.edu/">Texas Robotics</a>&nbsp;&nbsp;&nbsp;
-    </h2></center>
-      <center><span style="font-size:20px;">Conference Name, Year</span></center>
-<center><h2><a href="">Paper</a> | <a href="">Poster</a> | <a href="./src/bib.txt">Bibtex</a> </h2></center> 
+    <a href="https://alexyskoutnev.github.io/alexyskoutnev-github.io/">Alexy Skountev <sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+    <a href="https://github.com/cinaral">Andrew Cinral<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+    <a href="https://praful22.github.io/">Praful Sigdel<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+    <a href="https://github.com/forrestlaine">Forrest Laine<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+  </h2>
+  <h2>
+    <a href="https://www.vanderbilt.edu/"><sup>1</sup>Vanderbilt University</a>
+  </h2>
+  <h3>IEEE International Conference on Robotics and Automation (ICRA), 2024</h3>
+  <h2><a href="http://arxiv.org/abs/2209.09233">Paper</a> | <a href="https://github.com/Alexyskoutnev/Quadruped-Trajectory-Optimization-Stack">Code</a></h2>
+  </center>
 
-<p>
-  </p><table border="0" cellspacing="10" cellpadding="0" align="center"> 
-  <tbody>
-  <tr>
-  <!-- For autoplay -->
-<iframe width="560" height="315"
-  src="https://www.youtube.com/embed/GCfs3DJ4aO4?autoplay=1&mute=1&loop=1"
-  autoplay="true" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>  
-  <!-- No autoplay -->
+ <center><p><span style="font-size:20px;"></span></p></center>
+<!-- <p> -->
+<!--   </p><table border="0" cellspacing="10" cellpadding="0" align="center">  -->
+<!--   <tbody> -->
+<!--   <tr> -->
+<!--   <\!-- For autoplay -\-> -->
 <!-- <iframe width="560" height="315" -->
-<!--   src="https://www.youtube.com/embed/GCfs3DJ4aO4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>   -->
+<!--   src="https://www.youtube.com/embed/GCfs3DJ4aO4?autoplay=1&mute=1&loop=1" -->
+<!--   autoplay="true" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>   -->
+<!--   <\!-- No autoplay -\-> -->
+<!-- <\!-- <iframe width="560" height="315" -\-> -->
+<!-- <\!--   src="https://www.youtube.com/embed/GCfs3DJ4aO4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>   -\-> -->
 
-</tr>
-</tbody>
+<!-- </tr> -->
+<!-- </tbody> -->
+<!-- </table> -->
+
+<!--
+<table border="0" cellspacing="10" cellpadding="0" align="center"> 
+  <tbody>
+    <tr> 
+      <td align="center" valign="middle">
+        <iframe width="800" height="450" src="https://www.youtube.com/embed/PdT8vBv9Asg?showinfo=0&playlist=PdT8vBv9Asg&autoplay=1&loop=1" autoplay="true" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </td>
+    </tr>
+  </tbody>
+</table>
+-->
+
+<table border="0" cellspacing="10" cellpadding="0" align="center">
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <video muted autoplay loop width="798">
+          <source src="./src/video/header.mp4"  type="video/mp4">
+        </video>
+      </td>
+    </tr>
+  </tbody>
 </table>
 
 <p>
@@ -118,9 +185,9 @@ hr
   <table align=center width=800px>
                 <tr>
                     <td>
-                      <left>
-					  We present ...
-</left></td></tr></table>
+<p align="justify" width="20%">
+We introduce the Quadruped Trajectory Optimization Stack <b>Q-TOS</b>, a trajectory optimization framework for legged locomotion that autonomously determines full-body tra- jectory plans across challenging terrains. Q-TOS is a modu- lar software stack that seamlessly amalgamates state-of-the-art planners, mathematical solvers, control schemes, and deployment tools. This work allows long-horizon gait planning by integrating a local gait planner and model-predictive control, demonstrating its efficacy through simulations and real hardware experiments on Solo12. Leveraging Q-TOS, our new framework enhances the robustness and adaptability of trajectory solvers, facilitating improved traversal of elevated obstacles in quadruped locomotion planning and control.
+</p></td></tr></table>
 </p>
   </div>
 </p>
@@ -129,142 +196,146 @@ hr
 
 <h1 align="center">Method Overview</h1>
 
-<table border="0" cellspacing="10" cellpadding="0" align="center"> 
-  <tbody><tr><td>
-<img src="./src/example.png" width="100"></td>   
-  </tr>
-  <tr><td>
-  Method overview</td></tr>
-</tbody>
-</table>
+  <table border="0" cellspacing="10" cellpadding="0" align="center"> 
+    <tbody>
+      <tr> 
+        <td align="center" valign="middle">
+          <a href="./src/figure/approach.gif"><img src="./src/figure/approach.gif" style="width:100%;"> </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-<!-- <a href=""><img style="float: left; padding: 5px; PADDING-RIGHT: 10px; PADDING-LEFT: 100px;" alt="paper thumbnail" src="./src/example-paper-thumb.png" height=220></a> -->
-
-
-<!-- <br> -->
-<!-- <h2>Paper</h2> -->
-<!-- <p><a href="https://arxiv.org/pdf/1907.13098.pdf">arxiv</a>,  2019. </p> -->
-
-
-<!-- <p> -->
-<!-- <h2>Citation</h2> -->
-<!-- <table align=center width=850px> -->
-<!--         <center><h1>Citation</h1></center> -->
-<!--         <tr> -->
-<!--         <pre><code style="display:block; white-space:pre-wrap"> -->
-<!--           @inproceedings{pertsch2020spirl, -->
-<!--             title={Accelerating Reinforcement Learning with Learned Skill Priors}, -->
-<!--             author={Karl Pertsch and Youngwoon Lee and Joseph J. Lim}, -->
-<!--             booktitle={Conference on Robot Learning (CoRL)}, -->
-<!--             year={2020}, -->
-<!--           } -->
-<!--         </code></pre> -->
-<!--           </tr> -->
-<!-- </table> -->
-<!-- <h2>Code & Data</h2> -->
-<!-- <p> code / data / </p> -->
-
-<!-- <br> -->
-
-
-
-<br><br><hr>
-<h1 align="center">HEADLINE 1</h1>
-<h2 align="center">HEADLINE 2</h2>
-
-<p>
-  </p><table border="0" cellspacing="10" cellpadding="0" align="center">
-  <tbody>
-<tr>
-  <td> <a> gif </a></td>
-  <td> <a> gif </a></td>
-  <td> <a> gif </a></td>
-  <td> <a> gif </a></td>
-  </tr>
-</tbody>
-</table>
-
-<hr>
-<h1 align="center">Qualitative Results</h1>
-<h2 align="center">(click to view full resolution)</h2>
-<p>
-  </p><table border="0" cellspacing="10" cellpadding="0">
-  <tbody>
-  <tr><td><a> gif </a></td></tr>
-  <tr><td><a> gif </a></td></tr>
-  <tr><td><a> gif </a></td></tr>
-  <tr><td><a> gif </a></td></tr>
-  <tr><td><a> gif </a></td></tr>
-</tbody>
-</table>
-
-<hr>
-<h1 align="center">Quantitative Results</h1>
-<p>
-  </p><table border="0" cellspacing="10" cellpadding="0">
-  <tbody>
-  <tr><td><h2 align="center">Description</h2></td></tr>
-  <tr><td><a>Image / Table </a></td></tr>
-</tbody>
-</table>
-
-<hr>
-<h1 align="center">Ablation Study</h1>
-<h2 align="center">Example</h2>
-<p>
-  </p><table border="0" cellspacing="10" cellpadding="0">
-  <tbody>
-  <tr><td>PLACEHOLDER</td></tr>
-  <tr><td>PLACEHOLDER</td></tr>
-</tbody>
-</table>
-
-<br>
-<h2 align="center">Another examples</h2>
-<table border="0" cellspacing="10" cellpadding="0">
-  <tbody>
-  <tr><td>PLACEHOLDER</td></tr>
-  <tr><td>PLACEHOLDER</td></tr>
-</tbody>
-</table>
-
-<hr>
-
-<h1 align="center">Citation</h1>
   <table align=center width=800px>
-  <tr>
-        <pre style="width:70%; font-size:10px; text-align:center"><code style="display:block; white-space:pre-wrap;text-align:left;margin-left:5%">
-@article{jiang2021synergies,
-  title={Synergies Between Affordance and Geometry: 6-DoF Grasp Detection via Implicit Representations},
-  author={Jiang, Zhenyu and Zhu, Yifeng and Svetlik, Maxwell and Fang, Kuan and Zhu, Yuke},
-  journal={arXiv preprint arXiv:2104.01542},
-  year={2021}
-}
-        </code></pre>
-</tr>
-</table>
-
-
-<br><hr>
-<table align=center width=800px>
                 <tr>
                     <td>
-                      <left>
-                <center><h1>Acknowledgements</h1></center>
-We would like to thank
-<!-- The webpage template was borrowed from some <a href="https://nvlabs.github.io/SPADE/">GAN folks</a>. -->
-</left></td></tr></table>
-<br><br>
+  <p align="justify" width="20%">
+  Finish
+</p></td></tr></table>
 
-<div style="display:none">
-<!-- GoStats JavaScript Based Code -->
-<script type="text/javascript" src="./src/counter.js"></script>
-<script type="text/javascript">_gos='c3.gostats.com';_goa=390583;
-_got=4;_goi=1;_goz=0;_god='hits';_gol='web page statistics from GoStats';_GoStatsRun();</script>
-<noscript><a target="_blank" title="web page statistics from GoStats"
-href="http://gostats.com"><img alt="web page statistics from GoStats"
-src="http://c3.gostats.com/bin/count/a_390583/t_4/i_1/z_0/show_hits/counter.png"
-style="border-width:0" /></a></noscript>
-</div>
-<!-- End GoStats JavaScript Based Code -->
-<!-- </center></div></body></div> -->
+  
+<br><br><hr> <h1 align="center">Hierarchical Perceptive Locomotion Model</h1> <!-- <h2
+align="center"></h2> --> <table border="0" cellspacing="10"
+cellpadding="0" align="center"><tbody><tr><td align="center"
+valign="middle"><a href="./src/figure/pipeline.png"> <img
+src="./src/figure/pipeline.png" style="width:100%;"> </a></td>
+</tr> </tbody> </table>
+
+<table align=center width=800px><tr><td> <p align="justify" width="20%">finish</a>.
+</p></td></tr></table>
+<br>
+
+<hr>
+
+<h1 align="center">Real Robot Evaluation</h1>
+
+  <table align=center width=800px><tr><td> <p align="justify" width="20%">Description of evalutation
+
+  </p></td></tr></table>
+
+  <!--
+  <table border="0" cellspacing="10" cellpadding="0" align="center"> 
+    <tbody>
+      <tr> 
+        <td align="center" valign="middle">
+          <iframe width="798" height="300" src="https://www.youtube.com/embed/csr5hi5v_Bs?autoplay=1&mute=1&playlist=csr5hi5v_Bs&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  -->
+  
+  <!-- <table border="0" cellspacing="10" cellpadding="0" align="center">
+    <tbody>
+      <tr>
+        <td align="center" valign="middle">
+          <video muted controls width="798">
+            <source src="./src/video/evaluation.mp4"  type="video/mp4">
+          </video>
+        </td>
+      </tr>
+    </tbody>
+  </table> -->
+
+
+<hr>
+
+<h1 align="center">....</h1>
+
+  <table align=center width=800px><tr><td> <p align="justify" width="20%">
+  put text
+  </p></td></tr></table>
+
+
+  <!--
+  <table border="0" cellspacing="10" cellpadding="0" align="center"> 
+    <tr>
+        <td align="center" valign="middle">
+          <iframe width="600" height="337" src="https://www.youtube.com/embed/K3pYobHhzDs?autoplay=1&mute=1&playlist=K3pYobHhzDs&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" valign="middle">
+          <iframe width="600" height="337" src="https://www.youtube.com/embed/cc3b8VM7Jb0?autoplay=1&mute=1&playlist=cc3b8VM7Jb0&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" valign="middle">
+          <iframe width="600" height="337" src="https://www.youtube.com/embed/9yEtgGHy9Aw?autoplay=1&mute=1&playlist=9yEtgGHy9Aw&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </td>
+      </tr>
+  </table>
+  -->
+  <!-- <table border="0" cellspacing="10" cellpadding="0" align="center">
+    <tbody>
+      <tr>
+        <td align="center" valign="middle">
+          <video muted controls width="394">
+            <source src="./src/video/deploy1.mp4"  type="video/mp4">
+          </video>
+        </td>
+
+        <td align="center" valign="middle">
+          <video muted controls width="394">
+            <source src="./src/video/deploy2.mp4"  type="video/mp4">
+          </video>
+        </td>
+      </tr>
+
+      <tr>
+        <td align="center" valign="middle">
+          <video muted controls width="394">
+            <source src="./src/video/deploy3.mp4"  type="video/mp4">
+          </video>
+        </td>
+
+        <td align="center" valign="middle">
+          <video muted controls width="394">
+            <source src="./src/video/deploy4.mp4"  type="video/mp4">
+          </video>
+        </td>
+      </tr>
+
+    </tbody>
+  </table> -->
+
+
+<hr>
+<center><h1>Citation</h1></center>
+
+<table align=center width=800px>
+  <tr>
+    <td>
+    <!-- <left> -->
+    <pre><code style="display:block; overflow-x: auto">
+      @inproceedings{skoutnev2023qtos,
+        title={Quadruped-Trajectory-Optimization-Stack},
+        author={Alexy, Skoutnev},
+        booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
+        year={2024}
+      }
+    </code></pre>
+    <!-- </left> -->
+    </td>
+  </tr>
+</table>
