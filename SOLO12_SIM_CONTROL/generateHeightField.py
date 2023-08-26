@@ -190,19 +190,20 @@ class PATH_MAP(object):
                     _x_goal += (2 * step_x)
                     _x_start, _y_start = round(_x_start, 2), round(_y_start, 2)
                     _x_goal, _y_goal = round(_x_goal, 2), round(_y_goal, 2)
-                    print(f"x_coord, y_coord [{_x_start}, {_y_start}] -> [{_x_goal}, {_y_goal}]")
-                    print(f"x, y [{x}, {y}] -> {self.neighbors_danger_test(map, _idx_x, _idx_y)}")
-                    if self.neighbors_danger_test(map, x, y):
+                    # print(f"x_coord, y_coord [{_x_start}, {_y_start}] -> [{_x_goal}, {_y_goal}]")
+                    # print(f"x_start, y_start [{_idx_x}, {_idx_y}] -> {self.neighbors_danger_test(map, _idx_x, _idx_y)}")
+                    # print(f"x_end, y_end [{_idx_x}, {_idx_y_offset}] -> {self.neighbors_danger_test(map, _idx_x, _idx_y_offset)}")
+                    if self.neighbors_danger_test(map, _idx_x, _idx_y) or self.neighbors_danger_test(map, _idx_x, _idx_y_offset):
                         data = Map_2_Idx(map_coords_start=(_x_start, _y_start), map_coords_goal=(_x_goal, _y_goal),
                                         map_idx_start=(_idx_x, _idx_y), map_idx_goal=(_idx_x, _idx_y_offset))
                         self.data_queue.put(data)
                     _idx_y += 2
                     _idx_y_offset += 2
-                    print(data)
+                    # print(data)
                 _idx_x += 1
                 
-                print(f"x,y start: {_x_start, _y_start}")
-                print(f"x,y goal: {_x_goal, _y_goal}\n")
+                # print(f"x,y start: {_x_start, _y_start}")
+                # print(f"x,y goal: {_x_goal, _y_goal}\n")
 
     def run(self):
         processes = []
