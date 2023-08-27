@@ -6,7 +6,9 @@ import pinocchio as pin
 
 from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd, trajectory_2_local_frame
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
+from SOLO12_SIM_CONTROL.stateEstimation import State_Estimation
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
+
 
 def links_to_id(robot):
     """Helper function to retrieve the joint info of a robot into a dictionary
@@ -133,6 +135,9 @@ class SOLO12(object):
         self._joint_state = None
         self._time_step = config['timestep']
         self.q_ref = self.q_init
+        self.stateEstimator = State_Estimation(config['start_pos'])
+        self.CoM_acceleration = np.array([0, 0, 0])
+        self.CoM_vel = np.array([0, 0, 0])
         self._update()
 
 
@@ -158,6 +163,21 @@ class SOLO12(object):
         time_step = np.array(self.time)
         state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
         return state
+
+    @property
+    def state_np_estimated(self):
+        CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
+        EE = self.get_endeffector_pose()
+        CoM_pos = self.state_estimated['COM']
+        CoM_angle = p.getEulerFromQuaternion(np.array(CoM_angle))
+        EE_1 = np.array(EE['FL_FOOT']['linkWorldPosition'])
+        EE_2 = np.array(EE['FR_FOOT']['linkWorldPosition'])
+        EE_3 = np.array(EE['HL_FOOT']['linkWorldPosition'])
+        EE_4 = np.array(EE['HR_FOOT']['linkWorldPosition'])
+        time_step = np.array(self.time)
+        state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
+        print(CoM_pos)
+        return state
      
     @property
     def state(self):
@@ -171,6 +191,22 @@ class SOLO12(object):
         return {"COM": CoM_pos, "linkWorldOrientation": CoM_angle, "FL_FOOT": EE['FL_FOOT']['linkWorldPosition'], 
                 "FR_FOOT": EE['FR_FOOT']['linkWorldPosition'], "HL_FOOT": EE['HL_FOOT']['linkWorldPosition'], "HR_FOOT": EE['HR_FOOT']['linkWorldPosition']}
     
+    @property
+    def state_estimated(self):
+        """Return the known state of the robot
+
+        Returns:
+            dict: return the current CoM, orientation, endeffector positions
+        """
+        timestep = self.time
+        lin_vel, ang_vel = p.getBaseVelocity(self.robot)
+        updated_accelation = np.array([lin_vel[0] - self.CoM_vel[0], lin_vel[1] - self.CoM_vel[1], lin_vel[2] - self.CoM_vel[2]])
+        self.CoM_acceleration = updated_accelation
+        self.stateEstimator.update(updated_accelation, self.time)
+        CoM_pos, CoM_vel = self.stateEstimator.CoM, self.stateEstimator.CoM_vel
+        self.CoM_vel = CoM_vel
+        return {"COM": CoM_pos, "COM_VEL": CoM_vel}
+
     @property
     def csv_entry(self):
         """Helper function to quickly extract robot joint states into csv
@@ -201,6 +237,14 @@ class SOLO12(object):
         CoM = self.CoM_states()
         traj_vec = np.concatenate((CoM['linkWorldPosition'],  p.getEulerFromQuaternion(CoM['linkWorldOrientation']), EE['FL_FOOT']['linkWorldPosition'], EE['FR_FOOT']['linkWorldPosition'], EE['HL_FOOT']['linkWorldPosition'], EE['HR_FOOT']['linkWorldPosition']))
         return traj_vec
+
+    @property
+    def traj_vec_estimated(self):
+        EE = self.get_endeffector_pose()
+        CoM = self.state_estimated
+        traj_vec = np.concatenate((CoM['COM'],  np.zeros(3), EE['FL_FOOT']['linkWorldPosition'], EE['FR_FOOT']['linkWorldPosition'], EE['HL_FOOT']['linkWorldPosition'], EE['HR_FOOT']['linkWorldPosition']))
+        return traj_vec
+
 
     @property
     def jointstate(self):
@@ -569,7 +613,9 @@ class SOLO12(object):
     def update(self):
         """Updates the global varaibles corresponding to robot
         """
-        global_cfg.ROBOT_CFG.state = self.state_np
+        # global_cfg.ROBOT_CFG.state = self.state_np
+        global_cfg.ROBOT_CFG.state = self.state_np_estimated #state estimation of robot state
+
 
     def _update(self):
         """Current joint angles, joint velocity, base state, and base velocity of the robot 
