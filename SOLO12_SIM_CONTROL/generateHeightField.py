@@ -198,20 +198,15 @@ class PATH_MAP(object):
                     _x_goal += (2 * step_x)
                     _x_start, _y_start = round(_x_start, 2), round(_y_start, 2)
                     _x_goal, _y_goal = round(_x_goal, 2), round(_y_goal, 2)
-                    # print(f"x_coord, y_coord [{_x_start}, {_y_start}] -> [{_x_goal}, {_y_goal}]")
-                    # print(f"x_start, y_start [{_idx_x}, {_idx_y}] -> {self.neighbors_danger_test(map, _idx_x, _idx_y)}")
-                    # print(f"x_end, y_end [{_idx_x}, {_idx_y_offset}] -> {self.neighbors_danger_test(map, _idx_x, _idx_y_offset)}")
+                    _z_start, _z_goal = map[_idx_x][_idx_y], map[_idx_x][_idx_y_offset]
                     if self.neighbors_danger_test(map, _idx_x, _idx_y) or self.neighbors_danger_test(map, _idx_x, _idx_y_offset):
-                        data = Map_2_Idx(map_coords_start=(_x_start, _y_start), map_coords_goal=(_x_goal, _y_goal),
+                        data = Map_2_Idx(map_coords_start=(_x_start, _y_start, _z_start), map_coords_goal=(_x_goal, _y_goal, _z_goal),
                                         map_idx_start=(_idx_x, _idx_y), map_idx_goal=(_idx_x, _idx_y_offset))
                         self.data_queue.put(data)
+                        print(data)
                     _idx_y += 2
                     _idx_y_offset += 2
-                    # print(data)
                 _idx_x += 1
-                
-                # print(f"x,y start: {_x_start, _y_start}")
-                # print(f"x,y goal: {_x_goal, _y_goal}\n")
 
     def run(self):
         processes = []
@@ -227,28 +222,28 @@ class PATH_MAP(object):
     def worker_f(self, map, queue, num_cols):
 
         def state_config(args, start_pt, goal_pt, shift=[0, 0]):
-            args['-s'] = [start_pt[0], start_pt[1], 0.24]
-            args['-e1'] = (np.array([0.20590930477664196, 0.14927536747689948, 0.0]) + np.array(shift)).tolist()
-            args['-e2'] = (np.array([0.2059042161427424, -0.14926921805769638, 0.0]) + np.array(shift)).tolist()
-            args['-e3'] = (np.array([-0.20589422629511542, 0.14933201572367907, 0.0]) + np.array(shift)).tolist()
-            args['-e4'] = (np.array([-0.2348440184502048, -0.17033609357109808, 0.0]) + np.array(shift)).tolist()
+            args['-s'] = [start_pt[0], start_pt[1], start_pt[2] + 0.24]
+            args['-e1'] = (np.array([0.21, 0.19, 0.0]) + np.array(shift)).tolist()
+            args['-e2'] = (np.array([0.21, -0.19, 0.0]) + np.array(shift)).tolist()
+            args['-e3'] = (np.array([-0.21, 0.19, 0.0]) + np.array(shift)).tolist()
+            args['-e4'] = (np.array([-0.21, -0.19, 0.0]) + np.array(shift)).tolist()
             args['-s_ang'] = [0, 0, 0]
-            args['-g'] = [goal_pt[0], goal_pt[1], 0.24]
-            args['-r'] = 2.0
+            args['-g'] = [goal_pt[0], goal_pt[1], goal_pt[2] + 0.24]
+            args['-r'] = 7.5
 
         while not queue.empty():
             args = {}
             data = queue.get()
             start_pt = data.map_coords_start
             goal_pt = data.map_coords_goal
-            shift_vec = [start_pt[0], start_pt[1], 0]
+            shift_vec = [start_pt[0], start_pt[1], start_pt[2]]
             start_idx = data.map_idx_start
             goal_idx = data.map_idx_goal
             state_config(args, start_pt, goal_pt, shift=shift_vec)
             local_array = np.frombuffer(map.get_obj(), dtype=np.float32).reshape(-1, num_cols)
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            if p_status.returncode == 0:
+            if p_status.returncode == 0 or p_status.returncode == 2:
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
                     local_array[start_idx] = 0
@@ -312,10 +307,8 @@ class Maps(object):
             self.map = self.multi_map_generator(maps)
 
     def multi_map_generator(self, maps):
-        # map_arr = np.zeros((self.standard_map_dim[0] * len(maps), self.standard_map_dim[1]))
         map_arr = np.zeros((self.standard_map_dim[1], self.standard_map_dim[0] * len(maps)))
         for i, map_id in enumerate(maps):
-            # map_arr[(i * self.dim):(i + 1) * self.dim, :] = self.name_2_np_arr[map_id]
             map_arr[:, (i * self.dim):(i + 1) * self.dim] = self.name_2_np_arr[map_id]
         return map_arr
 
