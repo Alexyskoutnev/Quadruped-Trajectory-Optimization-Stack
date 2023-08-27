@@ -229,7 +229,7 @@ class PATH_MAP(object):
             args['-e4'] = (np.array([-0.21, -0.19, 0.0]) + np.array(shift)).tolist()
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], goal_pt[2] + 0.24]
-            args['-r'] = 7.5
+            args['-r'] = 4.0
 
         while not queue.empty():
             args = {}
@@ -243,7 +243,7 @@ class PATH_MAP(object):
             local_array = np.frombuffer(map.get_obj(), dtype=np.float32).reshape(-1, num_cols)
             TOWR_SCRIPT = shlex.split(self.scripts['run'] + " " + cmd_args(args))
             p_status = subprocess.run(TOWR_SCRIPT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            if p_status.returncode == 0 or p_status.returncode == 2:
+            if p_status.returncode == 0:
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
                     local_array[start_idx] = 0
@@ -279,6 +279,7 @@ class Maps(object):
     stairs_file = "./data/heightfields/staircase.txt"
     plane_file =  "./data/heightfields/plane.txt"
     feasibility = "./data/heightfields/feasibility_test.txt"
+    feasibility_1 = "./data/heightfields/feasibility_test_1.txt"
     calibration = heighmap_2_np_reader(calibration_file)
     step = heighmap_2_np_reader(step_file)
     step_1 = heighmap_2_np_reader(step_1_file)
@@ -292,8 +293,9 @@ class Maps(object):
     plane = heighmap_2_np_reader(plane_file)
     test = heighmap_2_np_reader(test_file)
     feasibility = heighmap_2_np_reader(feasibility)
+    feasibility_1 = heighmap_2_np_reader(feasibility_1)
     name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
-                     'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'wall_4' : wall_4}
+                     'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4}
 
     def __init__(self, maps=['plane'], dim=20):
         self.dim = 20

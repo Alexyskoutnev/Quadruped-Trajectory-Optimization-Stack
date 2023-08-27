@@ -244,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=0.6)
+    parser.add_argument('-step', '--step', type=float, default=0.75)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
     parser.add_argument('-l', '--look', type=float, default=3750)
     parser.add_argument('-r', '--record', type=bool, default=False)
