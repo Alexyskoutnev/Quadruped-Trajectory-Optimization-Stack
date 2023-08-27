@@ -176,7 +176,6 @@ class SOLO12(object):
         EE_4 = np.array(EE['HR_FOOT']['linkWorldPosition'])
         time_step = np.array(self.time)
         state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
-        print(CoM_pos)
         return state
      
     @property
@@ -613,8 +612,8 @@ class SOLO12(object):
     def update(self):
         """Updates the global varaibles corresponding to robot
         """
-        # global_cfg.ROBOT_CFG.state = self.state_np
-        global_cfg.ROBOT_CFG.state = self.state_np_estimated #state estimation of robot state
+        global_cfg.ROBOT_CFG.state = self.state_np
+        # global_cfg.ROBOT_CFG.state = self.state_np_estimated #state estimation of robot state
 
 
     def _update(self):

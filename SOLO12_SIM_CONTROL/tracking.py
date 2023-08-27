@@ -278,8 +278,8 @@ class Tracking:
             pass
         
     def get_sim_cmd(self):
-        # vec = self.robot.traj_vec
-        vec = self.robot.traj_vec_estimated
+        vec = self.robot.traj_vec
+        # vec = self.robot.traj_vec_estimated
         return vec_to_cmd_pose(vec)
         
 
