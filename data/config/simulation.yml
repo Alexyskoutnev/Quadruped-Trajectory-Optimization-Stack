@@ -29,8 +29,9 @@ track : True
 track_rate : 100
 height_map : True
 # map_id : ['feasibility']
-map_id : ['feasibility', 'plane']
+# map_id : ['feasibility', 'plane']
 # map_id : ['step', 'plane']
+map_id : ['plane', 'plane']
 friction : 0.99
 
 #==Visual Planner CONFIGURATIONS==
