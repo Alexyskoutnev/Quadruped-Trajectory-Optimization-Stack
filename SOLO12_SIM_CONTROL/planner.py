@@ -15,6 +15,7 @@ from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack, LimitedFIFOQ
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
+GLOBAL_TRAJ_DIR = "./data/plots/"
 GLOBAL_TRAJ_MAP = "./data/plots/global_plan.png"
 
 
@@ -38,8 +39,8 @@ class Global_Planner(object):
         self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
         self.grid_res = 0.1 #PUT IN CONFIG FILE
         self.map = args['sim'].height_map
-        if not os.path.exists(GLOBAL_TRAJ_MAP):
-            os.makedirs(GLOBAL_TRAJ_MAP)
+        if not os.path.exists(GLOBAL_TRAJ_DIR):
+            os.makedirs(GLOBAL_TRAJ_DIR)
         if args['sim'].bool_map is not None:
             print("Using bool map")
             self.path_solver = PATH_Solver(self.map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args, bool_map=args['sim'].bool_map)
