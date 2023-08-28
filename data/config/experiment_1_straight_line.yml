@@ -1,6 +1,6 @@
 # mode : "bezier"
 mode : "towr"
-enviroment : "custom"
+enviroment : "custom_test"
 # enviroment : "plane"
 
 py_interface : False
@@ -15,14 +15,14 @@ trot_2_stance_ratio : 0.5
 #============================
 terrain_offset : [1.5, 0, 0]
 
-TRAJ_SIZE : 20000
-SIM_STEPS : 21000
+TRAJ_SIZE : 10000
+SIM_STEPS : 10100
 
 HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : False
 stance_period : 1000
-skip_forward_idx : 5 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
+skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : True
 base_stable : False
 track : True

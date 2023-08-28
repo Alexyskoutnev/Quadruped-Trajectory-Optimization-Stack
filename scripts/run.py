@@ -63,7 +63,7 @@ def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.runtime = ROBOT.time
     if sim_cfg['skip_forward_idx'] > 1:
         global_cfg.RUN.step += sim_cfg['skip_forward_idx'] + 1
-    elif sim_cfg['enviroment'] == "towr_no_gui":
+    else:
         global_cfg.RUN.step += 1
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 

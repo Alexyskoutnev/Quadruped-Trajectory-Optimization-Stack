@@ -38,6 +38,11 @@ BEZIER_TRAJ = "./data/traj/bezier_traj"
 key_press_init_phase = True
 mutex = Lock()
 
+def save_traj(writer, entries):
+    print(f"size of trajectory {len(entries)}")
+    for csv_entry in entries:
+        writer.writerow(csv_entry)
+
 def make_even(number):
     if number % 2 != 0:  # Check if the number is odd
         number += 1      # Increment the number by 1 to make it even
@@ -67,7 +72,7 @@ def _global_update(ROBOT, kwargs, sim_cfg):
     global_cfg.ROBOT_CFG.runtime = ROBOT.time
     if sim_cfg['skip_forward_idx'] > 1:
         global_cfg.RUN.step += sim_cfg['skip_forward_idx'] + 1
-    elif sim_cfg['enviroment'] == "towr_no_gui":
+    else:
         global_cfg.RUN.step += 1
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 
@@ -95,6 +100,9 @@ def record_simulation(args):
     last_loop_time = time.time()
     sim_step = 1
     RECORD_TRAJ = False
+
+    csv_entries = []
+
     """============Record-CONFIGURATION============"""
     if sim_cfg['mode'] == "towr":
         csv_file = open(TOWR, 'r', newline='')
@@ -108,6 +116,7 @@ def record_simulation(args):
             q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)
         FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
         record_file = open(FILE, 'w', newline='')
+        print(f"RECORDING FILE AT -> {record_file}")
         writer = csv.writer(record_file) 
         record_timestep = 0
         RECORD_TRAJ = True
@@ -185,9 +194,8 @@ def record_simulation(args):
                         joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                         ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
 
-                    csv_entry = ROBOT.csv_entry
-                    writer.writerow(csv_entry)
-                    record_timestep += 1
+                    
+
                     if record_timestep >= sim_cfg['TRAJ_SIZE']:
                         global_cfg.RUN._run_update_thread = False
                         break
@@ -200,12 +208,25 @@ def record_simulation(args):
                     else:
                         ROBOT.time_step += 1
 
+
                     p.stepSimulation()
                     _global_update(ROBOT, ROBOT.state, sim_cfg)
                     ROBOT.update()
-
+                    ROBOT.time_step += 1
+                # print(f"entered: {sim_step}")
+                # print(f"values: {ROBOT.csv_entry}")
+                # with mutex:
+                #     csv_entry = ROBOT.csv_entry
+                #     global_cfg.ROBOT_CFG.robot_states.append(csv_entry)
+                #     csv_entries.append(csv_entry)
+                # writer.writerow(csv_entry)
+                record_timestep += 1
                 last_loop_time = time.time()
                 sim_step += 1
+                with mutex:
+                    csv_entry = ROBOT.csv_entry
+                    global_cfg.ROBOT_CFG.robot_states.append(csv_entry)
+                    csv_entries.append(csv_entry)
         else:
             loop_time = time.time() - last_loop_time
             time_loop = time.time()
@@ -220,10 +241,12 @@ def record_simulation(args):
                     sim_step += 1
                 else:
                     break
-                
-        if make_even(sim_step) % 100 == 0:
-            print(f"step [{sim_step} / {sim_cfg['TRAJ_SIZE']}]")
+
+        if make_even(sim_step) % 500 == 0:
+            pass
+            # print(f"step [{sim_step} / {sim_cfg['TRAJ_SIZE']}]")
         # print(f"loop time -> {loop_time}")
 
+    save_traj(writer, csv_entries)
     print(f"TRAJ RECORD PATH -> {record_file}")
     p.disconnect()

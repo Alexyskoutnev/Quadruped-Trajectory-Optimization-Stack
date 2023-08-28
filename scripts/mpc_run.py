@@ -133,7 +133,8 @@ def _update(args, log, mpc):
             mutex.acquire()
             mpc.update()
             mutex.release()
-            time.sleep(0.01)
+            # time.sleep(0.00001)
+            print("steps -> ", mpc.cutoff_idx)
             if mpc.goal_diff < 0.05:
                 print("Robot reach the goal!")
                 global_cfg.RUN._stance = True
@@ -278,6 +279,6 @@ if __name__ == "__main__":
         test_mpc_single_loop(args)
 
     else:
-        args.update(builder())
+        args.update(builder(sim_cfg=args['sim_cfg']))
         args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
         _run(args)
