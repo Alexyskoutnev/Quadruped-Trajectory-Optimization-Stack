@@ -28,10 +28,10 @@ from SOLO12_SIM_CONTROL.simulation import Simulation
 from SOLO12_SIM_CONTROL.builder import builder
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
-            'copy': 'docker cp <id>:root/catkin_ws/src/towr/towr_solo12/build/traj.csv ./data/traj/towr.csv',
+            'copy': 'docker cp <id>:root/catkin_ws/src/towr_solo12/towr/build/traj.csv ./data/traj/towr.csv',
             'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
-            'data': 'docker cp <id>:root/catkin_ws/src/towr/towr_solo12/build/traj.csv /tmp/towr.csv',
+            'data': 'docker cp <id>:root/catkin_ws/src/towr_solo12/towr/build/traj.csv /tmp/towr.csv',
             'delete': 'rm ./data/traj/towr.csv',
             'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
             'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
