@@ -15,22 +15,19 @@ trot_2_stance_ratio : 0.5
 #============================
 terrain_offset : [1.5, 0, 0]
 
-TRAJ_SIZE : 500000
-SIM_STEPS : 510000
+TRAJ_SIZE : 20000
+SIM_STEPS : 21000
 
 HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : False
-stance_period : 100
+stance_period : 1000
 skip_forward_idx : 5 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : True
 base_stable : False
 track : True
-track_rate : 100
+track_rate : 250
 height_map : True
-# map_id : ['feasibility']
-# map_id : ['feasibility', 'plane']
-# map_id : ['step', 'plane']
 map_id : ['plane', 'plane', 'plane', 'plane']
 friction : 0.99
 

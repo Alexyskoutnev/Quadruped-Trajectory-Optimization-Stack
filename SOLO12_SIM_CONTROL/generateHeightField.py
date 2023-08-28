@@ -146,9 +146,9 @@ class PATH_MAP(object):
         self.shared_arr = multiprocessing.Array('i', map.shape[0] * map.shape[1])
         self.num_cols = map.shape[1]
         self.probe_map(map, multi_map_shift)
-        self.neighbors_start = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1))
-        self.neighbors_mid = ((-1, 0), (1, 0), (0, 1), (0, -1))
-        self.neighbors_end = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1))
+        self.neighbors_start = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1), (-2, 0), (2, 0), (0, -2), (0, -2))
+        self.neighbors_mid = ((-1, 0), (1, 0), (0, 1), (0, -1), (-2, 0), (2, 0), (0, -2), (0, -2))
+        self.neighbors_end = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1), (-2, 0), (2, 0), (0, -2), (0, -2))
         if self.check_flat_ground(map):
             pass
         else:

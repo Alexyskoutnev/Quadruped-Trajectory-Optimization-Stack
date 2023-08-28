@@ -7,11 +7,16 @@ import argparse
 import copy
 import sys
 import csv
+import os
 from threading import Thread, Lock
 
 
+#importing scripts
 import run
-import collect_towr_data
+import trajectory_record
+# import collect_towr_data
+
+
 import numpy as np
 import yaml
 
@@ -54,6 +59,13 @@ def DockerInfo():
     output = p.stdout.replace('\n', ' ')
     dockerid, idx = output.split(), output.split().index('towr') - 1
     return dockerid[idx]
+
+def experimentInfo(experiement_name):
+    experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
+                        "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml"}
+    file_path = os.path.join("./data/config", experiment_names[experiement_name])
+    sim_cfg = yaml.safe_load(open(file_path, 'r'))
+    return sim_cfg
 
 def parse_scripts(scripts_dic, docker_id):
     for script_name, script in scripts_dic.items():
@@ -133,9 +145,9 @@ def _update(args, log, mpc):
                 # global_cfg.RUN._wait = True
                 # breakpoint()
                 args = mpc.plan(args)
-                TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-                print(f"Updated with a new plan - \n {TOWR_SCRIPT}")
-                p_status = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+                MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+                print(f"Updated with a new plan - \n {MPC_SCRIPT}")
+                p_status = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
                 print(f"P_status {p_status}")
                 _wait = True
                 # breakpoint()
@@ -205,16 +217,19 @@ def _run(args):
     log = _init(args)
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     mpc.plan_init(args)
-    TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+    MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
     if p.returncode == 0:
         print("Launching Simulation")
-        towr_thread = Thread(target=_update, args=(args, log, mpc))
-        towr_thread.start()
-        run.simulation(args)
+        mpc_thread = Thread(target=_update, args=(args, log, mpc))
+        mpc_thread.start()
+        if args.get('record'):
+            trajectory_record.record_simulation(args)
+        else:
+            run.simulation(args)
     else: 
-        print("Error in copying Towr Trajectory")
+        print("Error in copying MPC Trajectory")
         sys.exit(1)
 
 def test_mpc_single_loop(args):
@@ -222,14 +237,14 @@ def test_mpc_single_loop(args):
     log = _init(args)
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     mpc.plan_init(args)
-    TOWR_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    p = subprocess.run(TOWR_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+    MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     if p.returncode == 0:
         p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
         if p.returncode == 0:
             _update(args, log, mpc)
     else:
-        print("Error Generating Towr Trajectory")
+        print("Error Generating MPC Trajectory")
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -249,17 +264,20 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--look', type=float, default=3750)
     parser.add_argument('-r', '--record', type=bool, default=False)
     parser.add_argument('-p', '--mpc_p', type=bool, default=False)
+    parser.add_argument('-exp', '--experiment', type=str, default="default")
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
             "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
             "f_steps": p_args.f_steps, "record": p_args.record, "mpc_p": p_args.mpc_p}
+    args['sim_cfg'] = experimentInfo(p_args.experiment)
     if test:
         args.update(builder())
         args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
         test_mpc_single_loop(args)
+
     else:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 1.5
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
         _run(args)
