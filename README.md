@@ -16,6 +16,37 @@ If you find our work useful in your research, please consider [citing](#citing).
 - [Towr](https://github.com/ethz-adrl/towr)
 - [Docker](https://www.docker.com/)
 
+## Repo Installation and Enviroment Setup
+To help keep all the packages together in one enviroment, please create conda enviroment.
+
+```console
+conda create -n soloSIM python=3.10
+conda activate soloSIM
+pip3 install -r requirements.txt
+pip3 install -e .
+```
+Installing Docker [Ubuntu].
+```console
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo docker run hello-world
+```
+Installing Docker [macOS]
+```console
+sudo hdiutil attach Docker.dmg
+sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
+sudo hdiutil detach /Volumes/Docker
+```
+
 ## Docker Installation Steps
 ```console
 DOCKER_BUILDKIT=1 docker build --no-cache -t towr -f Dockerfile
