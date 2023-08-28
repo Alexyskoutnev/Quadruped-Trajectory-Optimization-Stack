@@ -133,8 +133,7 @@ def _update(args, log, mpc):
             mutex.acquire()
             mpc.update()
             mutex.release()
-            # time.sleep(0.00001)
-            print("steps -> ", mpc.cutoff_idx)
+            time.sleep(0.001)
             if mpc.goal_diff < 0.05:
                 print("Robot reach the goal!")
                 global_cfg.RUN._stance = True

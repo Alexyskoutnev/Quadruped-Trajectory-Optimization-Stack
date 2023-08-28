@@ -158,7 +158,7 @@ def record_simulation(args):
                             print("ROBOT HAS REACHED THE GOAL")
                             break
                         if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
-                            time.sleep(0.001)
+                            time.sleep(0.0001)
                             continue
                         elif global_cfg.RUN._update:
                             print("============UPDATE STATE============")
@@ -244,9 +244,9 @@ def record_simulation(args):
 
         if make_even(sim_step) % 500 == 0:
             pass
-            # print(f"step [{sim_step} / {sim_cfg['TRAJ_SIZE']}]")
-        # print(f"loop time -> {loop_time}")
+            print(f"step [{sim_step} / {sim_cfg['TRAJ_SIZE']}]")
 
     save_traj(writer, csv_entries)
-    print(f"TRAJ RECORD PATH -> {record_file}")
+    
+    # print(f"TRAJ RECORD PATH -> {record_file}")
     p.disconnect()

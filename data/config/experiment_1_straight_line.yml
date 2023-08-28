@@ -1,6 +1,6 @@
 # mode : "bezier"
 mode : "towr"
-enviroment : "custom_test"
+enviroment : "custom"
 # enviroment : "plane"
 
 py_interface : False
