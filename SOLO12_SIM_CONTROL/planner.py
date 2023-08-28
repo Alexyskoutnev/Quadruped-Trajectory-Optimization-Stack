@@ -3,6 +3,7 @@ from collections import deque
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import os
 import heapq
 from scipy.optimize import minimize
 from scipy.interpolate import CubicSpline
@@ -37,6 +38,8 @@ class Global_Planner(object):
         self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
         self.grid_res = 0.1 #PUT IN CONFIG FILE
         self.map = args['sim'].height_map
+        if not os.path.exists(GLOBAL_TRAJ_MAP):
+            os.makedirs(GLOBAL_TRAJ_MAP)
         if args['sim'].bool_map is not None:
             print("Using bool map")
             self.path_solver = PATH_Solver(self.map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args, bool_map=args['sim'].bool_map)

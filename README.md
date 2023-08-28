@@ -49,8 +49,8 @@ sudo hdiutil detach /Volumes/Docker
 
 ## Docker Installation Steps
 ```console
-DOCKER_BUILDKIT=1 docker build --no-cache -t towr -f Dockerfile
-docker run -it towr
+DOCKER_BUILDKIT=1 docker build --no-cache -t towr -f Dockerfile .
+docker run -d towr
 ```
 Now you should a Docker image named towr which will be used in the towr_run.py script to strat the Towr MPC loop.
 To check that the container was built correctly, use the follwing command (should output that the container is a ancestor of the towr image).
@@ -76,7 +76,7 @@ catkin_make_isolated -DCMAKE_BUILD_TYPE=Release -j4
 source devel_isolated/setup.sh
 roslaunch towr_ros towr_ros.launch
 ```
-## Python Installation Steps
+<!-- ## Python Installation Steps
 ```
 conda create --name soloSim python=3.10
 conda activate soloSim
@@ -85,7 +85,7 @@ pip3 install -e .
 conda install pyyaml
 conda install scipy
 conda install matplotlib
-```
+``` -->
 ## Running Basic Simulation
 Make sure you run all script from the home direction (~/SOLO12_SIM_CONTROL), to run the simulator use run.py. The configuration files for this scripts are ~/data/config/solo12.yml and ~/data/config/simulation.yml. Make all the neccesary changes in the .yml files to configure starting state of the simulation and robot.
 ```

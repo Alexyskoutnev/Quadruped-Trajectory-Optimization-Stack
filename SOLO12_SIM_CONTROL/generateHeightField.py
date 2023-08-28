@@ -316,7 +316,7 @@ class Maps(object):
 
 class Height_Map_Generator(Maps):
 
-    def __init__(self, dim=20, maps='plane'):
+    def __init__(self, dim=20, maps='plane', bool_map_search=False):
         super(Height_Map_Generator, self).__init__(maps, dim)
         self.towr_map =  np.transpose(self.map)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
@@ -325,7 +325,11 @@ class Height_Map_Generator(Maps):
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
         self.multi_map_shift = len(self.maps)
-        self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift).bool_map
+        self.bool_map_search = bool_map_search
+        if bool_map_search:
+            self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift).bool_map
+        else:
+            self.bool_map = np.zeros((self.map.shape[0], self.map.shape[1]))
 
     def create_height_file(self, file, h_data):
             rows = len(h_data)
