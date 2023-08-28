@@ -34,7 +34,7 @@ WORKDIR /root/
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu bionic main" > /etc/apt/sources.list.d/ros-melodic.list'
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 RUN apt update
-RUN apt-get -y install ros-melodic-desktop-full
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install ros-melodic-desktop-full
 WORKDIR /
 RUN bash -c "source /opt/ros/melodic/setup.bash >> /root/.bashrc"
 RUN bash -c "source /root/.bashrc"
