@@ -100,7 +100,6 @@ class MPC(object):
             diff_vec[2] = 0.0
             args['-g'] = list(global_pos + diff_vec)
             args['-g'][2] = 0.24
-
         return args
 
 
@@ -136,6 +135,7 @@ class MPC(object):
             self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
             self._step(_state_dic["CoM"])
         print("ARRGS", self.args)
+        breakpoint()
         return self.args
 
     def spine_step(self, CoM, timestep, total_traj_time=5.0):

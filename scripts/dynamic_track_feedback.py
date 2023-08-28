@@ -18,10 +18,10 @@ from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
 from SOLO12_SIM_CONTROL.logger import Logger
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
-            'copy': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv ./data/traj/towr.csv',
+            'copy': 'docker cp <id>:/root/catkin_ws/src/towr_solo12/towr/build/traj.csv ./data/traj/towr.csv',
             'run': 'docker exec <id> ./towr-example',
             'info': 'docker ps -f ancestor=towr',
-            'data': 'docker cp <id>:/root/catkin_ws/src/towr/towr/build/traj.csv /tmp/towr.csv',
+            'data': 'docker cp <id>:/root/catkin_ws/src/towr_solo12/towr/build/traj.csv /tmp/towr.csv',
             'delete': 'rm ./data/traj/towr.csv'}
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t']
