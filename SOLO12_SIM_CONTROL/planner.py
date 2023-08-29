@@ -1,14 +1,10 @@
-
 from collections import deque
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 import os
 import heapq
-from scipy.optimize import minimize
 from scipy.interpolate import CubicSpline
-from scipy.interpolate import BSpline
-
 
 from SOLO12_SIM_CONTROL.config.global_cfg import PLANNER
 from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack, LimitedFIFOQueue
@@ -17,7 +13,6 @@ import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
 GLOBAL_TRAJ_DIR = "./data/plots/"
 GLOBAL_TRAJ_MAP = "./data/plots/global_plan.png"
-
 
 class Global_Planner(object):
     
@@ -28,7 +23,6 @@ class Global_Planner(object):
         self.hz = hz
         self.set_correct_flag = False
         self.start_goal_pts = Limited_Stack(start_goal_pts_history_sz)
-        # self.P_correction = True # correction for proportional error btw planner and robot CoM
         self.P_correction = args['mpc_p']
         self.plan_state = None
         self.robot_state = None
@@ -95,7 +89,6 @@ class Global_Planner(object):
     def lookahead_timestamp(self, time):
         return time + round(self.lookahead / self.hz, 3)
 
-
     def update(self, timestep, plan_state_xy, robot_state_xy, goal_step_vec):
         """Template to update the state of the planner
 
@@ -130,11 +123,11 @@ class Global_Planner(object):
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
 
-    def P_goal_point(self, goal_pt, error = [0, 0], kp=0.50):
-        return goal_pt + (kp * error)
+    def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
+        return goal_pt - (kp * error)
 
     def D_goal_point(self, goal_pt, d_error = [0, 0], kd=1.0):
-        return goal_pt + (kd * d_error)
+        return goal_pt - (kd * d_error)
 
     def pop(self):
         return self.start_goal_pts.pop()
@@ -148,8 +141,11 @@ class Global_Planner(object):
         return row, column
     
     def get_map_height(self, pos):
-        row, col = self.convert_2_idx(pos[0], pos[1])
-        return self.map[row, col]
+        try:
+            row, col = self.convert_2_idx(pos[0], pos[1])
+            return self.map[row, col]
+        except:
+            return 0
 
 class PATH_Solver(object):
     
@@ -170,8 +166,6 @@ class PATH_Solver(object):
         self.goal_idx_x_y = self.convert_2_idx(self.goal_pos_x_y[0], self.goal_pos_x_y[1])
         self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
         self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
-        # print("Predicted _t -> ", self.predicted_t)
-
         if self.solution_flag:
             self.solution_flag = True
             self._solve()
@@ -201,7 +195,6 @@ class PATH_Solver(object):
         while oheap:
             current = heapq.heappop(oheap)[1]
             if current == goal:
-                print("Found a path")
                 data = []
                 while current in came_from:
                     data.append(current)
@@ -241,7 +234,6 @@ class PATH_Solver(object):
         self.spine_x_plot = CubicSpline(t, path_x_plot)
         self.spine_y_plot = CubicSpline(t, path_y_plot)
 
-
     def solve(self, start, goal, plot=False):
         self.start_pos_x_y = start[0:2]
         self.goal_pos_x_y = goal[0:2]
@@ -249,16 +241,15 @@ class PATH_Solver(object):
         self.goal_idx_x_y = self.convert_2_idx(goal[0], goal[1])
         self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
         self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
-        print("Predicted_T -> ", self.predicted_t)
         if self.solution_flag:
-            t = np.linspace(0, self.predicted_t, len(self.path[::3]) + 1)
-            path_x_track = [(pos[1] * self.grid_res) - self.origin_x_shift for pos in self.path[::3]]
+            t = np.linspace(0, self.predicted_t, len(self.path[::2]) + 1)
+            path_x_track = [(pos[1] * self.grid_res) - self.origin_x_shift for pos in self.path[::2]]
             path_x_track.append(self.path[-1][1] * self.grid_res)
-            path_y_track = [(pos[0] * self.grid_res) - self.origin_y_shift for pos in self.path[::3]]
+            path_y_track = [(pos[0] * self.grid_res) - self.origin_y_shift for pos in self.path[::2]]
             path_y_track.append(self.path[-1][0] * self.grid_res)
-            path_x_plot = [pos[1] * self.grid_res for pos in self.path[::3]]
+            path_x_plot = [pos[1] * self.grid_res for pos in self.path[::2]]
             path_x_plot.append(self.path[-1][1] * self.grid_res)
-            path_y_plot = [pos[0] * self.grid_res for pos in self.path[::3]]
+            path_y_plot = [pos[0] * self.grid_res for pos in self.path[::2]]
             path_y_plot.append(self.path[-1][0] * self.grid_res)
             self.spine_x_track = CubicSpline(t, path_x_track)
             self.spine_y_track = CubicSpline(t, path_y_track)
@@ -270,32 +261,25 @@ class PATH_Solver(object):
             self.visualize_path()
 
 
-    def visualize_path(self, k=5, plot_spline=True, plot_nodes=False):
+    def visualize_path(self, plot_spline=True, plot_nodes=False):
 
         x_range = np.arange(0, self.visual_map.shape[1]) * self.grid_res
         y_range = np.arange(0, self.visual_map.shape[0]) * self.grid_res
         X, Y = np.meshgrid(x_range, y_range)
-
         plt.figure()
         plt.pcolormesh(X, Y, self.visual_map, cmap='gray', shading='auto')
-
         plt.scatter(self.start_pos_x_y[0] + self.origin_x_shift, self.start_pos_x_y[1] + self.origin_y_shift, color='green', marker='o', label='Start')
         plt.scatter(self.goal_pos_x_y[0] + self.origin_x_shift, self.goal_pos_x_y[1] + self.origin_y_shift, color='red', marker='x', label='Goal')
-
         if self.path:
-
             path_x = [pos[1] * self.grid_res for pos in self.path]
             path_y = [pos[0] * self.grid_res for pos in self.path]
-
             if plot_nodes:
                 plt.plot(path_x, path_y, color='blue', label='Path')
-
             if plot_spline:
                 t_new = np.linspace(0, self.predicted_t, 100)
                 path_x_new = self.spine_x_plot(t_new)
                 path_y_new = self.spine_y_plot(t_new)
                 plt.plot(path_x_new, path_y_new, color='blue', label='Trajectory Spline')
-            
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.title('Global Trajectory Path')

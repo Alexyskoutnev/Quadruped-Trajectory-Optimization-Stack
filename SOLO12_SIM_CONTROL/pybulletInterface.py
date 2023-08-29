@@ -26,7 +26,6 @@ class PybulletInterface(object):
         self.camera_roll = 0
         self.camera_distance = 1.50
 
-        
         self.xId = p.addUserDebugParameter('x', -0.1, 0.1, 0.0)
         self.yId = p.addUserDebugParameter('y', -0.1, 0.1, 0.0)
         self.zId = p.addUserDebugParameter('z', -0.1, 0.1, 0.0)

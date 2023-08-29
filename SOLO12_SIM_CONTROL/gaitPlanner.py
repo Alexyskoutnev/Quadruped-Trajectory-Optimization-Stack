@@ -21,9 +21,6 @@ def bezier_d_1(t, k, p_i, p_i_1):
     b_i = binomial_factor(n, k)*np.power(t, k)*np.power(1 - t, n - k)
     return (n + 1)*b_i *(p_i_1 - p_i)
 
-def bezier_d_2(t, k, p):
-    pass
-
 class Gait(object):
     
     def __init__(self, robot):
@@ -104,7 +101,6 @@ class Gait(object):
     def stepTrajectory(self, t, velocity, angle, angle_velocity, stepOffset, footID): 
         if t >= 1.0:
             t = (t - 1.0)
-
 
         #a circumference to rotate around
         r = np.sqrt(self.robot.shift[footID][0]**2 + self.robot.shift[footID][1]**2)
@@ -201,10 +197,7 @@ class Gait(object):
         self.gaitTraj['HR_FOOT']['D'][1] = step_coord[4]
         self.gaitTraj['HR_FOOT']['D'][2] = step_coord[5]
 
-
-        # breakpoint()
         self.gaitTraj['COM'] = np.concatenate((self.robot.CoM_states()['linkWorldPosition'], self.robot.CoM_states()['linkWorldPosition']))
-
         self.gaitTraj = trajectory_2_world_frame(self.robot, self.gaitTraj, bezier=True)
 
         return self.gaitTraj, True

@@ -40,6 +40,7 @@ class MPC(object):
         self.global_solver = self.global_planner.path_solver
         self.spine_x = self.global_solver.spine_x_track
         self.spine_y = self.global_solver.spine_y_track
+        print(self.current_traj)
         self.traj_plan = txt_2_np_reader(self.current_traj)
         self.robot = args['robot']
         self.set_correct_flag = False
@@ -135,13 +136,14 @@ class MPC(object):
             self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
             self._step(_state_dic["CoM"])
         print("ARRGS", self.args)
-        # breakpoint()
         return self.args
 
     def spine_step(self, CoM, timestep, total_traj_time=5.0):
         step_size = self.args['step_size']
         timestep_future = timestep + total_traj_time
         goal = np.array([self.spine_x(timestep_future), self.spine_y(timestep_future), 0.24])
+        if goal[0] > global_cfg.ROBOT_CFG.robot_goal[0]:
+            goal[0] = global_cfg.ROBOT_CFG.robot_goal[0]
         diff_vec = np.clip(goal - CoM, -step_size, step_size)
         return CoM + diff_vec
 
@@ -155,7 +157,7 @@ class MPC(object):
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         #Updating the global planner
         self.global_planner.update(self.last_timestep, self.global_plan_state, self.robot_state[1:3], goal_step_vec)
-        if self.global_planner.max_t < self.last_timestep + 5.0:
+        if self.global_planner.max_t < self.last_timestep:
             print("STOPING MPC CONTROLLER")
             global_cfg.RUN._done = True
 

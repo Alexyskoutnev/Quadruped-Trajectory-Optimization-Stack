@@ -1,7 +1,7 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['feasibility', 'plane']
+map_id : ['feasibility', 'feasibility_1', 'plane']
 #=========Switches==============
 stance_phase : False
 height_map : True
