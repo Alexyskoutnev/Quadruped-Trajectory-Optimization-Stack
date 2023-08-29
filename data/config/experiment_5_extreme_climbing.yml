@@ -1,22 +1,20 @@
-#======Goal=====================
-goal : [0, 0, 0.24]
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['random_terrain_1', 'random_terrain_1', 'random_terrain_1']
+map_id : ['climb_2', 'climb_1', 'plane', 'plane']
 #=========Switches==============
 stance_phase : False
 height_map : True
 track : True
 #=========Hyperparameters=======
-TRAJ_SIZE : 10000
-SIM_STEPS : 11000
+TRAJ_SIZE : 20000
+SIM_STEPS : 21000
 HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 300
 skip_forward_idx : 1
 track_rate : 250
-friction : 2.0
+friction : 0.5
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 50
 v_look_ahead : 5000

@@ -127,7 +127,7 @@ def simulation(args):
     if sim_cfg['py_interface']:
         pybullet_interface = PybulletInterface()
     elif sim_cfg['custom_camera_view']:
-        pybullet_interface = RecordInterface(ROBOT.robot)
+        pybullet_interface = RecordInterface(args, ROBOT.robot)
     """=========================================="""
     cmd = np.zeros((12, 1))
     keypress_io = Thread(target=keypress)

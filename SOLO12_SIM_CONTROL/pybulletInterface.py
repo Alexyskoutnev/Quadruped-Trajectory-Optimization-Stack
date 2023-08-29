@@ -6,11 +6,24 @@ import numpy as np
 
 class RecordInterface(object):
     
-    def __init__(self, robot):
-        self.camera_yaw = 40
-        self.camera_pitch = -15
-        self.camera_roll = 0
-        self.camera_distance = 1.25
+    def __init__(self, args, robot):
+        print()
+        if args.get('camera_yaw'):
+            self.camera_yaw = args['camera_yaw']
+        else:
+             self.camera_yaw = 40
+        if args.get('camera_pitch'):
+            self.camera_pitch = args['camera_pitch']
+        else:
+            self.camera_pitch = -15
+        if args.get('camera_roll'):
+            self.camera_roll = args['camera_roll']
+        else:
+            self.camera_roll = 0
+        if args.get('camera_distance'):
+            self.camera_distance = args['camera_distance']
+        else:
+            self.camera_distance = 1.25
         self.robot = robot
 
     def update(self):
@@ -21,11 +34,7 @@ class PybulletInterface(object):
 
     def __init__(self):
 
-        self.camera_yaw = 0
-        self.camera_pitch = -7
-        self.camera_roll = 0
-        self.camera_distance = 1.50
-
+       
         self.xId = p.addUserDebugParameter('x', -0.1, 0.1, 0.0)
         self.yId = p.addUserDebugParameter('y', -0.1, 0.1, 0.0)
         self.zId = p.addUserDebugParameter('z', -0.1, 0.1, 0.0)

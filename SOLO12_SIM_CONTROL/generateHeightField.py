@@ -281,6 +281,8 @@ class Maps(object):
     feasibility = "./data/heightfields/feasibility_test.txt"
     feasibility_1 = "./data/heightfields/feasibility_test_1.txt"
     random_terrain_1 = "./data/heightfields/random_terrain.txt"
+    climb_1 = "./data/heightfields/climb_1.txt"
+    climb_2 = "./data/heightfields/climb_2.txt"
     calibration = heighmap_2_np_reader(calibration_file)
     step = heighmap_2_np_reader(step_file)
     step_1 = heighmap_2_np_reader(step_1_file)
@@ -292,11 +294,13 @@ class Maps(object):
     wall_4 = heighmap_2_np_reader(wall_4_file)
     stairs = heighmap_2_np_reader(stairs_file)
     plane = heighmap_2_np_reader(plane_file)
+    climb_1 = heighmap_2_np_reader(climb_1)
+    climb_2 = heighmap_2_np_reader(climb_2)
     test = heighmap_2_np_reader(test_file)
     feasibility = heighmap_2_np_reader(feasibility)
     feasibility_1 = heighmap_2_np_reader(feasibility_1)
     random_terrain_1 = heighmap_2_np_reader(random_terrain_1)
-    name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
+    name_2_np_arr = {'climb_2': climb_2, 'climb_1' : climb_1, 'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
                      'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4, "random_terrain_1": random_terrain_1}
 
     def __init__(self, maps=['plane'], dim=20):

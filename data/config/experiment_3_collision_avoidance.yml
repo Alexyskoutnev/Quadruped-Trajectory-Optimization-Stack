@@ -23,3 +23,8 @@ show_feet_plan : False
 #==Search Proprocess==#
 bool_map_search : True
 step_version : 'spine'
+#==Camera Options=====#
+camera_yaw : 40
+camera_pitch : 135
+camera_roll : 0
+camera_distance : 2.0
