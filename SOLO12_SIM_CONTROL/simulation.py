@@ -44,6 +44,7 @@ class Simulation(object):
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
             p.changeVisualShape(terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
             p.changeDynamics(terrain, -1, lateralFriction=cfg['friction'])
+            p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 
         elif cfg['enviroment'] == 'custom_test':
             py_client = p.connect(p.DIRECT)

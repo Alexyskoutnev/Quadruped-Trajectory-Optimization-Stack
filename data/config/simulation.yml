@@ -3,6 +3,7 @@ mode : "towr"
 enviroment : "custom"
 # enviroment : "plane"
 
+custom_camera_view : True
 py_interface : False
 fix-base : False
 #==BEZIER INIT CONFIGURATION==
@@ -28,6 +29,7 @@ base_stable : False
 track : False
 track_rate : 100
 height_map : True
+
 # map_id : ['feasibility']
 map_id : ['feasibility', 'plane']
 # map_id : ['step', 'plane']

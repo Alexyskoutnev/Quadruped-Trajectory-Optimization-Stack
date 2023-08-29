@@ -18,7 +18,7 @@ import numpy as np
 from SOLO12_SIM_CONTROL.robot.robot import SOLO12
 from SOLO12_SIM_CONTROL.utils import *
 from SOLO12_SIM_CONTROL.gaitPlanner import Gait
-from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
+from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface, RecordInterface
 from SOLO12_SIM_CONTROL.simulation import Simulation
 from SOLO12_SIM_CONTROL.logger import Logger
 from SOLO12_SIM_CONTROL.tracking import Tracking
@@ -126,6 +126,8 @@ def simulation(args):
             RECORD_TRAJ = True
     if sim_cfg['py_interface']:
         pybullet_interface = PybulletInterface()
+    elif sim_cfg['custom_camera_view']:
+        pybullet_interface = RecordInterface(ROBOT.robot)
     """=========================================="""
     cmd = np.zeros((12, 1))
     keypress_io = Thread(target=keypress)
@@ -238,6 +240,8 @@ def simulation(args):
 
                 last_loop_time = time.time()
                 sim_step += 1
+                if sim_cfg['custom_camera_view']:
+                    pybullet_interface.update()
 
         else:
             loop_time = time.time() - last_loop_time
@@ -253,6 +257,8 @@ def simulation(args):
                     sim_step += 1
                 else:
                     break
+
+        
 
     if sim_cfg.get('track'):
         TRACK_RECORD.plot()

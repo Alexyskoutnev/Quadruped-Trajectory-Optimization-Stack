@@ -4,6 +4,19 @@ import sys
 import numpy as np
 
 
+class RecordInterface(object):
+    
+    def __init__(self, robot):
+        self.camera_yaw = 40
+        self.camera_pitch = -15
+        self.camera_roll = 0
+        self.camera_distance = 1.25
+        self.robot = robot
+
+    def update(self):
+        cubePos, cubeOrn = p.getBasePositionAndOrientation(self.robot)
+        p.resetDebugVisualizerCamera(cameraDistance=self.camera_distance, cameraYaw=self.camera_yaw, cameraPitch=self.camera_pitch, cameraTargetPosition=cubePos)
+
 class PybulletInterface(object):
 
     def __init__(self):
