@@ -50,3 +50,4 @@ WORKDIR /root/catkin_ws/src/towr_solo12/towr/build
 RUN cmake -S ../ -DCMAKE_BUILD_TYPE=Release
 RUN make -j4
 RUN make install
+WORKDIR /root/catkin_ws/src/towr_solo12/towr/build

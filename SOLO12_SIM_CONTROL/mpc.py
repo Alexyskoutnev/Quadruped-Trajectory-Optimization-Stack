@@ -135,7 +135,7 @@ class MPC(object):
             self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
             self._step(_state_dic["CoM"])
         print("ARRGS", self.args)
-        breakpoint()
+        # breakpoint()
         return self.args
 
     def spine_step(self, CoM, timestep, total_traj_time=5.0):
@@ -155,6 +155,10 @@ class MPC(object):
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         #Updating the global planner
         self.global_planner.update(self.last_timestep, self.global_plan_state, self.robot_state[1:3], goal_step_vec)
+        if self.global_planner.max_t < self.last_timestep + 5.0:
+            print("STOPING MPC CONTROLLER")
+            global_cfg.RUN._done = True
+
 
     def update_timestep(self):
         """

@@ -50,6 +50,7 @@ class Global_Planner(object):
         self.error_tol = 0.05
         self.CoM_avg = 0.0
         self.CoM_avg_container = LimitedFIFOQueue(500)
+        self.max_t = self.path_solver.predicted_t
 
     def push_CoM(self, xy):
         self.CoM_avg_container.enqueue(xy)
@@ -169,6 +170,7 @@ class PATH_Solver(object):
         self.goal_idx_x_y = self.convert_2_idx(self.goal_pos_x_y[0], self.goal_pos_x_y[1])
         self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
         self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
+        # print("Predicted _t -> ", self.predicted_t)
 
         if self.solution_flag:
             self.solution_flag = True
@@ -225,15 +227,14 @@ class PATH_Solver(object):
         return None
 
     def _solve(self):
-        t = np.linspace(0, self.predicted_t, len(self.path[::3]) + 1)
-        print(self.path)
-        path_x_track = [(pos[1] * self.grid_res) - self.origin_x_shift for pos in self.path[::3]]
+        t = np.linspace(0, self.predicted_t, len(self.path[::2]) + 1)
+        path_x_track = [(pos[1] * self.grid_res) - self.origin_x_shift for pos in self.path[::2]]
         path_x_track.append(self.path[-1][1] * self.grid_res)
-        path_y_track = [(pos[0] * self.grid_res) - self.origin_y_shift for pos in self.path[::3]]
+        path_y_track = [(pos[0] * self.grid_res) - self.origin_y_shift for pos in self.path[::2]]
         path_y_track.append(self.path[-1][0] * self.grid_res)
-        path_x_plot = [pos[1] * self.grid_res for pos in self.path[::3]]
+        path_x_plot = [pos[1] * self.grid_res for pos in self.path[::2]]
         path_x_plot.append(self.path[-1][1] * self.grid_res)
-        path_y_plot = [pos[0] * self.grid_res for pos in self.path[::3]]
+        path_y_plot = [pos[0] * self.grid_res for pos in self.path[::2]]
         path_y_plot.append(self.path[-1][0] * self.grid_res)
         self.spine_x_track = CubicSpline(t, path_x_track)
         self.spine_y_track = CubicSpline(t, path_y_track)
@@ -248,6 +249,7 @@ class PATH_Solver(object):
         self.goal_idx_x_y = self.convert_2_idx(goal[0], goal[1])
         self.path = self.astar(self.start_idx_x_y, self.goal_idx_x_y)
         self.predicted_t = np.linalg.norm(np.array(start[0:2]) - np.array(goal[0:2])) / (self.args['step_size']) * 10
+        print("Predicted_T -> ", self.predicted_t)
         if self.solution_flag:
             t = np.linspace(0, self.predicted_t, len(self.path[::3]) + 1)
             path_x_track = [(pos[1] * self.grid_res) - self.origin_x_shift for pos in self.path[::3]]
