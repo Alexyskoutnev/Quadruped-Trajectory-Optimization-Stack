@@ -79,21 +79,21 @@ class MPC(object):
 
         def start_config(args):
             args['-s'] = [0, 0, 0.24]
-            args['-e1'] = [0.20590930477664196, 0.14927536747689948, 0.0]
-            args['-e2'] = [0.2059042161427424, -0.14926921805769638, 0.0]
-            args['-e3'] = [-0.20589422629511542, 0.14933201572367907, 0.0]
-            args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
+            args['-e1'] = [0.21, 0.19, 0.0]
+            args['-e2'] = [0.21, -0.19, 0.0]
+            args['-e3'] = [-0.21, 0.19, 0.0]
+            args['-e4'] = [-0.21, -0.19, 0.0]
             args['-s_ang'] = [0, 0, 0]
         start_config(args)
         step_size = args['step_size'] #try implementing in config-file
         if self.set_spine_flag:
-            print("spine")
             global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
             goal = self.spine_step(args['-s'], self.last_timestep)
             diff_vec = np.clip(goal - global_pos, -step_size, step_size)
             diff_vec[2] = 0.0
             args['-g'] = list(global_pos + diff_vec)
-            args['-g'][2] = 0.24
+            z_goal = self.global_planner.get_map_height((args['-g'][0], args['-g'][1]))
+            args['-g'][2] = z_goal + 0.24
         else:
             global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
             goal = global_cfg.ROBOT_CFG.robot_goal
@@ -141,7 +141,8 @@ class MPC(object):
     def spine_step(self, CoM, timestep, total_traj_time=5.0):
         step_size = self.args['step_size']
         timestep_future = timestep + total_traj_time
-        goal = np.array([self.spine_x(timestep_future), self.spine_y(timestep_future), 0.24])
+        z_goal = self.global_planner.get_map_height((self.spine_x(timestep_future), self.spine_y(timestep_future)))
+        goal = np.array([self.spine_x(timestep_future), self.spine_y(timestep_future), z_goal + 0.24])
         if goal[0] > global_cfg.ROBOT_CFG.robot_goal[0]:
             goal[0] = global_cfg.ROBOT_CFG.robot_goal[0]
         diff_vec = np.clip(goal - CoM, -step_size, step_size)

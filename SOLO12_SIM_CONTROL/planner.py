@@ -76,7 +76,8 @@ class Global_Planner(object):
     def spine_step(self, CoM, timestep, total_traj_time=5.0):
         step_size = self.args['step_size']
         timestep_future = timestep + total_traj_time
-        goal = np.array([self.path_solver.spine_x_track(timestep_future), self.path_solver.spine_y_track(timestep_future), 0.24])
+        z_goal = self.get_map_height((self.path_solver.spine_x_track(timestep_future), self.path_solver.spine_y_track(timestep_future)))
+        goal = np.array([self.path_solver.spine_x_track(timestep_future), self.path_solver.spine_y_track(timestep_future), z_goal + 0.24])
         diff_vec = np.clip(goal - CoM, -step_size, step_size)
         return CoM + diff_vec
 
