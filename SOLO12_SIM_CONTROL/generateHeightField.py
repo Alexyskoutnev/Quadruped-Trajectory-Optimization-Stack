@@ -280,6 +280,7 @@ class Maps(object):
     plane_file =  "./data/heightfields/plane.txt"
     feasibility = "./data/heightfields/feasibility_test.txt"
     feasibility_1 = "./data/heightfields/feasibility_test_1.txt"
+    random_terrain_1 = "./data/heightfields/random_terrain.txt"
     calibration = heighmap_2_np_reader(calibration_file)
     step = heighmap_2_np_reader(step_file)
     step_1 = heighmap_2_np_reader(step_1_file)
@@ -294,8 +295,9 @@ class Maps(object):
     test = heighmap_2_np_reader(test_file)
     feasibility = heighmap_2_np_reader(feasibility)
     feasibility_1 = heighmap_2_np_reader(feasibility_1)
+    random_terrain_1 = heighmap_2_np_reader(random_terrain_1)
     name_2_np_arr = {'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
-                     'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4}
+                     'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4, "random_terrain_1": random_terrain_1}
 
     def __init__(self, maps=['plane'], dim=20):
         self.dim = 20

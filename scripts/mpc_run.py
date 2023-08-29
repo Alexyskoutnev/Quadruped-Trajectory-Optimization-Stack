@@ -62,7 +62,8 @@ def DockerInfo():
 
 def experimentInfo(experiement_name):
     experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
-                        "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml"}
+                        "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
+                        "exp_4" : "experiment_4_rough_terrain.yml"}
     file_path = os.path.join("./data/config", experiment_names[experiement_name])
     sim_cfg = yaml.safe_load(open(file_path, 'r'))
     return sim_cfg
@@ -280,5 +281,5 @@ if __name__ == "__main__":
 
     else:
         args.update(builder(sim_cfg=args['sim_cfg']))
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 1.0
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.7
         _run(args)

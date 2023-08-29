@@ -1,7 +1,7 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['random_terrain', 'random_terrain_1', 'random_terrain_2']
+map_id : ['random_terrain_1', 'random_terrain_1', 'random_terrain_1']
 #=========Switches==============
 stance_phase : False
 height_map : True
@@ -11,15 +11,15 @@ TRAJ_SIZE : 10000
 SIM_STEPS : 11000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_period : 100
+stance_period : 300
 skip_forward_idx : 1
 track_rate : 250
-friction : 1.0
+friction : 2.0
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 50
 v_look_ahead : 5000
 show_com_plan : False
 show_feet_plan : False
 #==Search Proprocess==#
-bool_map_search : True
+bool_map_search : False
 step_version : 'spine'
