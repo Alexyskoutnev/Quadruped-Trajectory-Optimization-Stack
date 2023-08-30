@@ -542,14 +542,11 @@ class SOLO12(object):
         err_FR = np.reshape(xyz_FR[0:2] - cmd['FR_FOOT']['P'][0:2], (2, 1))
         err_HL = np.reshape(xyz_HL[0:2] - cmd['HL_FOOT']['P'][0:2], (2, 1))
         err_HR = np.reshape(xyz_HR[0:2] - cmd['HR_FOOT']['P'][0:2], (2, 1))
-        # print("cmd -> ", cmd['FL_FOOT'])
-        # print("xyz_FL -> ", xyz_FL)
 
         o_FL = self.ROBOT.data.oMf[ID_FL].rotation
         o_FR = self.ROBOT.data.oMf[ID_FR].rotation
         o_HL = self.ROBOT.data.oMf[ID_HL].rotation
         o_HR = self.ROBOT.data.oMf[ID_HR].rotation
-
 
         fJ_FL3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_FL)[:3, -12:]  # Take only the translation terms
         oJ_FL3 = o_FL @ fJ_FL3  #Transforms to rotation to global frame
@@ -567,16 +564,9 @@ class SOLO12(object):
         oJ_HR3 = o_HR @ fJ_HR3
         oJ_HRxz = oJ_HR3[0:2, -12:]
 
-
-        # breakpoint()
         nu = np.vstack([err_FL, err_FR, err_HL, err_HR]) # 12 x 1
-        # print(nu)
-
         J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz]) #12 x 12
-
-
         q_dot_cmd = - K * np.linalg.pinv(J) @ nu # 12 x 12 X 12 x 1 => 12 x 1
-
         q_dot_cmd = np.reshape(q_dot_cmd, (12, ))
 
         # q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
