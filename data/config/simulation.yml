@@ -3,7 +3,7 @@ mode : "towr"
 enviroment : "custom"
 # enviroment : "plane"
 
-custom_camera_view : True
+custom_camera_view : False
 py_interface : False
 fix-base : False
 #==BEZIER INIT CONFIGURATION==
@@ -26,14 +26,14 @@ stance_period : 100
 skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : False
 base_stable : False
-track : False
-track_rate : 100
+track : True
+track_rate : 200
 height_map : True
 
 # map_id : ['feasibility']
-map_id : ['feasibility', 'plane']
+# map_id : ['feasibility', 'plane']
 # map_id : ['step', 'plane']
-# map_id : ['plane', 'plane']
+map_id : ['plane', 'plane', 'plane', 'plane']
 friction : 0.99
 
 #==Visual Planner CONFIGURATIONS==

@@ -275,6 +275,7 @@ class Tracking:
             print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
             print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
         except:
+            print("error in ploting")
             pass
         
     def get_sim_cmd(self):

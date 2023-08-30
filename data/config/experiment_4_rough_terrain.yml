@@ -4,6 +4,7 @@ goal : [0, 0, 0.24]
 mode : "towr"
 enviroment : "custom"
 map_id : ['random_terrain_1', 'random_terrain_1', 'random_terrain_1']
+custom_camera_view : False
 #=========Switches==============
 stance_phase : False
 height_map : True

@@ -1,4 +1,5 @@
 import time
+import copy
 
 import pybullet as p
 import numpy as np
@@ -63,23 +64,11 @@ def shift_z(v, shift):
     """
     v[2] += shift
     return v
-
-class Loader:
-    def __init__(self, urdf_path, config, fixed = 0) -> None:
-        if config['use_pinocchio']:
-            _load = pin.buildModelFromUrdf(urdf_path)
-            self.model = _load
-            self.data = _load.createData()
-        self.robot = p.loadURDF(urdf_path, config['start_pos'], config['start_ang'], useFixedBase=fixed)
-        self.q0 = np.zeros(12)
-    
-    def __repr__(self) -> str:
-        return str(self.robot)
         
 class SOLO12(object):
-    def __init__(self, URDF, config, fixed = 0, sim_cfg=None):
+    def __init__(self, URDF, config, fixed = 0, sim_cfg=None, loader=None):
         self.config = config
-        self.ROBOT = Loader(URDF, config, fixed)
+        self.ROBOT = loader
         self.robot = self.ROBOT.robot
         self.jointidx = {"FL": [0, 1, 2], "FR": [4, 5, 6], "BL": [8, 9, 10], "BR": [12, 13, 14], "idx": [0,1,2,4,5,6,8,9,10,12,13,14]}
         self.fixjointidqx = {"FL": 3, "FR": 7, "BL": 11, "BR": 15, "idx": [3,7,11,15]}
@@ -335,6 +324,9 @@ class SOLO12(object):
             q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
+    def end_effector_correction(self, desired_EE, measured_EE):
+        pass
+
     def control_multi(self, cmds, indices, mode="P", usePin = False):
         """Helper function to find the control outputs for each end-effector
 
@@ -347,7 +339,22 @@ class SOLO12(object):
             tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
         """
         self._update()
-        if usePin and (not mode == "P" or not mode == "PD"):
+        if self.config['use_pinocchio'] and (mode == "P" or mode == "PD"):
+            q_cmd = np.zeros(12)
+            q_vel = np.zeros(12)
+            q_toq = np.zeros(12)
+            i = 0
+            for cmd, idx in zip(cmds.values(), indices):
+                q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
+                if (q_cmd_temp is not None):
+                    q_cmd[i:i+3] = q_cmd_temp[i:i+3]
+                i += 3
+            cmds_local = copy.deepcopy(cmds)
+            trajectory_2_local_frame(self, cmds_local)
+            if cmd.get('COM') is not None:
+                    del cmd['COM']
+            _, q_vel = self.inv_kinematics_pin(cmds_local) 
+        if self.config['use_pinocchio'] and mode == "torque":
             cmds = trajectory_2_local_frame(self, cmds)
             if cmds.get('COM') is not None:
                     del cmds['COM']
@@ -516,7 +523,7 @@ class SOLO12(object):
             NotImplementedError: _description_
         """
 
-        K = 100.
+        K = 1.
 
         ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")
         ID_FR = self.ROBOT.model.getFrameId("FR_FOOT")
@@ -531,10 +538,12 @@ class SOLO12(object):
         xyz_HL = self.ROBOT.data.oMf[ID_HL].translation
         xyz_HR = self.ROBOT.data.oMf[ID_HR].translation
 
-        err_FL = np.reshape(xyz_FL - cmd['FL_FOOT']['P'], (3,1))
-        err_FR = np.reshape(xyz_FR - cmd['FR_FOOT']['P'], (3, 1))
-        err_HL = np.reshape(xyz_HL - cmd['HL_FOOT']['P'], (3, 1))
-        err_HR = np.reshape(xyz_HR - cmd['HR_FOOT']['P'], (3, 1))
+        err_FL = np.reshape(xyz_FL[0:2] - cmd['FL_FOOT']['P'][0:2], (2, 1))
+        err_FR = np.reshape(xyz_FR[0:2] - cmd['FR_FOOT']['P'][0:2], (2, 1))
+        err_HL = np.reshape(xyz_HL[0:2] - cmd['HL_FOOT']['P'][0:2], (2, 1))
+        err_HR = np.reshape(xyz_HR[0:2] - cmd['HR_FOOT']['P'][0:2], (2, 1))
+        # print("cmd -> ", cmd['FL_FOOT'])
+        # print("xyz_FL -> ", xyz_FL)
 
         o_FL = self.ROBOT.data.oMf[ID_FL].rotation
         o_FR = self.ROBOT.data.oMf[ID_FR].rotation
@@ -544,22 +553,24 @@ class SOLO12(object):
 
         fJ_FL3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_FL)[:3, -12:]  # Take only the translation terms
         oJ_FL3 = o_FL @ fJ_FL3  #Transforms to rotation to global frame
-        oJ_FLxz = oJ_FL3[0:3, -12:]
+        oJ_FLxz = oJ_FL3[0:2, -12:]
 
         fJ_FR3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_FR)[:3, -12:]
         oJ_FR3 = o_FR @ fJ_FR3
-        oJ_FRxz = oJ_FR3[0:3, -12:]
+        oJ_FRxz = oJ_FR3[0:2, -12:]
 
         fJ_HL3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_HL)[:3, -12:]
         oJ_HL3 = o_HL @ fJ_HL3
-        oJ_HLxz = oJ_HL3[0:3, -12:]
+        oJ_HLxz = oJ_HL3[0:2, -12:]
 
         fJ_HR3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_HR)[:3, -12:]
         oJ_HR3 = o_HR @ fJ_HR3
-        oJ_HRxz = oJ_HR3[0:3, -12:]
+        oJ_HRxz = oJ_HR3[0:2, -12:]
 
 
+        # breakpoint()
         nu = np.vstack([err_FL, err_FR, err_HL, err_HR]) # 12 x 1
+        # print(nu)
 
         J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz]) #12 x 12
 
@@ -568,9 +579,9 @@ class SOLO12(object):
 
         q_dot_cmd = np.reshape(q_dot_cmd, (12, ))
 
-        q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
+        # q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
 
-        return q_cmd, q_dot_cmd
+        return None, q_dot_cmd
 
     def default_stance_control(self, q_init = None):
         """Robot default stance standing still
