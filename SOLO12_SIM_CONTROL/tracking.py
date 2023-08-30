@@ -1,3 +1,4 @@
+import os
 import datetime
 import numpy as np
 import pybullet
@@ -10,6 +11,8 @@ from SOLO12_SIM_CONTROL.utils import vec_to_cmd, vec_to_cmd_pose
 SAVE_FILE = "./data/tracking_info/ref_sim_track_"
 SAVE_FILE_COM = "./data/tracking_info/CoM_track_"
 SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error_"
+SAVE_DIR = "./data/tracking_info/"
+NUM_TRAJS_TO_SAVE = 2
 
 def date_salt(f_type=".png"):
     current_datetime = datetime.datetime.now()
@@ -46,6 +49,11 @@ class Tracking:
         self.track_rate = cfg['track_rate']
         self.track_flag = cfg['track']
         self.date_time_salt = date_salt()
+        if os.path.exists(SAVE_DIR) and os.path.isdir(SAVE_DIR):
+            if len(os.listdir(SAVE_DIR)) > (NUM_TRAJS_TO_SAVE * 3):
+                for file in os.listdir(SAVE_DIR):
+                    file_path = os.path.join(SAVE_DIR, file)
+                    os.remove(file_path)
     
     def update(self, reference_cmd, timestep):
         sim_cmd = self.get_sim_cmd()
