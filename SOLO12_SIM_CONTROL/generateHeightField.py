@@ -14,7 +14,7 @@ np.set_printoptions(threshold=np.inf)
 
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
-NUM_PROCESSES = 16
+NUM_PROCESSES = 32
 
 scripts =  {'run': 'docker exec <id> ./main',
             'info': 'docker ps -f ancestor=towr',
@@ -247,7 +247,7 @@ class PATH_MAP(object):
                         data = Map_2_Idx(map_coords_start=(_x_start, _y_start, _z_start), map_coords_goal=(_x_goal, _y_goal, _z_goal),
                                         map_idx_start=(_idx_x, _idx_y), map_idx_goal=(_idx_x, _idx_y_offset))
                         self.data_queue.put(data)
-                        print(data)
+                        # print(data)
                     _idx_y += 2
                     _idx_y_offset += 2
                 _idx_x += 1
@@ -303,7 +303,7 @@ class PATH_MAP(object):
                     for idx in self.neighbors_end:
                         local_array[goal_idx[0] + idx[0]][goal_idx[1] + idx[1]] = 1
                     
-            print(np.transpose(local_array), "\n")
+            # print(np.transpose(local_array), "\n")
             
 
 class RandomMaps(object):
