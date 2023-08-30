@@ -38,7 +38,9 @@ class Tracking:
         self.HR_FOOT = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.CoM_Pos = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
         self.CoM_Ang = {"reference": [], "sim": [], "error": [], "r_x" : [], "r_y" : [], "r_z" : [], "s_x": [], "s_y" : [], "s_z" : []}
-        self.timeseries = np.linspace(0, 10, num_traj)
+        self.end_time = 5.0
+        self.size = num_traj
+        self.timeseries = np.linspace(0, self.end_time, num_traj)
         self.total_error_feet_error = 0.0
         self.total_error_com_error = 0.0
         self.track_rate = cfg['track_rate']
@@ -51,11 +53,14 @@ class Tracking:
         self.traj['sim'].append(COMMAND(timestep, sim_cmd))
         self._update()
         self.idx += 1
+        self.size = self.idx + 1
+        self.end_time = timestep
         if self.idx % self.track_rate == 0:
             if self.track_flag:
                 self.plot()
         
     def _update(self):
+        self.timeseries = np.linspace(0, self.end_time, self.size)
         for NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'CoM_pos'):
             if NAME in ('CoM_pos'):
                 r_com_x, r_com_y, r_com_z = self.traj['reference'][self.idx].CoM[NAME]
@@ -268,15 +273,15 @@ class Tracking:
             plt.show()
 
     def plot(self, plot_graph=False):
-        try:
-            self.plot_CoM(plot_graph)
-            self.plot_reference_vs_sim(plot_graph)
-            self.plot_error(plot_graph)
-            print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
-            print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
-        except:
-            print("error in ploting")
-            pass
+        # try:
+        self.plot_CoM(plot_graph)
+        self.plot_reference_vs_sim(plot_graph)
+        self.plot_error(plot_graph)
+        print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
+        print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
+        # except:
+            # print("error in ploting")
+            # pass
         
     def get_sim_cmd(self):
         vec = self.robot.traj_vec
