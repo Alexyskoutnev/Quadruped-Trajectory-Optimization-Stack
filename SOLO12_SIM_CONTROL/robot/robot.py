@@ -110,7 +110,6 @@ class SOLO12(object):
         jointTorques = [0.0 for m in revoluteJointIndices]
         p.setJointMotorControlArray(self.robot, revoluteJointIndices, controlMode=p.TORQUE_CONTROL, forces=jointTorques)
 
-        # self.offsets = [0.02, 0.0, 0.0, -0.02, 0.0, 0.0, 0.02, 0.0, 0.0, -0.02, 0.0, 0.0]
         self.offsets = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self._kp = config['kp']
         self._kd = config['kd']
@@ -356,16 +355,24 @@ class SOLO12(object):
             q_cmd_pin, q_vel = self.inv_kinematics_pin(cmds_local) 
             q_cmd += (q_cmd - q_cmd_pin)
         elif self.config['use_pinocchio'] and mode == "torque":
-            cmds = trajectory_2_local_frame(self, cmds)
-            if cmds.get('COM') is not None:
-                    del cmds['COM']
             q_cmd = np.zeros(12)
             q_vel = np.zeros(12)
             q_toq = np.zeros(12)
-            q_cmd, q_vel_cmd = self.inv_kinematics_pin(cmds) 
+            i = 0
+            for cmd, idx in zip(cmds.values(), indices):
+                q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
+                if (q_cmd_temp is not None):
+                    q_cmd[i:i+3] = q_cmd_temp[i:i+3]
+                i += 3
+            cmds_local = copy.deepcopy(cmds)
+            trajectory_2_local_frame(self, cmds_local)
+            if cmd.get('COM') is not None:
+                    del cmd['COM']
+            q_cmd_pin, q_vel = self.inv_kinematics_pin(cmds_local) 
+            q_cmd += (q_cmd - q_cmd_pin)
             self._update()
             q_mes, v_mes = self.get_PD_values()
-            q_toq = self._motor.convert_to_torque_v1(q_cmd, q_mes, v_mes, q_vel_cmd)
+            q_toq = self._motor.convert_to_torque_v1(q_cmd, q_mes, v_mes, q_vel)
         else:
             if cmds.get('COM') is not None:
                 del cmds['COM']
@@ -565,9 +572,9 @@ class SOLO12(object):
         oJ_HR3 = o_HR @ fJ_HR3
         oJ_HRxz = oJ_HR3[0:2, -12:]
 
-        nu = np.vstack([err_FL, err_FR, err_HL, err_HR]) # 12 x 1
-        J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz]) #12 x 12
-        q_dot_cmd = - K * np.linalg.pinv(J) @ nu # 12 x 12 X 12 x 1 => 12 x 1
+        nu = np.vstack([err_FL, err_FR, err_HL, err_HR])
+        J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz])
+        q_dot_cmd = - K * np.linalg.pinv(J) @ nu
         q_dot_cmd = np.reshape(q_dot_cmd, (12, ))
 
         q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)

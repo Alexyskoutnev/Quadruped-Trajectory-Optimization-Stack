@@ -125,10 +125,10 @@ class Global_Planner(object):
             self.start_goal_pts.push(plan_start_goal_tuple)
 
     def P_goal_point(self, goal_pt, error = [0, 0], kp=1.0):
-        return goal_pt - (kp * error)
+        return goal_pt + (kp * error)
 
     def D_goal_point(self, goal_pt, d_error = [0, 0], kd=1.0):
-        return goal_pt - (kd * d_error)
+        return goal_pt + (kd * d_error)
 
     def pop(self):
         return self.start_goal_pts.pop()

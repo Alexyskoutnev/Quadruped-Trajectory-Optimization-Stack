@@ -27,7 +27,7 @@ skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POI
 record : False
 base_stable : False
 track : True
-track_rate : 200
+track_rate : 500
 height_map : True
 
 # map_id : ['feasibility']
