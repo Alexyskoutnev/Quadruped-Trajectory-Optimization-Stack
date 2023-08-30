@@ -3,6 +3,7 @@ mode : "towr"
 enviroment : "custom"
 map_id : ['step', 'step_1', 'step_2', 'plane']
 custom_camera_view : True
+mesh_scale : 10
 #=========Switches==============
 stance_phase : False
 height_map : True

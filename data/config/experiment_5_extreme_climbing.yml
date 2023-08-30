@@ -3,6 +3,7 @@ mode : "towr"
 enviroment : "custom"
 map_id : ['climb_2', 'climb_1', 'plane', 'plane']
 custom_camera_view : True
+mesh_scale : 10
 #=========Switches==============
 stance_phase : False
 height_map : True

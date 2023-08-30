@@ -31,14 +31,16 @@ class Simulation(object):
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
-            height_map_generator = Height_Map_Generator(maps=cfg['map_id'], bool_map_search=cfg['bool_map_search'])
+            height_map_generator = Height_Map_Generator(maps=cfg['map_id'], bool_map_search=cfg['bool_map_search'], scale_factor=cfg['mesh_scale'])
             height_shift = height_map_generator.height_shift
             tiles = len(cfg['map_id'])
             self.bool_map = height_map_generator.bool_map
             self.num_tiles = tiles
             self.height_map = height_map_generator.map
+            self.resolution_xy = height_map_generator.resolution
+            cfg['resolution'] =  height_map_generator.resolution
             num_rows, num_cols = height_map_generator.num_rows, height_map_generator.num_cols
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1, 1.0], heightfieldTextureScaling=64, heightfieldData=height_map_generator.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
+            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[self.resolution_xy,self.resolution_xy, 1.0], heightfieldTextureScaling=128, heightfieldData=height_map_generator.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
             terrain  = p.createMultiBody(0, terrainShape)
             p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1), .0, height_shift+0.001], [0,0,0,1.0]) # fix
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)

@@ -40,7 +40,6 @@ class MPC(object):
         self.global_solver = self.global_planner.path_solver
         self.spine_x = self.global_solver.spine_x_track
         self.spine_y = self.global_solver.spine_y_track
-        print(self.current_traj)
         self.traj_plan = txt_2_np_reader(self.current_traj)
         self.robot = args['robot']
         self.set_correct_flag = False

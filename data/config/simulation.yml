@@ -6,6 +6,7 @@ enviroment : "custom"
 custom_camera_view : False
 py_interface : False
 fix-base : False
+mesh_scale : 2
 #==BEZIER INIT CONFIGURATION==
 pos : [0, 0, 0]
 angle : 0.0
@@ -31,9 +32,10 @@ track_rate : 500
 height_map : True
 
 # map_id : ['feasibility']
-# map_id : ['feasibility', 'plane']
+map_id : ['feasibility', 'plane']
 # map_id : ['step', 'plane']
-map_id : ['plane', 'plane', 'plane', 'plane']
+# map_id : ['plane', 'plane', 'plane', 'plane']
+# map_id : ['wall_1']
 friction : 0.99
 
 #==Visual Planner CONFIGURATIONS==

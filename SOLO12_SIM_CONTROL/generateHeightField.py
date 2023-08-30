@@ -1,12 +1,14 @@
 from SOLO12_SIM_CONTROL.utils import is_numeric
 
 import time
+import matplotlib.pyplot as plt
 from collections import namedtuple
 import multiprocessing
 import subprocess
 import shlex
 
 import numpy as np
+from scipy.spatial import ConvexHull
 
 np.set_printoptions(threshold=np.inf)
 
@@ -29,6 +31,15 @@ def strip(x):
         else:
             st += s
     return st
+
+def scale_map(map, scale_factor=1):
+    scaled_map = []
+    for row in map:
+        scaled_row = []
+        for x in row:
+            scaled_row.extend([x] * scale_factor)
+        scaled_map.extend([scaled_row]  * scale_factor)
+    return np.array(scaled_map)
 
 def DockerInfo():
     p = subprocess.run([scripts['info']], shell=True, capture_output=True, text=True)
@@ -133,7 +144,7 @@ def max_height(file):
 
 class PATH_MAP(object):
     
-    def __init__(self, map, multi_map_shift=1):
+    def __init__(self, map, multi_map_shift=1, scale=1):
         self.map = map
         self.origin_shift_x = 1.0
         self.origin_shift_y = 1.0
@@ -145,14 +156,48 @@ class PATH_MAP(object):
         self.lock = multiprocessing.Lock()
         self.shared_arr = multiprocessing.Array('i', map.shape[0] * map.shape[1])
         self.num_cols = map.shape[1]
-        self.probe_map(map, multi_map_shift)
-        self.neighbors_start = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1), (-2, 0), (2, 0), (0, -2), (0, -2))
-        self.neighbors_mid = ((-1, 0), (1, 0), (0, 1), (0, -1), (-2, 0), (2, 0), (0, -2), (0, -2))
-        self.neighbors_end = ((-1, 0), (1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1), (-2, 0), (2, 0), (0, -2), (0, -2))
+        self.mesh_resolution = 0.1 * (1 / scale)
+        self.probe_map(map, multi_map_shift, self.mesh_resolution )
+        neighbors = ((-(scale*3), 0), (scale*3, 0), (0, -(scale*3)), (0, (scale*3)))
+        neighbors_mid = ((-scale*3, 0), (scale*3, 0), (0, scale*3), (0, -scale*3), (-scale*3, 0), (scale*3, 0), (0, -scale*3), (0, -scale*3))
+        self.neighbors_start = self.find_convex_hull(neighbors)
+        self.neighbors_mid = self.find_convex_hull(neighbors_mid)
+        self.neighbors_end = self.find_convex_hull(neighbors)
         if self.check_flat_ground(map):
             pass
         else:
             self.run()
+
+    def find_convex_hull(self, points):
+        points = np.array(points)
+        hull = ConvexHull(points)
+        hull_vertices = points[hull.vertices]
+        min_x, max_x = np.min(hull_vertices[:, 0]), np.max(hull_vertices[:, 0])
+        min_y, max_y = np.min(hull_vertices[:, 1]), np.max(hull_vertices[:, 1])
+        grid = np.zeros((max_y - min_y + 1, max_x - min_x + 1), dtype=int)
+
+        for y in range(min_y, max_y + 1):
+            intersections = []
+            for i in range(len(hull_vertices)):
+                x1, y1 = hull_vertices[i]
+                x2, y2 = hull_vertices[(i + 1) % len(hull_vertices)]
+
+                if y1 == y2:
+                    continue
+
+                if y1 <= y <= y2 or y2 <= y <= y1:
+                    x_intersection = int(x1 + (x2 - x1) * (y - y1) / (y2 - y1))
+                    intersections.append(x_intersection)
+
+            intersections.sort()
+            if len(intersections) >= 2:
+                start_x = intersections[0]
+                end_x = intersections[-1]
+                grid[y - min_y, start_x - min_x:end_x - min_x + 1] = 1
+
+        center_map = grid.shape[0] // 2, grid.shape[1] // 2
+        neighbor_indices = np.argwhere(grid == 1) - np.array([center_map[0], center_map[1]])
+        return neighbor_indices
 
     def check_flat_ground(self, map):
         return np.all(map == 0) or np.all(map == 0.0)
@@ -160,7 +205,6 @@ class PATH_MAP(object):
     def setup(self):
         subprocess.run(shlex.split(self.scripts['heightfield_rm']))
         subprocess.run(shlex.split(self.scripts['heightfield_copy']))
-
 
     def neighbors_danger_test(self, map, idx_x, idx_y, sz=1):
         neighbor = ((sz, 0), (-sz, 0), (0, sz), (0, -sz), (sz, sz), (sz, -sz), (-sz, -sz), (-sz, sz))
@@ -283,28 +327,11 @@ class Maps(object):
     random_terrain_1 = "./data/heightfields/random_terrain.txt"
     climb_1 = "./data/heightfields/climb_1.txt"
     climb_2 = "./data/heightfields/climb_2.txt"
-    calibration = heighmap_2_np_reader(calibration_file)
-    step = heighmap_2_np_reader(step_file)
-    step_1 = heighmap_2_np_reader(step_1_file)
-    step_2 = heighmap_2_np_reader(step_2_file)
-    step_3 = heighmap_2_np_reader(step_3_file)
-    wall_1 = heighmap_2_np_reader(wall_1_file)
-    wall_2 = heighmap_2_np_reader(wall_2_file)
-    wall_3 = heighmap_2_np_reader(wall_3_file)
-    wall_4 = heighmap_2_np_reader(wall_4_file)
-    stairs = heighmap_2_np_reader(stairs_file)
-    plane = heighmap_2_np_reader(plane_file)
-    climb_1 = heighmap_2_np_reader(climb_1)
-    climb_2 = heighmap_2_np_reader(climb_2)
-    test = heighmap_2_np_reader(test_file)
-    feasibility = heighmap_2_np_reader(feasibility)
-    feasibility_1 = heighmap_2_np_reader(feasibility_1)
-    random_terrain_1 = heighmap_2_np_reader(random_terrain_1)
-    name_2_np_arr = {'climb_2': climb_2, 'climb_1' : climb_1, 'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3,
-                     'test': test, 'stairs': stairs, 'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4, "random_terrain_1": random_terrain_1}
+    plane_file_200 = "./data/heightfields/plane_200.txt"
 
-    def __init__(self, maps=['plane'], dim=20):
-        self.dim = 20
+    def __init__(self, maps=['plane'], dim=20, scale_factor=1):
+        self._generate(scale_factor)
+        self.dim = self.name_2_np_arr[maps[0]].shape[0]
         self.standard_map_dim = (self.dim, self.dim)
         self.maps = maps
         if len(maps) == 0:
@@ -320,20 +347,44 @@ class Maps(object):
             map_arr[:, (i * self.dim):(i + 1) * self.dim] = self.name_2_np_arr[map_id]
         return map_arr
 
+    def _generate(self, scale_factor):
+        calibration = scale_map(heighmap_2_np_reader(self.calibration_file), scale_factor)
+        step = scale_map(heighmap_2_np_reader(self.step_file), scale_factor)
+        step_1 = scale_map(heighmap_2_np_reader(self.step_1_file), scale_factor)
+        step_2 = scale_map(heighmap_2_np_reader(self.step_2_file), scale_factor)
+        step_3 = scale_map(heighmap_2_np_reader(self.step_3_file), scale_factor)
+        wall_1 = scale_map(heighmap_2_np_reader(self.wall_1_file), scale_factor)
+        wall_2 =  scale_map(heighmap_2_np_reader(self.wall_2_file), scale_factor)
+        wall_3 =  scale_map(heighmap_2_np_reader(self.wall_3_file), scale_factor)
+        wall_4 =  scale_map(heighmap_2_np_reader(self.wall_4_file), scale_factor)
+        stairs =  scale_map(heighmap_2_np_reader(self.stairs_file), scale_factor)
+        plane =   scale_map(heighmap_2_np_reader(self.plane_file), scale_factor)
+        climb_1 = scale_map(heighmap_2_np_reader(self.climb_1), scale_factor)
+        climb_2 = scale_map(heighmap_2_np_reader(self.climb_2), scale_factor)
+        test = scale_map(heighmap_2_np_reader(self.test_file), scale_factor)
+        feasibility = scale_map(heighmap_2_np_reader(self.feasibility), scale_factor)
+        feasibility_1 = scale_map(heighmap_2_np_reader(self.feasibility_1), scale_factor)
+        random_terrain_1 = scale_map(heighmap_2_np_reader(self.random_terrain_1), scale_factor)
+        self.name_2_np_arr = {'climb_2': climb_2, 'climb_1' : climb_1, 'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 
+                               'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3, 'test': test, 'stairs': stairs,
+                               'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4, "random_terrain_1": random_terrain_1}
+
+
 class Height_Map_Generator(Maps):
 
-    def __init__(self, dim=20, maps='plane', bool_map_search=False):
-        super(Height_Map_Generator, self).__init__(maps, dim)
+    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1):
+        super(Height_Map_Generator, self).__init__(maps, dim, scale_factor)
         self.towr_map =  np.transpose(self.map)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map)
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0
         self.num_rows = self.map.shape[0]
         self.num_cols = self.map.shape[1]
+        self.resolution = 1 / (self.map.shape[0] / 2)
         self.multi_map_shift = len(self.maps)
         self.bool_map_search = bool_map_search
         if bool_map_search:
-            self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift).bool_map
+            self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift, scale=scale_factor).bool_map
         else:
             self.bool_map = np.zeros((self.map.shape[0], self.map.shape[1]))
 
