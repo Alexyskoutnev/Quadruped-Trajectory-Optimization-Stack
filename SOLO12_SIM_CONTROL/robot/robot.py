@@ -353,8 +353,9 @@ class SOLO12(object):
             trajectory_2_local_frame(self, cmds_local)
             if cmd.get('COM') is not None:
                     del cmd['COM']
-            _, q_vel = self.inv_kinematics_pin(cmds_local) 
-        if self.config['use_pinocchio'] and mode == "torque":
+            q_cmd_pin, q_vel = self.inv_kinematics_pin(cmds_local) 
+            q_cmd += (q_cmd - q_cmd_pin)
+        elif self.config['use_pinocchio'] and mode == "torque":
             cmds = trajectory_2_local_frame(self, cmds)
             if cmds.get('COM') is not None:
                     del cmds['COM']
@@ -523,7 +524,7 @@ class SOLO12(object):
             NotImplementedError: _description_
         """
 
-        K = 1.
+        K = 10.
 
         ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")
         ID_FR = self.ROBOT.model.getFrameId("FR_FOOT")
@@ -569,9 +570,9 @@ class SOLO12(object):
         q_dot_cmd = - K * np.linalg.pinv(J) @ nu # 12 x 12 X 12 x 1 => 12 x 1
         q_dot_cmd = np.reshape(q_dot_cmd, (12, ))
 
-        # q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
+        q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
 
-        return None, q_dot_cmd
+        return q_cmd, q_dot_cmd
 
     def default_stance_control(self, q_init = None):
         """Robot default stance standing still
