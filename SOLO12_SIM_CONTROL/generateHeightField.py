@@ -1,4 +1,4 @@
-from SOLO12_SIM_CONTROL.utils import is_numeric
+from SOLO12_SIM_CONTROL.utils import is_numeric, save_bool_map, save_height_grid_map
 
 import time
 import matplotlib.pyplot as plt
@@ -384,7 +384,9 @@ class Height_Map_Generator(Maps):
         self.multi_map_shift = len(self.maps)
         self.bool_map_search = bool_map_search
         if bool_map_search:
+            save_height_grid_map(self.map)
             self.bool_map = PATH_MAP(self.map, multi_map_shift=self.multi_map_shift, scale=scale_factor).bool_map
+            save_bool_map(self.bool_map)
         else:
             self.bool_map = np.zeros((self.map.shape[0], self.map.shape[1]))
 

@@ -6,7 +6,7 @@ enviroment : "custom"
 custom_camera_view : False
 py_interface : False
 fix-base : False
-mesh_scale : 2
+mesh_scale : 1
 #==BEZIER INIT CONFIGURATION==
 pos : [0, 0, 0]
 angle : 0.0

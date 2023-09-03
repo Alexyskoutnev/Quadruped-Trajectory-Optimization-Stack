@@ -3,6 +3,7 @@ import numpy as np
 import math
 import csv
 import copy
+import matplotlib.pyplot as plt
 
 from scipy.spatial.transform import Rotation
 
@@ -334,5 +335,17 @@ def txt_2_np_reader(file, delimiter=','):
             _row = row.strip().split(delimiter)
             _row = [float(x) for x in _row if is_numeric(x)]
             data.append(_row)
-    # return np.transpose(np.array(data))
     return np.array(data)
+
+def save_height_grid_map(height_map, save_file="./data/plots/height_map.png"):
+    fig, ax = plt.subplots()
+    height_map = height_map[::-1, :]
+    ax.imshow(height_map, cmap='gray', origin='upper', extent=(0, len(height_map[0]), 0, len(height_map)))
+    plt.savefig(save_file)
+
+
+def save_bool_map(bool_map, save_file="./data/plots/bool_map.png"):
+    fig, ax = plt.subplots()
+    bool_map = bool_map[::-1, :]
+    ax.imshow(bool_map, cmap='binary', origin='upper', extent=(0, len(bool_map[0]), 0, len(bool_map)))
+    plt.savefig(save_file)
