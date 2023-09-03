@@ -268,7 +268,7 @@ class PATH_Solver(object):
         y_range = np.arange(0, self.visual_map.shape[0]) * self.grid_res
         X, Y = np.meshgrid(x_range, y_range)
         plt.figure()
-        plt.pcolormesh(X, Y, self.visual_map, cmap='gray', shading='auto')
+        plt.pcolormesh(X, Y, self.visual_map, cmap='gray_r', shading='auto')
         plt.scatter(self.start_pos_x_y[0] + self.origin_x_shift, self.start_pos_x_y[1] + self.origin_y_shift, color='green', marker='o', label='Start')
         plt.scatter(self.goal_pos_x_y[0] + self.origin_x_shift, self.goal_pos_x_y[1] + self.origin_y_shift, color='red', marker='x', label='Goal')
         if self.path:

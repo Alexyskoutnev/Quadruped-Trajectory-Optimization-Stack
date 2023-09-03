@@ -340,12 +340,19 @@ def txt_2_np_reader(file, delimiter=','):
 def save_height_grid_map(height_map, save_file="./data/plots/height_map.png"):
     fig, ax = plt.subplots()
     height_map = height_map[::-1, :]
-    ax.imshow(height_map, cmap='gray', origin='upper', extent=(0, len(height_map[0]), 0, len(height_map)))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.imshow(height_map, cmap='gray_r', origin='upper', extent=(0, len(height_map[0]), 0, len(height_map)))
     plt.savefig(save_file)
-
 
 def save_bool_map(bool_map, save_file="./data/plots/bool_map.png"):
     fig, ax = plt.subplots()
     bool_map = bool_map[::-1, :]
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
     ax.imshow(bool_map, cmap='binary', origin='upper', extent=(0, len(bool_map[0]), 0, len(bool_map)))
     plt.savefig(save_file)
