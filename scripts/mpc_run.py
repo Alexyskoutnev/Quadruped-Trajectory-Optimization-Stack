@@ -64,7 +64,7 @@ def experimentInfo(experiement_name):
     experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
                         "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
                         "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
-                        "FSS_Plot" : "create_FSS_plots.yml"}
+                        "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml"}
     file_path = os.path.join("./data/config", experiment_names[experiement_name])
     sim_cfg = yaml.safe_load(open(file_path, 'r'))
     return sim_cfg
@@ -262,9 +262,11 @@ if __name__ == "__main__":
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=1.0)
+    parser.add_argument('-step', '--step', type=float, default=0.75)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
+    # parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
     parser.add_argument('-l', '--look', type=float, default=3750)
+    # parser.add_argument('-l', '--look', type=float, default=7500)
     parser.add_argument('-r', '--record', type=bool, default=False)
     parser.add_argument('-p', '--mpc_p', type=bool, default=False)
     parser.add_argument('-exp', '--experiment', type=str, default="default")

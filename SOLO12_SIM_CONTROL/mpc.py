@@ -114,6 +114,7 @@ class MPC(object):
         """
 
         if self.set_spine_flag or self.global_planner.P_correction and not self.global_planner.empty():
+            print("spine plan")
             _state_dic = self._state()
             start_pos, end_pos = self.global_planner.pop()
             self.args['-s'] = _state_dic["CoM"]
@@ -125,6 +126,7 @@ class MPC(object):
             self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
             self.args['-g'] = end_pos
         else:
+            print("default Plan")
             _state_dic = self._state()
             self.args['-s'] = _state_dic["CoM"]
             self.args['-s_ang'] = _state_dic['orientation']

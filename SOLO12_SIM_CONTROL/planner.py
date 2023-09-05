@@ -16,7 +16,7 @@ GLOBAL_TRAJ_MAP = "./data/plots/global_plan.png"
 
 class Global_Planner(object):
     
-    def __init__(self, args, lookahead=7500, hz=1000, start_goal_pts_history_sz = 500):
+    def __init__(self, args, lookahead=7500, hz=1000, start_goal_pts_history_sz = 500, scale=1):
         self.error_bound = 0.1
         self.lookahead = lookahead
         self.forced_num = None
@@ -31,7 +31,7 @@ class Global_Planner(object):
         self.args = args
         self.origin_x_shift = 1.0 #PUT IN CONFIG FILE
         self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
-        self.grid_res = 0.1 #PUT IN CONFIG FILE
+        self.grid_res = args['args']['resolution'] #PUT IN CONFIG FILE
         self.map = args['sim'].height_map
         if not os.path.exists(GLOBAL_TRAJ_DIR):
             os.makedirs(GLOBAL_TRAJ_DIR)
@@ -73,11 +73,13 @@ class Global_Planner(object):
         """
         return plan_state - robot_state
 
-    def spine_step(self, CoM, timestep, total_traj_time=5.0):
+    def spine_step(self, CoM, timestep, total_traj_time=5.0, tol=0.00001):
         step_size = self.args['step_size']
         timestep_future = timestep + total_traj_time
-        z_goal = self.get_map_height((self.path_solver.spine_x_track(timestep_future), self.path_solver.spine_y_track(timestep_future)))
-        goal = np.array([self.path_solver.spine_x_track(timestep_future), self.path_solver.spine_y_track(timestep_future), z_goal + 0.24])
+        x_future = self.path_solver.spine_x_track(timestep_future).item() if (np.abs(self.path_solver.spine_x_track(timestep_future)) > tol) else 0.0
+        y_future = self.path_solver.spine_y_track(timestep_future).item() if (np.abs(self.path_solver.spine_y_track(timestep_future)) > tol) else 0.0
+        z_goal = self.get_map_height((x_future, y_future))
+        goal = np.array([x_future, y_future, z_goal + 0.24])
         diff_vec = np.clip(goal - CoM, -step_size, step_size)
         return CoM + diff_vec
 
@@ -119,7 +121,6 @@ class Global_Planner(object):
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
         else:
-            self.start_goal_pts.clear()
             self.plan_desired_goal_pt = goal_pt
             plan_start_goal_tuple = (plan_desired_start_pt, self.plan_desired_goal_pt)
             self.start_goal_pts.push(plan_start_goal_tuple)
@@ -142,11 +143,11 @@ class Global_Planner(object):
         return row, column
     
     def get_map_height(self, pos):
-        try:
+        # try:
             row, col = self.convert_2_idx(pos[0], pos[1])
             return self.map[row, col]
-        except:
-            return 0
+        # except:
+        #     return 0
 
 class PATH_Solver(object):
     
