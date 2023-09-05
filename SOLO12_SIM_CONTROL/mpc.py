@@ -33,6 +33,7 @@ class MPC(object):
         self.cutoff_idx = 0
         self.last_timestep = 0.0
         self.lookahead = lookahead if lookahead else 7500
+        self.lookahead_original = lookahead
         self.next_traj_step = 0
         self.hz = hz
         self.decimal_precision = math.log10(hz)
@@ -125,16 +126,20 @@ class MPC(object):
             self.args['-e4'] = _state_dic["HR_FOOT"]
             self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
             self.args['-g'] = end_pos
+            self.args['s_vel'] = _state_dic['CoM_vel']
+            self.args['s_ang_vel'] = _state_dic['CoM_vel_ang']
         else:
             print("default Plan")
             _state_dic = self._state()
             self.args['-s'] = _state_dic["CoM"]
-            self.args['-s_ang'] = _state_dic['orientation']
+            # self.args['-s_ang'] = _state_dic['orientation']
             self.args['-e1'] = _state_dic["FL_FOOT"]
             self.args['-e2'] = _state_dic["FR_FOOT"]
             self.args['-e3'] = _state_dic["HL_FOOT"]
             self.args['-e4'] = _state_dic["HR_FOOT"]
             self.args['-t'] = global_cfg.ROBOT_CFG.runtime + (self.lookahead / self.hz)
+            self.args['s_vel'] = _state_dic['CoM_vel']
+            self.args['s_ang_vel'] = _state_dic['CoM_vel_ang']
             self._step(_state_dic["CoM"])
         print("ARRGS", self.args)
         return self.args
@@ -192,19 +197,36 @@ class MPC(object):
             state (dic): robot state dic
         """
         state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
-             "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
+             "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None, "CoM_vel": None,
+             "CoM_vel_ang": None}
+        all_foot_in_contact = False
+        self.lookahead = self.lookahead_original
         with open(self.current_traj, "r", newline='') as f:
             print(f"=============NEXT SEARCH QUERY [{self.last_timestep}]=============")
             print(f"=============OLD TRAJ START INDEX QUERY [{self.cutoff_idx}]=============")
             print(f"=============OLD TRAJ END INDEX QUERY [{self.next_traj_step}]=============")
             reader, step = look_ahead(f, self.last_timestep, self.lookahead)
-            row = next(reader)[1:]
-            state["CoM"] = [float(_) for _ in row[0:3]]
-            state["orientation"] = [float(_) for _ in row[3:6]]
-            state["FL_FOOT"] = [float(_) for _ in row[6:9]]
-            state["FR_FOOT"] = [float(_) for _ in row[9:12]]
-            state["HL_FOOT"] = [float(_) for _ in row[12:15]]
-            state["HR_FOOT"] = [float(_) for _ in row[15:18]]
+            while (not all_foot_in_contact):
+                try:
+                    row = next(reader)[1:]
+                    state["CoM"] = [float(_) for _ in row[0:3]]
+                    state["orientation"] = [float(_) for _ in row[3:6]]
+                    state["FL_FOOT"] = [float(_) for _ in row[6:9]]
+                    state["FR_FOOT"] = [float(_) for _ in row[9:12]]
+                    state["HL_FOOT"] = [float(_) for _ in row[12:15]]
+                    state["HR_FOOT"] = [float(_) for _ in row[15:18]]
+                    state["CoM_vel"] = [float(_) for _ in row[18:21]]
+                    state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
+                    if round(state["FL_FOOT"][2], 7) == 0 and round(state["FR_FOOT"][2], 7) == 0 and round(state["HL_FOOT"][2], 7) == 0 and round(state["HR_FOOT"][2], 7) == 0:
+                        print("look_ahead, ", self.lookahead)
+                        print("State", state)
+                        all_foot_in_contact = True
+                    else:
+                        self.lookahead += 1
+                except:
+                    print("reached the end of the trajectory")
+
+                    
         state = {key: zero_filter(value) for key, value in state.items()}
         self.next_traj_step = step + self.lookahead - 1
         return state

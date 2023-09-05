@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 
 from scipy.spatial.transform import Rotation
 
+EE_NAMES = ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT')
+
 def create_cmd(q_ang=None, q_vel=None):
     cmd = {"FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
@@ -36,7 +38,8 @@ def create_cmd(q_ang=None, q_vel=None):
 
 def create_cmd_pose():
     return {"COM": np.zeros(6), "FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
-            "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
+            "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "COM_VEL" : np.zeros(6),
+            "FL_FOOT_FORCE": np.zeros(3), "FR_FOOT_FORCE": np.zeros(3), "HL_FOOT_FORCE": np.zeros(3), "HR_FOOT_FORCE": np.zeros(3)}
 
 def vec_to_cmd(vec, mode= "P", joint_cnt=3):
     cmd = create_cmd()
@@ -64,6 +67,16 @@ def vec_to_cmd_pose(vec, mode="P", joint_cnt=3):
             cmd["HL_FOOT"][mode] = vec[12:15]
         elif i == 4:
             cmd["HR_FOOT"][mode] = vec[15:18]
+        elif i == 5:
+            cmd["COM_VEL"] = vec[18:24]
+        elif i == 7:
+            cmd["FL_FOOT_FORCE"] = vec[24:27]
+        elif i == 8:
+            cmd["FR_FOOT_FORCE"] = vec[27:30]
+        elif i == 9:
+            cmd["HL_FOOT_FORCE"] = vec[30:33]
+        elif i == 10:
+            cmd["HR_FOOT_FORCE"] = vec[33:36]
     return cmd
 
 def combine(*vectors):
@@ -145,7 +158,6 @@ def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_tra
                                     np.array([traj[link][mode][1] + robot.shift[link][1]]),  
                                     np.array([traj[link][mode][2] + robot.shift[link][2]]), 
                                     np.ones(1)))
-                # breakpoint()
             elif towr:
                 vec = np.concatenate((np.array([traj[link][mode][0]]), 
                                     np.array([traj[link][mode][1]]), 
@@ -236,13 +248,12 @@ def towr_transform(robot, traj, towr=True, ee_shift=0.01):
     original_traj = copy.deepcopy(traj)
     tfMtx =  transformation_inv(transformation_mtx(CoM, traj['COM'][3:6]))
     for t in traj:
-        if not t == 'COM':
+        if t in EE_NAMES:
             vec = np.concatenate((traj[t]['P'], np.ones(1)))
             t_vec = tfMtx @ vec
             traj[t]['P'] = t_vec[0:3]
             traj[t]['P'][2] += ee_shift
     traj = trajectory_2_world_frame(robot, traj, towr=towr, original_traj=original_traj)
-    del traj['COM']
     return traj
 
 def norm(v1, v2):

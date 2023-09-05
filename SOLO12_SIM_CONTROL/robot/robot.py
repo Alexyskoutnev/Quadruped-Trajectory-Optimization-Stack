@@ -5,7 +5,7 @@ import pybullet as p
 import numpy as np
 import pinocchio as pin
 
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd, trajectory_2_local_frame
+from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd, trajectory_2_local_frame, EE_NAMES
 from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
 from SOLO12_SIM_CONTROL.stateEstimation import State_Estimation
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
@@ -337,21 +337,21 @@ class SOLO12(object):
         Returns:
             tuple (np.array): returns a tuple of joint angle, joint velocity, joint torque commands
         """
+        
+        EE_cmds = {key : value for key, value in cmds.items() if key in EE_NAMES}
         self._update()
         if self.config['use_pinocchio'] and (mode == "P" or mode == "PD"):
             q_cmd = np.zeros(12)
             q_vel = np.zeros(12)
             q_toq = np.zeros(12)
             i = 0
-            for cmd, idx in zip(cmds.values(), indices):
+            for cmd, idx in zip(EE_cmds.values(), indices):
                 q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
                 if (q_cmd_temp is not None):
                     q_cmd[i:i+3] = q_cmd_temp[i:i+3]
                 i += 3
-            cmds_local = copy.deepcopy(cmds)
-            trajectory_2_local_frame(self, cmds_local)
-            if cmd.get('COM') is not None:
-                    del cmd['COM']
+            cmds_local = copy.deepcopy(EE_cmds)
+            trajectory_2_local_frame(self, EE_cmds)
             q_cmd_pin, q_vel = self.inv_kinematics_pin(cmds_local) 
             q_cmd += (q_cmd - q_cmd_pin)
         elif self.config['use_pinocchio'] and mode == "torque":
@@ -359,28 +359,24 @@ class SOLO12(object):
             q_vel = np.zeros(12)
             q_toq = np.zeros(12)
             i = 0
-            for cmd, idx in zip(cmds.values(), indices):
+            for cmd, idx in zip(EE_cmds.values(), indices):
                 q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
                 if (q_cmd_temp is not None):
                     q_cmd[i:i+3] = q_cmd_temp[i:i+3]
                 i += 3
-            cmds_local = copy.deepcopy(cmds)
+            cmds_local = copy.deepcopy(EE_cmds)
             trajectory_2_local_frame(self, cmds_local)
-            if cmd.get('COM') is not None:
-                    del cmd['COM']
             q_cmd_pin, q_vel = self.inv_kinematics_pin(cmds_local) 
             q_cmd += (q_cmd - q_cmd_pin)
             self._update()
             q_mes, v_mes = self.get_PD_values()
             q_toq = self._motor.convert_to_torque_v1(q_cmd, q_mes, v_mes, q_vel)
         else:
-            if cmds.get('COM') is not None:
-                del cmds['COM']
             q_cmd = np.zeros(12)
             q_vel = np.zeros(12)
             q_toq = np.zeros(12)
             i = 0
-            for cmd, idx in zip(cmds.values(), indices):
+            for cmd, idx in zip(EE_cmds.values(), indices):
                 q_cmd_temp, q_vel_temp, q_toq_temp = self.control(cmd, idx, mode)
                 if (q_cmd_temp is not None):
                     q_cmd[i:i+3] = q_cmd_temp[i:i+3]

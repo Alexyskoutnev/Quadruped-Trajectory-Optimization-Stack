@@ -36,7 +36,7 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
             'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
 
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r']
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-mesh_size', 's_vel', 's_ang_vel']
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
@@ -84,7 +84,8 @@ def start_config(args):
 
 def _state(p = 0.6):
     state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
-             "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
+             "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None, "CoM_vel": None,
+             "CoM_vel_ang": None}
     with open(CURRENT_TRAJ_CSV_FILE, "r", newline='') as f:
         reader = percentage_look_ahead(f, p)
         row = next(reader)
@@ -94,6 +95,8 @@ def _state(p = 0.6):
         state["FR_FOOT"] = [float(_) for _ in row[9:12]]
         state["HL_FOOT"] = [float(_) for _ in row[12:15]]
         state["HR_FOOT"] = [float(_) for _ in row[15:18]]
+        state["CoM_vel"] = [float(_) for _ in row[18:21]]
+        state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
     state = {key: zero_filter(value) for key, value in state.items()}
     return state
 
