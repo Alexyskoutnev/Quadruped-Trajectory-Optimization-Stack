@@ -45,6 +45,19 @@ class MPC(object):
         self.robot = args['robot']
         self.set_correct_flag = False
         self.set_spine_flag = True
+        self.map = args['sim'].height_map
+        self.height_set = self.get_height_set(self.map)
+
+    def get_height_set(self, map):
+        height_values = np.unique(map)
+        return set(height_values)
+        
+    def check_legs_contact(self, state, tol=9):
+        for leg in state:
+            if leg in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
+                if round(state[leg][2], tol) not in self.height_set:
+                    return False
+        return True
 
     @property
     def global_plan_state(self):
@@ -132,7 +145,7 @@ class MPC(object):
             print("default Plan")
             _state_dic = self._state()
             self.args['-s'] = _state_dic["CoM"]
-            # self.args['-s_ang'] = _state_dic['orientation']
+            self.args['-s_ang'] = _state_dic['orientation']
             self.args['-e1'] = _state_dic["FL_FOOT"]
             self.args['-e2'] = _state_dic["FR_FOOT"]
             self.args['-e3'] = _state_dic["HL_FOOT"]
@@ -217,15 +230,23 @@ class MPC(object):
                     state["HR_FOOT"] = [float(_) for _ in row[15:18]]
                     state["CoM_vel"] = [float(_) for _ in row[18:21]]
                     state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
-                    if round(state["FL_FOOT"][2], 7) == 0 and round(state["FR_FOOT"][2], 7) == 0 and round(state["HL_FOOT"][2], 7) == 0 and round(state["HR_FOOT"][2], 7) == 0:
+                    if self.check_legs_contact(state):
                         print("look_ahead, ", self.lookahead)
                         print("State", state)
                         all_foot_in_contact = True
                     else:
                         self.lookahead += 1
-                except:
+                except StopIteration:
                     print("reached the end of the trajectory")
-
+                    row = self.current_traj[-1]
+                    state["CoM"] = [float(_) for _ in row[0:3]]
+                    state["orientation"] = [float(_) for _ in row[3:6]]
+                    state["FL_FOOT"] = [float(_) for _ in row[6:9]]
+                    state["FR_FOOT"] = [float(_) for _ in row[9:12]]
+                    state["HL_FOOT"] = [float(_) for _ in row[12:15]]
+                    state["HR_FOOT"] = [float(_) for _ in row[15:18]]
+                    state["CoM_vel"] = [float(_) for _ in row[18:21]]
+                    state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
                     
         state = {key: zero_filter(value) for key, value in state.items()}
         self.next_traj_step = step + self.lookahead - 1
