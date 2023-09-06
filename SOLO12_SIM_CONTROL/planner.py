@@ -31,7 +31,7 @@ class Global_Planner(object):
         self.args = args
         self.origin_x_shift = 1.0 #PUT IN CONFIG FILE
         self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
-        self.grid_res = args['args']['resolution'] #PUT IN CONFIG FILE
+        self.grid_res = args['args']['resolution']
         self.map = args['sim'].height_map
         if not os.path.exists(GLOBAL_TRAJ_DIR):
             os.makedirs(GLOBAL_TRAJ_DIR)

@@ -132,7 +132,7 @@ class MPC(object):
             _state_dic = self._state()
             start_pos, end_pos = self.global_planner.pop()
             self.args['-s'] = _state_dic["CoM"]
-            self.args['-s_ang'] = _state_dic['orientation']
+            # self.args['-s_ang'] = _state_dic['orientation']
             self.args['-e1'] = _state_dic["FL_FOOT"]
             self.args['-e2'] = _state_dic["FR_FOOT"]
             self.args['-e3'] = _state_dic["HL_FOOT"]

@@ -36,7 +36,7 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
             'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
 
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-mesh_size', 's_vel', 's_ang_vel']
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-resolution', 's_vel', 's_ang_vel']
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
@@ -211,6 +211,7 @@ def _init(args):
     subprocess.run(shlex.split(args['scripts']['heightfield_rm']))
     subprocess.run(shlex.split(args['scripts']['heightfield_copy']))
     args = _step(args)
+    args['-resolution'] = args['sim_cfg']['resolution']
     return log
 
 def _run(args):
@@ -220,11 +221,13 @@ def _run(args):
         args (dict): user + config inputs for simulation and solver
     """
     log = _init(args)
+    print("ARGASGASGAS", args)
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     mpc.plan_init(args)
     MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
+    breakpoint()
     if p.returncode == 0:
         print("Launching Simulation")
         mpc_thread = Thread(target=_update, args=(args, log, mpc))
@@ -265,7 +268,7 @@ if __name__ == "__main__":
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=1.0)
+    parser.add_argument('-step', '--step', type=float, default=2.0)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
     # parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
     parser.add_argument('-l', '--look', type=float, default=3750)
