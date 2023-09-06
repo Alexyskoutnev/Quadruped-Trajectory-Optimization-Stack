@@ -57,7 +57,8 @@ class Local_Planner(object):
         self.robot = robot
         self.map = map
         self.height_set = self.get_height_set(self.map)
-        self.EE_traj = {"FL_FOOT": {"traj": None, "contact_idx": None}, "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None}
+        self.EE_traj = {"FL_FOOT": {}, "FR_FOOT": {}, 
+                        "HL_FOOT": {}, "HR_FOOT": {}}
 
     def plan(self, traj):
         self._filter(traj)
@@ -66,12 +67,62 @@ class Local_Planner(object):
     def _process(self, traj):
         pass
 
+    def contact_swing_phase(self, contacts):
+        contact_idx = []
+        swing_idx = []
+        last_contact = 0
+        for idx in contacts:
+            if idx[0] == 0:
+                contact_idx.append((idx[0], idx[-1]))
+                last_contact = idx[-1]
+            else:
+                contact_idx.append((idx[0], idx[-1]))
+                swing_idx.append((last_contact + 1, idx[0] - 1))
+                last_contact = idx[-1]
+        return contact_idx, swing_idx
+
+    def get_contact_idx(self, foot, traj):
+        list_idx = []
+        first_check, second_check = False, True
+        first_idx, last_idx = 0, 0
+        idx = 0
+        contact_pairs = []
+        _last = traj[0]
+        contact_timing = list()
+        for idx, ee in enumerate(traj):
+            if self.check_leg_contact(ee):
+                if all(_last != ee):
+                    contact_pairs.append(contact_timing)
+                    contact_timing = list()
+                    _last = ee
+                if all(_last == ee):
+                    contact_timing.append(idx)
+        contact_pairs.append(contact_timing)
+        contact_idx, swing_idx = self.contact_swing_phase(contact_pairs)
+
+        self.EE_traj[foot]["contact_idx"] = contact_idx
+        self.EE_traj[foot]["swing_idx"] = swing_idx
+
+    def get_gait_contact_idx(self, traj):
+        list_idx = []
+        for idx, (ee1, ee2, ee3, ee4) in enumerate(zip(self.EE_traj["FL_FOOT"], self.EE_traj["FR_FOOT"], self.EE_traj["HL_FOOT"], self.EE_traj["HR_FOOT"])):
+            EE = (ee1, ee2, ee3, ee4)
+            if self.check_legs_contact(EE):
+                print(EE)
+                list_idx.append(idx)
+        first_idx, last_idx = list_idx[0], list_idx[-1]
+        return (first_idx, last_idx)
+
     def _filter(self, traj):
-        self.EE_traj["FL_FOOT"] = traj[:,7:10]
-        self.EE_traj["FR_FOOT"] = traj[:,10:13]
-        self.EE_traj["HL_FOOT"] = traj[:,13:16]
-        self.EE_traj["HR_FOOT"] = traj[:,16:19]
+        self.EE_traj["FL_FOOT"]["traj"] = traj[:,7:10]
+        self.EE_traj["FR_FOOT"]["traj"] = traj[:,10:13]
+        self.EE_traj["HL_FOOT"]["traj"] = traj[:,13:16]
+        self.EE_traj["HR_FOOT"]["traj"] = traj[:,16:19]
         self.orignal_traj = (self.EE_traj["FL_FOOT"], self.EE_traj["FR_FOOT"], self.EE_traj["HL_FOOT"], self.EE_traj["HR_FOOT"])
+        # breakpoint()
+        for foot_name in ("FL_FOOT", "FR_FOOT", "HL_FOOT", "HR_FOOT"):
+            self.get_contact_idx(foot_name, self.EE_traj[foot_name]["traj"])
+        breakpoint()
 
     def cost_function(traj):
         pass
@@ -82,11 +133,15 @@ class Local_Planner(object):
     def get_height_set(self, map):
         height_values = np.unique(map)
         return set(height_values)
+
+    def check_leg_contact(self, EE, tol=9):
+        if round(EE[2], tol) not in self.height_set:
+                    return False
+        return True
         
-    def check_legs_contact(self, state, tol=9):
-        for leg in state:
-            if leg in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
-                if round(state[leg][2], tol) not in self.height_set:
+    def check_legs_contact(self, EE, tol=9):
+        for ee in EE:
+                if self.check_legs_contact(ee, tol):
                     return False
         return True
 
