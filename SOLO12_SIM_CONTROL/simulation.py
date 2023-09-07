@@ -30,7 +30,7 @@ class Simulation(object):
         if cfg['enviroment'] == "custom":
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-20.0)
+            p.setGravity(0,0,-10.0)
             height_map_generator = Height_Map_Generator(maps=cfg['map_id'], bool_map_search=cfg['bool_map_search'], scale_factor=cfg['mesh_scale'])
             height_shift = height_map_generator.height_shift
             tiles = len(cfg['map_id'])

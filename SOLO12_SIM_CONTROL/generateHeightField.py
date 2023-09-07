@@ -330,6 +330,7 @@ class Maps(object):
     plane_file_200 = "./data/heightfields/plane_200.txt"
     stairs = "./data/heightfields/stairs.txt"
     stairs_1 = "./data/heightfields/stairs_1.txt"
+    collision_hills = "./data/heightfields/collision_wall_hills.txt"
 
     def __init__(self, maps=['plane'], dim=20, scale_factor=1):
         self._generate(scale_factor)
@@ -369,10 +370,11 @@ class Maps(object):
         feasibility = scale_map(heighmap_2_np_reader(self.feasibility), scale_factor)
         feasibility_1 = scale_map(heighmap_2_np_reader(self.feasibility_1), scale_factor)
         random_terrain_1 = scale_map(heighmap_2_np_reader(self.random_terrain_1), scale_factor)
+        collision_hills = scale_map(heighmap_2_np_reader(self.collision_hills), scale_factor)
         self.name_2_np_arr = {'climb_2': climb_2, 'climb_1' : climb_1, 'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 
                                'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3, 'test': test, 'stairs': stairs,
                                'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4, "random_terrain_1": random_terrain_1,
-                               "stair" : stair, "stair_1": stair_1}
+                               "stair" : stair, "stair_1": stair_1, "collision_hill" : collision_hills}
 
 
 class Height_Map_Generator(Maps):

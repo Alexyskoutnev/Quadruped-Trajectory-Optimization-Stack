@@ -130,9 +130,10 @@ class MPC(object):
         if self.set_spine_flag or self.global_planner.P_correction and not self.global_planner.empty():
             print("spine plan")
             _state_dic = self._state()
+            print("state ", _state_dic)
             start_pos, end_pos = self.global_planner.pop()
             self.args['-s'] = _state_dic["CoM"]
-            # self.args['-s_ang'] = _state_dic['orientation']
+            self.args['-s_ang'] = _state_dic['orientation']
             self.args['-e1'] = _state_dic["FL_FOOT"]
             self.args['-e2'] = _state_dic["FR_FOOT"]
             self.args['-e3'] = _state_dic["HL_FOOT"]
@@ -238,7 +239,8 @@ class MPC(object):
                         self.lookahead += 1
                 except StopIteration:
                     print("reached the end of the trajectory")
-                    row = self.current_traj[-1]
+                    # row = self.current_traj[-1]
+                    print(row)
                     state["CoM"] = [float(_) for _ in row[0:3]]
                     state["orientation"] = [float(_) for _ in row[3:6]]
                     state["FL_FOOT"] = [float(_) for _ in row[6:9]]

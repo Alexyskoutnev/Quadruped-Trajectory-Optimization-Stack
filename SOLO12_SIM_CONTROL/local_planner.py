@@ -2,9 +2,12 @@ import csv
 
 import numpy as np
 from scipy.optimize import minimize
+import osqp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import ListedColormap
+import scipy.sparse as sp
+from scipy.sparse import identity, csr_matrix
 
 from SOLO12_SIM_CONTROL.utils import is_numeric
 
@@ -49,6 +52,31 @@ def plot(trajs, map):
     plt.show()
 
 
+def plot_traj(traj, sphere_center, sphere_radius, original_traj=None):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], marker='o', markersize=1)
+    ax.plot(original_traj[:, 0], original_traj[:, 1], original_traj[:, 2], marker='o', markersize=1)
+
+    # Plot the sphere constraint
+    u = np.linspace(0, 2 * np.pi, 100)
+    v = np.linspace(0, np.pi, 100)
+    x = sphere_center[0] + sphere_radius * np.outer(np.cos(u), np.sin(v))
+    y = sphere_center[1] + sphere_radius * np.outer(np.sin(u), np.sin(v))
+    z = sphere_center[2] + sphere_radius * np.outer(np.ones(np.size(u)), np.cos(v))
+    ax.plot_surface(x, y, z, color='red', alpha=0.3)
+
+    # Set plot limits and labels
+    ax.set_xlim(0, 0.5)
+    ax.set_ylim(0, 0.5)
+    ax.set_zlim(0, 0.5)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    plt.show()
+
+
 
 class Local_Planner(object):
 
@@ -58,6 +86,8 @@ class Local_Planner(object):
         self.map = map
         self.height_set = self.get_height_set(self.map)
         self.EE_traj = {"FL_FOOT": {}, "FR_FOOT": {}, 
+                        "HL_FOOT": {}, "HR_FOOT": {}}
+        self.EE_traj_optumized = {"FL_FOOT": {}, "FR_FOOT": {}, 
                         "HL_FOOT": {}, "HR_FOOT": {}}
 
     def plan(self, traj):
@@ -119,16 +149,97 @@ class Local_Planner(object):
         self.EE_traj["HL_FOOT"]["traj"] = traj[:,13:16]
         self.EE_traj["HR_FOOT"]["traj"] = traj[:,16:19]
         self.orignal_traj = (self.EE_traj["FL_FOOT"], self.EE_traj["FR_FOOT"], self.EE_traj["HL_FOOT"], self.EE_traj["HR_FOOT"])
-        # breakpoint()
         for foot_name in ("FL_FOOT", "FR_FOOT", "HL_FOOT", "HR_FOOT"):
             self.get_contact_idx(foot_name, self.EE_traj[foot_name]["traj"])
+        
+        self.optimize(self.EE_traj["FL_FOOT"])
+
+    # def cost_function(self, inputs, expert_traj):
+    #     control_nodes = inputs.reshape((expert_traj.shape[0], 3))
+    #     error = np.sum((control_nodes - expert_traj) ** 2)
+    #     return error
+
+    def constraints(self, traj):
+        pass
+
+    # Ground clearance constraint function
+    def ground_clearance_constraint(self, x, ground_height):
+        return x[:, 2] - ground_height
+
+    def cost_function_track(self, x, expert_traj):
+        error = np.linalg.norm(x - expert_traj, ord=2)
+        return error
+
+    def smoothness_penalty(self, x):
+        jerk = np.diff(np.diff(x, axis=0), axis=0)
+        jerk_norm = np.linalg.norm(jerk, axis=1)
+        penalty = np.sum(jerk_norm**2)
+        return penalty
+
+    def spacing_penalty(self, x):
+        squared_distances = np.sum(np.diff(x, axis=0) ** 2, axis=1)
+        regularization_term = np.sum(squared_distances)
+        return regularization_term
+
+    def length_penalty(self, x):
+        return np.sum(np.linalg.norm(np.diff(x, axis=0), axis=1))
+
+    def calculate_potential_field(self, x, sphere_radius, sphere_center):
+        _x = x.reshape((-1, 3))
+        distances = np.linalg.norm(_x - sphere_center, axis=1)
+        return  (1 / distances + 0.005)
+        # potential_field_values  = np.where(distances < sphere_radius, (1.0 / distances + 1), 0.0)
+        # return potential_field_values
+
+    def cost_function(self, x, expert_traj, sphere_radius, sphere_center):
+        # potential_field_values = self.calculate_potential_field(x, sphere_radius, sphere_center)
+        # obstacle_cost = np.sum(potential_field_values)
+        _x = x.reshape((-1, 3))
+        # jerk_cost = self.smoothness_penalty(_x)
+        track_cost = self.cost_function_track(_x, expert_traj)
+        # traj_length_cost = self.length_penalty(_x)
+        # spacing_cost = self.spacing_penalty(_x)
+        # total_cost = track_cost + obstacle_cost * 3.0
+        # total_cost = track_cost * 2 + traj_length_cost 
+        total_cost = track_cost
+        return total_cost
+
+    def sphere_constraint(self, x, sphere_center, sphere_radius):
+        _x = x.reshape((-1, 3))  # Reshape the flattened x to a 2D array
+        distances = np.linalg.norm(_x - sphere_center, axis=1)
+        return distances - sphere_radius   # Should be >= 0 for valid constraint
+
+    def get_swing_traj(self,traj):
+        swing_traj = list()
+        for swing_start_end in traj['swing_idx']:
+            swing_traj.append(traj['traj'][swing_start_end[0]:swing_start_end[1]])
+        return swing_traj
+    
+    def optimize(self, traj):
+        expert_traj = traj['traj']
+        swing_traj = self.get_swing_traj(traj)
+
+        sphere_radius = 0.05
+        sphere_center = np.array([0.3, 0.15, 0.05])
+        ground_height = 0.0  # Minimum height above ground (z = 0)
+        constraints = [{'type': 'ineq', 'fun': lambda x: self.sphere_constraint(x, sphere_center, sphere_radius)}]
+        for swing_t in swing_traj:
+            min_swing = swing_t
+            num_nodes = len(min_swing)
+            # initial_guess = np.zeros((num_nodes, 3))
+            # initial_guess = min_swing.flatten()
+            initial_guess = np.linspace(min_swing[0], min_swing[-1], num_nodes).flatten()
+            result = minimize(self.cost_function, initial_guess, args=(min_swing, sphere_radius, sphere_center), method="SLSQP", options={'maxiter': 100}, constraints=constraints)
+            print(result)
+            optimized_traj = result.x.reshape((min_swing.shape[0], 3))
+            breakpoint()
+            plot_traj(optimized_traj, sphere_center, sphere_radius, min_swing)
+        # constraints = [{}]
+        breakpoint()
+        result = minimize(self.cost_function, initial_guess, args=(expert_traj,))
+
         breakpoint()
 
-    def cost_function(traj):
-        pass
-
-    def constraints(traj):
-        pass
 
     def get_height_set(self, map):
         height_values = np.unique(map)

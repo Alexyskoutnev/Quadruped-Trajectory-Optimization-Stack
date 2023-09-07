@@ -1,9 +1,9 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['step', 'step_1', 'step_2', 'plane']
+map_id : ['step', 'collision_hill', 'feasibility_1', 'plane']
 custom_camera_view : True
-mesh_scale : 5
+mesh_scale : 1
 #=========Switches==============
 stance_phase : True
 height_map : True

@@ -232,7 +232,7 @@ def simulation(args):
                         ROBOT.time_step += 1
 
                     if sim_cfg.get('track'):
-                        TRACK_RECORD.update(ref_cmd, ROBOT.time_step)
+                        TRACK_RECORD.update(towr_traj, ROBOT.time_step)
                     p.stepSimulation()
                     _global_update(ROBOT, ROBOT.state)
                     v_planner.step(sim_step, ROBOT.time)

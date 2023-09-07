@@ -64,7 +64,8 @@ def experimentInfo(experiement_name):
     experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
                         "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
                         "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
-                        "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml"}
+                        "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml",
+                        "exp_7" : "experiment_7_climb_obstacle.yml"}
     file_path = os.path.join("./data/config", experiment_names[experiement_name])
     sim_cfg = yaml.safe_load(open(file_path, 'r'))
     return sim_cfg
@@ -227,7 +228,6 @@ def _run(args):
     MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
     p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-    breakpoint()
     if p.returncode == 0:
         print("Launching Simulation")
         mpc_thread = Thread(target=_update, args=(args, log, mpc))
