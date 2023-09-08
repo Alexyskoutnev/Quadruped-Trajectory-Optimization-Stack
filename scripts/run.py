@@ -99,11 +99,12 @@ def simulation(args):
         TRAJ_SIZE = sum(1 for row in reader)
         traj = np.genfromtxt(TOWR, delimiter=',')
         first_traj_point = traj[0]
+        print("SIMIMIM ",sim_cfg)
+        v_planner = Visual_Planner(TOWR, sim_cfg)
         if sim_cfg['stance_phase']:
             time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
             ref_start_cmd = vec_to_cmd_pose(EE_POSE)
-            q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)
-        v_planner = Visual_Planner(TOWR, sim_cfg)
+            q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)    
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
         if args.get('record') or sim_cfg.get('record'):

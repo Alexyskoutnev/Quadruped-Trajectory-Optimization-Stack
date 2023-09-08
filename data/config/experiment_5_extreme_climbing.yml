@@ -3,11 +3,11 @@ mode : "towr"
 enviroment : "custom"
 map_id : ['climb_2', 'climb_1', 'plane', 'plane']
 custom_camera_view : True
-mesh_scale : 10
+mesh_scale : 12
 #=========Switches==============
-stance_phase : False
+stance_phase : True
 height_map : True
-track : False
+track : True
 #=========Hyperparameters=======
 TRAJ_SIZE : 20000
 SIM_STEPS : 21000
@@ -16,7 +16,7 @@ TIMESTEPS : 0.001
 stance_period : 300
 skip_forward_idx : 1
 track_rate : 250
-friction : 0.99
+friction : 0.90
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 50
 v_look_ahead : 5000

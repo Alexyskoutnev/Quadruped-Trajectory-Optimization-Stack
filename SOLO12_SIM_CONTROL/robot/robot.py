@@ -367,8 +367,7 @@ class SOLO12(object):
             cmds_local = copy.deepcopy(EE_cmds)
             trajectory_2_local_frame(self, cmds_local)
             q_cmd_pin, q_vel = self.inv_kinematics_pin(cmds_local) 
-            # q_cmd += (q_cmd - q_cmd_pin)
-            # q_cmd = q_cmd_pin
+            q_cmd += (q_cmd - q_cmd_pin)
             self._update()
             q_mes, v_mes = self.get_PD_values()
             q_toq = self._motor.convert_to_torque_v1(q_cmd, q_mes, v_mes, q_vel)

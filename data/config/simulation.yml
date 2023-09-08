@@ -23,7 +23,7 @@ SIM_STEPS : 510000
 HZ : 1000
 TIMESTEPS : 0.001
 stance_phase : False
-stance_period : 100
+stance_period : 100-
 skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
 record : False
 base_stable : False
@@ -41,8 +41,8 @@ friction : 0.99
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 50
 v_look_ahead : 2500
-show_com_plan : False
-show_feet_plan : False
+show_com_plan : True
+show_feet_plan : True
 
 #==Search Proprocess==#
 bool_map_search : True

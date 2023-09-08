@@ -126,7 +126,6 @@ class MPC(object):
         Returns:
             self.args (dic) : input argument to Towr script
         """
-
         if self.set_spine_flag or self.global_planner.P_correction and not self.global_planner.empty():
             _state_dic = self._state()
             start_pos, end_pos = self.global_planner.pop()
@@ -218,7 +217,7 @@ class MPC(object):
             print(f"=============OLD TRAJ END INDEX QUERY [{self.next_traj_step}]=============")
             reader, step = look_ahead(f, self.last_timestep, self.lookahead)
             while (not all_foot_in_contact):
-                # try:
+                try:
                     row = next(reader)[1:]
                     state["CoM"] = [float(_) for _ in row[0:3]]
                     state["orientation"] = [float(_) for _ in row[3:6]]
@@ -231,19 +230,23 @@ class MPC(object):
                     if self.check_legs_contact(state):
                         all_foot_in_contact = True
                     else:
+                        print(f"Not in contact, {self.lookahead}")
                         self.lookahead += 1
-                # except StopIteration:
-                    # open(self.current_traj, "r", newline='') 
-                    # reader, step = look_ahead(f, self.last_timestep, self.lookahead_original)
-                    # row = next(reader)[1:]
-                    # state["CoM"] = [float(_) for _ in row[0:3]]
-                    # state["orientation"] = [float(_) for _ in row[3:6]]
-                    # state["FL_FOOT"] = [float(_) for _ in row[6:9]]
-                    # state["FR_FOOT"] = [float(_) for _ in row[9:12]]
-                    # state["HL_FOOT"] = [float(_) for _ in row[12:15]]
-                    # state["HR_FOOT"] = [float(_) for _ in row[15:18]]
-                    # state["CoM_vel"] = [float(_) for _ in row[18:21]]
-                    # state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
+                except StopIteration:
+                    print("stop iteration")
+                    self.lookahead = self.lookahead_original
+                    f.seek(0)
+                    reader, step = look_ahead(f, self.last_timestep, self.lookahead)
+                    row = next(reader)[1:]
+                    state["CoM"] = [float(_) for _ in row[0:3]]
+                    state["orientation"] = [float(_) for _ in row[3:6]]
+                    state["FL_FOOT"] = [float(_) for _ in row[6:9]]
+                    state["FR_FOOT"] = [float(_) for _ in row[9:12]]
+                    state["HL_FOOT"] = [float(_) for _ in row[12:15]]
+                    state["HR_FOOT"] = [float(_) for _ in row[15:18]]
+                    state["CoM_vel"] = [float(_) for _ in row[18:21]]
+                    state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
+                    all_foot_in_contact = True
                     
         state = {key: zero_filter(value) for key, value in state.items()}
         self.next_traj_step = step + self.lookahead - 1

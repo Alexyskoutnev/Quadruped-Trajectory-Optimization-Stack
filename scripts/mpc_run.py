@@ -34,14 +34,16 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'data': 'docker cp <id>:root/catkin_ws/src/towr_solo12/towr/build/traj.csv /tmp/towr.csv',
             'delete': 'rm ./data/traj/towr.csv',
             'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
-            'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
+            'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
+            'touch_file' : 'touch ./data/traj/towr.csv',
+}
 
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-resolution', 's_vel', 's_ang_vel']
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
-config_sim = "./data/config/simulation.yml"
-sim_cfg = yaml.safe_load(open(config_sim, 'r'))
+# config_sim = "./data/config/simulation.yml"
+# sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 
 mutex = Lock()
 
@@ -103,7 +105,6 @@ def _update(args, log, mpc):
     Threaded towr trajectory update function
     """
     _wait = False
-    # mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     while (global_cfg.RUN._run_update_thread):
             mutex.acquire()
             mpc.update()
@@ -178,10 +179,12 @@ def _init(args):
     """
     log = Logger("./logs", "towr_log")
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
+    subprocess.run(shlex.split(args['scripts']['delete']))
+    subprocess.run(shlex.split(args['scripts']['touch_file']))
     subprocess.run(shlex.split(args['scripts']['heightfield_rm']))
     subprocess.run(shlex.split(args['scripts']['heightfield_copy']))
     args = _step(args)
-    args['-resolution'] = args['sim_cfg']['resolution']
+    args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     return log
 
 def _run(args):
@@ -215,15 +218,11 @@ def test_mpc_single_loop(args):
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     mpc.plan_init(args)
     MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+    p_mpc = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+    p_copy = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
+    print(p_mpc)
     breakpoint()
-    if p.returncode == 0:
-        p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-        if p.returncode == 0:
-            _update(args, log, mpc)
-    else:
-        print("Error Generating MPC Trajectory")
-        sys.exit(1)
+    _update(args, log, mpc)
 
 if __name__ == "__main__":
     test = False
@@ -237,7 +236,7 @@ if __name__ == "__main__":
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=0.75)
+    parser.add_argument('-step', '--step', type=float, default=1.0)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
     # parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
     parser.add_argument('-l', '--look', type=float, default=3750)
@@ -254,7 +253,7 @@ if __name__ == "__main__":
     args['sim_cfg'] = experimentInfo(p_args.experiment)
     if test:
         args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 1.0 + 0.5
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5
         test_mpc_single_loop(args)
 
     else:

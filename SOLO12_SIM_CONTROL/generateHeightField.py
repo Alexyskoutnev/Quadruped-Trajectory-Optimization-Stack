@@ -247,7 +247,6 @@ class PATH_MAP(object):
                         data = Map_2_Idx(map_coords_start=(_x_start, _y_start, _z_start), map_coords_goal=(_x_goal, _y_goal, _z_goal),
                                         map_idx_start=(_idx_x, _idx_y), map_idx_goal=(_idx_x, _idx_y_offset))
                         self.data_queue.put(data)
-                        # print(data)
                     _idx_y += 2
                     _idx_y_offset += 2
                 _idx_x += 1

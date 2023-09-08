@@ -16,9 +16,9 @@ class Visual_Planner:
         self.foot_radius = 0.010
         self.CoM_orientation = [0, 0, 0, 1]
         self.foot_orientation = [0, 0, 0, 1]
-        self.CoM_goal_flag = False
+        self.CoM_goal_flag = True
         self.foot_id = FIFOQueue()
-        self.feet_id_flag = False
+        self.feet_id_flag = True
         self.traj_file = traj_file
         self.step_size = cfg['v_step_size']
         self.look_ahead = cfg['v_look_ahead']
