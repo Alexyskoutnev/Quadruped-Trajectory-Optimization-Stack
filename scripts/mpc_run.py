@@ -197,7 +197,7 @@ def _init(args):
     return log
 
 def _run(args):
-    """:aunch function to start the simulation and the solver concurrently
+    """launch function to start the simulation and the solver concurrently
 
     Args:
         args (dict): user + config inputs for simulation and solver
@@ -222,7 +222,7 @@ def _run(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[2.0,0,0.24])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[4.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)

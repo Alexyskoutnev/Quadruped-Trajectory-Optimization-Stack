@@ -229,8 +229,8 @@ def convert12arr_2_16arr(arr):
             idx += 1
         idx += 1
     return arr16
-
-def towr_transform(robot, traj, towr=True, ee_shift=0.0015):
+    
+def towr_transform(robot, traj, towr=True, ee_shift=0.015):
     """Helper function to transform 'raw towr data' from world frame to 
        base frame on robot. Then the base frame is converted back to world 
        frame in Pybullet enviroment to help fix misalignment if towr trajectory runs

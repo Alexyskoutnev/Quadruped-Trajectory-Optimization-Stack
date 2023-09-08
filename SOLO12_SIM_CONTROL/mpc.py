@@ -218,7 +218,6 @@ class MPC(object):
             reader, step = look_ahead(f, self.last_timestep, self.lookahead)
             while (not all_foot_in_contact):
                 try:
-                    print("ERRROr")
                     row = next(reader)[1:]
                     state["CoM"] = [float(_) for _ in row[0:3]]
                     state["orientation"] = [float(_) for _ in row[3:6]]
@@ -231,10 +230,8 @@ class MPC(object):
                     if self.check_legs_contact(state):
                         all_foot_in_contact = True
                     else:
-                        print(f"Not in contact, {self.lookahead}")
                         self.lookahead += 1
                 except StopIteration:
-                    print("stop iteration")
                     self.lookahead = self.lookahead_original
                     f.seek(0)
                     reader, step = look_ahead(f, self.last_timestep, self.lookahead)
