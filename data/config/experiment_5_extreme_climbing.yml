@@ -20,8 +20,8 @@ friction : 0.99
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 50
 v_look_ahead : 5000
-show_com_plan : False
-show_feet_plan : False
+show_com_plan : True
+show_feet_plan : True
 #==Search Proprocess==#
 bool_map_search : False
 step_version : 'spine'

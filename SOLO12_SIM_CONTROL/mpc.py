@@ -52,7 +52,7 @@ class MPC(object):
         height_values = np.unique(map)
         return set(height_values)
         
-    def check_legs_contact(self, state, tol=9):
+    def check_legs_contact(self, state, tol=6):
         for leg in state:
             if leg in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
                 if round(state[leg][2], tol) not in self.height_set:
@@ -106,14 +106,14 @@ class MPC(object):
             diff_vec[2] = 0.0
             args['-g'] = list(global_pos + diff_vec)
             z_goal = self.global_planner.get_map_height((args['-g'][0], args['-g'][1]))
-            args['-g'][2] = z_goal + 0.24
+            args['-g'][2] = z_goal + 0.20
         else:
             global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
             goal = global_cfg.ROBOT_CFG.robot_goal
             diff_vec = np.clip(goal - global_pos, -step_size, step_size)
             diff_vec[2] = 0.0
             args['-g'] = list(global_pos + diff_vec)
-            args['-g'][2] = 0.24
+            args['-g'][2] = 0.20
         return args
 
 
@@ -128,9 +128,7 @@ class MPC(object):
         """
 
         if self.set_spine_flag or self.global_planner.P_correction and not self.global_planner.empty():
-            print("spine plan")
             _state_dic = self._state()
-            print("state ", _state_dic)
             start_pos, end_pos = self.global_planner.pop()
             self.args['-s'] = _state_dic["CoM"]
             self.args['-s_ang'] = _state_dic['orientation']
@@ -176,7 +174,6 @@ class MPC(object):
         self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
         self.goal_diff = np.linalg.norm(np.array(self.args['-s'])[0:2] - np.array(self.args['-g'])[0:2])
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
-        #Updating the global planner
         self.global_planner.update(self.last_timestep, self.global_plan_state, self.robot_state[1:3], goal_step_vec)
         if self.global_planner.max_t < self.last_timestep - 5.0:
             print("STOPING MPC CONTROLLER")
@@ -199,7 +196,7 @@ class MPC(object):
         diff_vec = np.clip(goal - global_pos, -step_size, step_size)
         diff_vec[2] = 0.0
         self.args['-g'] = list(global_pos + diff_vec)
-        self.args['-g'][2] = 0.24
+        self.args['-g'][2] = 0.20
 
     def _state(self):
         """Returns the updated robot state back to the optimizer
@@ -221,8 +218,7 @@ class MPC(object):
             print(f"=============OLD TRAJ END INDEX QUERY [{self.next_traj_step}]=============")
             reader, step = look_ahead(f, self.last_timestep, self.lookahead)
             while (not all_foot_in_contact):
-                try:
-                    print(reader)
+                # try:
                     row = next(reader)[1:]
                     state["CoM"] = [float(_) for _ in row[0:3]]
                     state["orientation"] = [float(_) for _ in row[3:6]]
@@ -236,16 +232,18 @@ class MPC(object):
                         all_foot_in_contact = True
                     else:
                         self.lookahead += 1
-                except StopIteration:
-                    print("reached the end of the trajectory")
-                    state["CoM"] = [float(_) for _ in row[0:3]]
-                    state["orientation"] = [float(_) for _ in row[3:6]]
-                    state["FL_FOOT"] = [float(_) for _ in row[6:9]]
-                    state["FR_FOOT"] = [float(_) for _ in row[9:12]]
-                    state["HL_FOOT"] = [float(_) for _ in row[12:15]]
-                    state["HR_FOOT"] = [float(_) for _ in row[15:18]]
-                    state["CoM_vel"] = [float(_) for _ in row[18:21]]
-                    state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
+                # except StopIteration:
+                    # open(self.current_traj, "r", newline='') 
+                    # reader, step = look_ahead(f, self.last_timestep, self.lookahead_original)
+                    # row = next(reader)[1:]
+                    # state["CoM"] = [float(_) for _ in row[0:3]]
+                    # state["orientation"] = [float(_) for _ in row[3:6]]
+                    # state["FL_FOOT"] = [float(_) for _ in row[6:9]]
+                    # state["FR_FOOT"] = [float(_) for _ in row[9:12]]
+                    # state["HL_FOOT"] = [float(_) for _ in row[12:15]]
+                    # state["HR_FOOT"] = [float(_) for _ in row[15:18]]
+                    # state["CoM_vel"] = [float(_) for _ in row[18:21]]
+                    # state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
                     
         state = {key: zero_filter(value) for key, value in state.items()}
         self.next_traj_step = step + self.lookahead - 1

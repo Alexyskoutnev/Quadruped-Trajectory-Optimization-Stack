@@ -83,24 +83,6 @@ def start_config(args):
     args['-e4'] = [-0.2348440184502048, -0.17033609357109808, 0.0]
     args['-s_ang'] = [0, 0, 0]
 
-def _state(p = 0.6):
-    state = {"CoM": None, "orientation": None, "FL_FOOT": None, 
-             "FR_FOOT": None, "HL_FOOT": None, "HR_FOOT": None, "CoM_vel": None,
-             "CoM_vel_ang": None}
-    with open(CURRENT_TRAJ_CSV_FILE, "r", newline='') as f:
-        reader = percentage_look_ahead(f, p)
-        row = next(reader)
-        state["CoM"] = [float(_) for _ in row[0:3]]
-        state["orientation"] = [float(_) for _ in row[3:6]]
-        state["FL_FOOT"] = [float(_) for _ in row[6:9]]
-        state["FR_FOOT"] = [float(_) for _ in row[9:12]]
-        state["HL_FOOT"] = [float(_) for _ in row[12:15]]
-        state["HR_FOOT"] = [float(_) for _ in row[15:18]]
-        state["CoM_vel"] = [float(_) for _ in row[18:21]]
-        state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
-    state = {key: zero_filter(value) for key, value in state.items()}
-    return state
-
 def _step(args):
     start_config(args)
     step_size = args['step_size'] #try implementing in config-file
@@ -110,19 +92,6 @@ def _step(args):
     diff_vec[2] = 0.0
     args['-g'] = list(global_pos + diff_vec)
     args['-g'][2] = 0.24
-    return args
-
-def _plan(args):
-    """
-    Trajcetory plan towards the final goal
-    """
-    args = _step(args)
-    _state_dic = _state()
-    args['-s'] = _state_dic["CoM"]
-    args['-e1'] = _state_dic["FL_FOOT"]
-    args['-e2'] = _state_dic["FR_FOOT"]
-    args['-e3'] = _state_dic["HL_FOOT"]
-    args['-e4'] = _state_dic["HR_FOOT"]
     return args
 
 def mpc_update_thread(mpc):
@@ -268,7 +237,7 @@ if __name__ == "__main__":
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=0.5)
+    parser.add_argument('-step', '--step', type=float, default=0.75)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
     # parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
     parser.add_argument('-l', '--look', type=float, default=3750)

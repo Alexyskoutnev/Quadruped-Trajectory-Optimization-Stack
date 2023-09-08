@@ -382,7 +382,7 @@ class Height_Map_Generator(Maps):
     def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1):
         super(Height_Map_Generator, self).__init__(maps, dim, scale_factor)
         self.towr_map = np.transpose(self.map)
-        self.towr_map_adjusted = self.towr_map_adjustment(np.transpose(self.map.copy()), shift_z=0.0, shift_down_num=2)
+        self.towr_map_adjusted = self.towr_map_adjustment(np.transpose(self.map.copy()), shift_z=0.0, shift_down_num=0)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map_adjusted)
         self.height_shift = max_height(HEIGHT_FIELD_OUT) / 2.0

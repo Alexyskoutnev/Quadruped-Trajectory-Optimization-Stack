@@ -79,7 +79,7 @@ class Global_Planner(object):
         x_future = self.path_solver.spine_x_track(timestep_future).item() if (np.abs(self.path_solver.spine_x_track(timestep_future)) > tol) else 0.0
         y_future = self.path_solver.spine_y_track(timestep_future).item() if (np.abs(self.path_solver.spine_y_track(timestep_future)) > tol) else 0.0
         z_goal = self.get_map_height((x_future, y_future))
-        goal = np.array([x_future, y_future, z_goal + 0.24])
+        goal = np.array([x_future, y_future, z_goal + 0.20])
         diff_vec = np.clip(goal - CoM, -step_size, step_size)
         return CoM + diff_vec
 
@@ -111,7 +111,7 @@ class Global_Planner(object):
         total_err = np.linalg.norm(error_avg)
         lookahead_time = self.lookahead_timestamp(timestep)
         plan_desired_start_pt = np.array([self.path_solver.spine_x_track(lookahead_time), self.path_solver.spine_y_track(lookahead_time), 0])
-        z = self.get_map_height(plan_desired_start_pt[0:2]) + 0.24
+        z = self.get_map_height(plan_desired_start_pt[0:2]) + 0.20
         plan_desired_start_pt[2] = z
         # goal_pt = self.goal_step(plan_desired_start_pt)
         goal_pt = self.spine_step(plan_desired_start_pt, lookahead_time)
