@@ -222,6 +222,7 @@ class MPC(object):
             reader, step = look_ahead(f, self.last_timestep, self.lookahead)
             while (not all_foot_in_contact):
                 try:
+                    print(reader)
                     row = next(reader)[1:]
                     state["CoM"] = [float(_) for _ in row[0:3]]
                     state["orientation"] = [float(_) for _ in row[3:6]]
@@ -232,15 +233,11 @@ class MPC(object):
                     state["CoM_vel"] = [float(_) for _ in row[18:21]]
                     state["CoM_vel_ang"] = [float(_) for _ in row[21:24]]
                     if self.check_legs_contact(state):
-                        print("look_ahead, ", self.lookahead)
-                        print("State", state)
                         all_foot_in_contact = True
                     else:
                         self.lookahead += 1
                 except StopIteration:
                     print("reached the end of the trajectory")
-                    # row = self.current_traj[-1]
-                    print(row)
                     state["CoM"] = [float(_) for _ in row[0:3]]
                     state["orientation"] = [float(_) for _ in row[3:6]]
                     state["FL_FOOT"] = [float(_) for _ in row[6:9]]
