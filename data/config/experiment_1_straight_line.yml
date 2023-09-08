@@ -7,7 +7,7 @@ mesh_scale : 10
 #=========Switches==============
 stance_phase : False
 height_map : True
-track : True
+track : False
 #=========Hyperparameters=======
 TRAJ_SIZE : 10000
 SIM_STEPS : 11000
@@ -18,10 +18,10 @@ skip_forward_idx : 1
 track_rate : 250
 friction : 1.0
 #==Visual Planner CONFIGURATIONS==
-v_step_size : 50
-v_look_ahead : 5000
-show_com_plan : False
-show_feet_plan : False
+v_step_size : 25
+v_look_ahead : 2750
+show_com_plan : True
+show_feet_plan : True
 #==Search Proprocess==#
 bool_map_search : True
 step_version : 'spine'

@@ -10,12 +10,8 @@ import csv
 import os
 from threading import Thread, Lock
 
-
-#importing scripts
 import run
 import trajectory_record
-# import collect_towr_data
-
 
 import numpy as np
 import yaml
@@ -42,27 +38,26 @@ _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t'
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
-# config_sim = "./data/config/simulation.yml"
-# sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 
 mutex = Lock()
 
-def strip(x):
-    st = " "
-    for s in x:
-        if s == "[" or s == "]":
-            st += ''
-        else:
-            st += s
-    return st
-
 def DockerInfo():
+    """Helper function that finds the ID of the Docker runnning on the host system
+    """
     p = subprocess.run([scripts['info']], shell=True, capture_output=True, text=True)
     output = p.stdout.replace('\n', ' ')
     dockerid, idx = output.split(), output.split().index('towr') - 1
     return dockerid[idx]
 
 def experimentInfo(experiement_name):
+    """Helper function to setup different terrain experiments to test the Q-TOS Stack
+
+    Args:
+        experiement_name (string): name of experiment the user is trying to test
+
+    Returns:
+        sim_cfg: The corresponding configuration file to setup + run the the experiment
+    """
     experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
                         "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
                         "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
@@ -73,6 +68,15 @@ def experimentInfo(experiement_name):
     return sim_cfg
 
 def parse_scripts(scripts_dic, docker_id):
+    """Helper function that parsers through the user command arguments
+
+    Args:
+        scripts_dic (dict): The available Bash script commands for the user
+        docker_id (dict): The ID of the Docker container running the local planner
+
+    Returns:
+        scripts_dic: Formated Bash scripts commands for Python process execution
+    """
     for script_name, script in scripts_dic.items():
         scripts_dic[script_name] = script.replace("<id>", docker_id)
     return scripts_dic
@@ -97,12 +101,21 @@ def _step(args):
     return args
 
 def mpc_update_thread(mpc):
+    """MPC thread that runs the global planner
+
+    Args:
+        mpc (MPC): MPC object that interfaces with the global planner
+    """
     while True:
         mpc.update()
 
 def _update(args, log, mpc):
-    """
-    Threaded towr trajectory update function
+    """Update function for the MPC controller
+
+    Args:
+        args (dict): Q-TOS user arguments + hyperparameters
+        log (log): logger for simulator and local planner
+        mpc (MPC): MPC object that interfaces with the global planner
     """
     _wait = False
     while (global_cfg.RUN._run_update_thread):
@@ -118,16 +131,12 @@ def _update(args, log, mpc):
                 global_cfg.RUN._done = True
                 break
             elif not _wait:
-                # global_cfg.RUN._wait = True
-                # breakpoint()
                 args = mpc.plan(args)
                 MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
                 print(f"Updated with a new plan - \n {MPC_SCRIPT}")
                 p_status = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
                 print(f"P_status {p_status}")
                 _wait = True
-                # breakpoint()
-                # global_cfg.RUN._wait = False
             elif mpc.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
                 p = subprocess.run(shlex.split(scripts['data'])) 
@@ -169,7 +178,7 @@ def _cmd_args(args):
     return _cmd
 
 def _init(args):
-    """Configure trajectory solver in proper start state
+    """Configure trajectory solver in proper restart state
 
     Args:
         args (dict): user + config inputs for simulation and solver
@@ -188,19 +197,18 @@ def _init(args):
     return log
 
 def _run(args):
-    """launch function to start the simulation and the solver concurrently
+    """:aunch function to start the simulation and the solver concurrently
 
     Args:
         args (dict): user + config inputs for simulation and solver
     """
     log = _init(args)
-    print("ARGASGASGAS", args)
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     mpc.plan_init(args)
     MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
     p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-    p = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-    if p.returncode == 0:
+    p_copy = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
+    if p_copy.returncode == 0:
         print("Launching Simulation")
         mpc_thread = Thread(target=_update, args=(args, log, mpc))
         mpc_thread.start()
@@ -212,22 +220,9 @@ def _run(args):
         print("Error in copying MPC Trajectory")
         sys.exit(1)
 
-def test_mpc_single_loop(args):
-    """TO BE REMOVE"""
-    log = _init(args)
-    mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
-    mpc.plan_init(args)
-    MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
-    p_mpc = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-    p_copy = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
-    print(p_mpc)
-    breakpoint()
-    _update(args, log, mpc)
-
-if __name__ == "__main__":
-    test = False
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[5.0,0,0.24])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[2.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
@@ -238,12 +233,10 @@ if __name__ == "__main__":
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
     parser.add_argument('-step', '--step', type=float, default=1.0)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
-    # parser.add_argument('-forced_steps', '--f_steps', type=int, default=5000)
     parser.add_argument('-l', '--look', type=float, default=3750)
-    # parser.add_argument('-l', '--look', type=float, default=7500)
     parser.add_argument('-r', '--record', type=bool, default=False)
-    parser.add_argument('-p', '--mpc_p', type=bool, default=False)
     parser.add_argument('-exp', '--experiment', type=str, default="default")
+    parser.add_argument('-p', '--mpc_p', type=bool, default=False)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
@@ -251,12 +244,9 @@ if __name__ == "__main__":
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
             "f_steps": p_args.f_steps, "record": p_args.record, "mpc_p": p_args.mpc_p}
     args['sim_cfg'] = experimentInfo(p_args.experiment)
-    if test:
-        args.update(builder())
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5
-        test_mpc_single_loop(args)
+    args.update(builder(sim_cfg=args['sim_cfg']))
+    args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5
+    _run(args)
 
-    else:
-        args.update(builder(sim_cfg=args['sim_cfg']))
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5
-        _run(args)
+if __name__ == "__main__":
+    main()

@@ -9,8 +9,8 @@ import pybullet as p
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"
 config_sim = "./data/config/simulation.yml"
-cfg = yaml.safe_load(open(config, 'r'))
-sim_cfg = yaml.safe_load(open(config_sim, 'r'))
+_cfg = yaml.safe_load(open(config, 'r'))
+_sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 
 class Loader:
     def __init__(self, urdf_path, config, fixed = 0) -> None:
@@ -24,7 +24,7 @@ class Loader:
     def __repr__(self) -> str:
         return str(self.robot)
 
-def builder(cfg=cfg, sim_cfg=sim_cfg):
+def builder(cfg=_cfg, sim_cfg=None):
     SIMULATION = Simulation(sim_cfg)
     loader = Loader(URDF, cfg)
     ROBOT = SOLO12(URDF, cfg, sim_cfg=sim_cfg, loader=loader)

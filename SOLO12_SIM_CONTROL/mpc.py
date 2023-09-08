@@ -218,6 +218,7 @@ class MPC(object):
             reader, step = look_ahead(f, self.last_timestep, self.lookahead)
             while (not all_foot_in_contact):
                 try:
+                    print("ERRROr")
                     row = next(reader)[1:]
                     state["CoM"] = [float(_) for _ in row[0:3]]
                     state["orientation"] = [float(_) for _ in row[3:6]]

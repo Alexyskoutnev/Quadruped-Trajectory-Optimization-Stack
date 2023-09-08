@@ -83,6 +83,8 @@ def simulation(args):
     """Main simulation interface that runs the bullet engine
     
     """
+    if args.get('sim_cfg'):
+        sim_cfg = args['sim_cfg']
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
     ROBOT = args['robot']
@@ -101,7 +103,7 @@ def simulation(args):
         first_traj_point = traj[0]
         print("SIMIMIM ",sim_cfg)
         v_planner = Visual_Planner(TOWR, sim_cfg)
-        if sim_cfg['stance_phase']:
+        if sim_cfg.get('stance_phase'):
             time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
             ref_start_cmd = vec_to_cmd_pose(EE_POSE)
             q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)    
@@ -125,9 +127,9 @@ def simulation(args):
             writer = csv.writer(record_file) 
             record_timestep = 0
             RECORD_TRAJ = True
-    if sim_cfg['py_interface']:
+    if sim_cfg.get('py_interface'):
         pybullet_interface = PybulletInterface()
-    elif sim_cfg['custom_camera_view']:
+    elif sim_cfg.get('custom_camera_view'):
         pybullet_interface = RecordInterface(args, ROBOT.robot)
     """=========================================="""
     cmd = np.zeros((12, 1))
@@ -141,7 +143,7 @@ def simulation(args):
     stance_step = 0
     while (key_press_init_phase):
         loop_time = time.time() - last_loop_time
-        if stance_step >= sim_cfg['stance_period']:
+        if stance_step >= sim_cfg.get('stance_period'):
             key_press_init_phase = False
             break
         if init_phase and key_press_init_phase:
@@ -233,7 +235,7 @@ def simulation(args):
                         ROBOT.time_step += 1
 
                     if sim_cfg.get('track'):
-                        TRACK_RECORD.update(towr_traj, ROBOT.time_step)
+                        TRACK_RECORD.update(ref_cmd, ROBOT.time_step)
                     p.stepSimulation()
                     _global_update(ROBOT, ROBOT.state)
                     v_planner.step(sim_step, ROBOT.time)

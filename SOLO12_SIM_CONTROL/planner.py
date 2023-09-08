@@ -143,11 +143,12 @@ class Global_Planner(object):
         return row, column
     
     def get_map_height(self, pos):
-        # try:
+        try:
             row, col = self.convert_2_idx(pos[0], pos[1])
             return self.map[row, col]
-        # except:
-        #     return 0
+        except:
+            last_row, last_col = self.map.shape
+            return self.map[last_row - 1, last_col//2]
 
 class PATH_Solver(object):
     
