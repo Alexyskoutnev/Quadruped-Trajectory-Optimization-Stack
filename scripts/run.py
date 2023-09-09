@@ -1,4 +1,4 @@
-#! /opt/homebrew/Caskroom/miniforge/base/envs/soloSim/bin/python3
+#! /usr/bin/python3
 
 import time
 import os
@@ -7,6 +7,8 @@ import math
 import csv
 import argparse
 from threading import Thread, Lock
+import subprocess
+import shlex
 
 #third party
 import pybullet as p
@@ -41,8 +43,23 @@ mutex = Lock()
 
 def parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--test', action="store_true", help="Sets testing flag for CI")
-    args = parser.parse_args()
+    parser.add_argument('-t', '--towr', action="store_true", help="Default TOWR local planner")
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[3.0,0,0.24])
+    parser.add_argument('-s', '--s', nargs=3, type=float)
+    parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
+    parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
+    parser.add_argument('-n', '--n', nargs=1, type=str, default="t")
+    parser.add_argument('-e1', '--e1', nargs=3, type=float)
+    parser.add_argument('-e2', '--e2', nargs=3, type=float)
+    parser.add_argument('-e3', '--e3', nargs=3, type=float)
+    parser.add_argument('-e4', '--e4', nargs=3, type=float)
+    parser.add_argument('-step', '--step', type=float, default=1.0)
+    parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
+    parser.add_argument('-l', '--look', type=float, default=3750)
+    parser.add_argument('-r', '--record', type=bool, default=False)
+    parser.add_argument('-exp', '--experiment', type=str, default="default")
+    parser.add_argument('-p', '--mpc_p', type=bool, default=False)
+    args = vars(parser.parse_args())
     return args
 
 def update_file_name(file, cfg, sim_cfg):
@@ -261,25 +278,39 @@ def simulation(args):
                 else:
                     break
 
-        
-
     if sim_cfg.get('track'):
         TRACK_RECORD.plot()
     if RECORD_TRAJ:
         print(f"TRAJ RECORD PATH -> {record_file}")
-
     p.disconnect()
+
+def init(args):
+    """Configuration Setup for default TOWR based planning
+
+    Args:
+        args (dict): user + config inputs for simulation and solver
+    """
+    args['-r'] = 30 * args['sim'].num_tiles
+    args['-g'] = args['args']['goal']
+    args['-duration'] = 5 * args['sim'].num_tiles
+    subprocess.run(shlex.split(args['scripts']['delete']))
+    subprocess.run(shlex.split(args['scripts']['touch_file']))
+    DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
+    subprocess.run(DEFAULT_SCRIPT, stderr=subprocess.STDOUT)
+    subprocess.run(shlex.split(scripts['copy']))
+    return args
 
 if __name__ == "__main__":
     args = parser()
-    if args.test:
-        print("End-to-End Test")
-        config = "./test/data/config/solo12_test.yml"
-        config_sim = "./test/data/config/simulation_towr_test.yml"
-        cfg = yaml.safe_load(open(config, 'r'))
-        sim_cfg = yaml.safe_load(open(config_sim, 'r'))
+    if args.get('towr'):
+        print("Default Test")
+        docker_id = DockerInfo()
+        args['sim_cfg'] = experimentInfo(args['experiment'])
+        args['scripts'] = parse_scripts(scripts, docker_id)
+        sim_cfg = args['sim_cfg']
         TOWR = "./test/data/traj/towr.csv"
-        args = builder(cfg=cfg, sim_cfg=sim_cfg)
+        args.update(builder(sim_cfg=args['sim_cfg']))
+        init(args)
         simulation(args)
     else:
         args = builder()

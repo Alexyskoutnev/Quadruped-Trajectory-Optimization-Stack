@@ -136,62 +136,52 @@ class Tracking:
         plt.subplot(4, 3, 1)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FL_FOOT['r_x'])], self.FL_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FL_FOOT['s_x'])], self.FL_FOOT['s_x'], label='sim', color='blue')
-        # plt.plot(self.timeseries[0:len(self.FL_FOOT['error'])], self.FL_FOOT['error'], label='error', color='red')
         plt.grid(True)
-        plt.legend()
         plt.title('FL X Position')
         plt.subplot(4, 3, 2)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FL_FOOT['r_y'])], self.FL_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FL_FOOT['s_y'])], self.FL_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
-        plt.legend()
         plt.title('FL Y Position')
         plt.subplot(4, 3, 3)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FL_FOOT['r_z'])], self.FL_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FL_FOOT['s_z'])], self.FL_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
         plt.grid(True)
-        plt.legend()
         plt.title('FL Z Position')
 
         plt.subplot(4, 3, 4)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FR_FOOT['r_x'])], self.FR_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FR_FOOT['s_x'])], self.FR_FOOT['s_x'], label='sim', color='blue')
         plt.grid(True)
-        plt.legend()
         plt.title('FR X Position')
         plt.subplot(4, 3, 5)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FR_FOOT['r_y'])], self.FR_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FR_FOOT['s_y'])], self.FR_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
-        plt.legend()
         plt.title('FR Y Position')
         plt.subplot(4, 3, 6)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.FR_FOOT['r_z'])], self.FR_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FR_FOOT['s_z'])], self.FR_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
         plt.grid(True)
-        plt.legend()
         plt.title('FR Z Position')
 
         plt.subplot(4, 3, 7)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.HL_FOOT['r_x'])], self.HL_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HL_FOOT['s_x'])], self.HL_FOOT['s_x'], label='sim', color='blue')
         plt.grid(True)
-        plt.legend()
         plt.title('HL X Position')
         plt.subplot(4, 3, 8)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.HL_FOOT['r_y'])], self.HL_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HL_FOOT['s_y'])], self.HL_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
-        plt.legend()
         plt.title('HL Y Position')
         plt.subplot(4, 3, 9)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.HL_FOOT['r_z'])], self.HL_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HL_FOOT['s_z'])], self.HL_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
         plt.grid(True)
-        plt.legend()
         plt.title('HL Z Position')
 
 
@@ -199,22 +189,19 @@ class Tracking:
         plt.plot(self.timeseries[0:len(self.HR_FOOT['r_x'])], self.HR_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HR_FOOT['s_x'])], self.HR_FOOT['s_x'], label='sim', color='blue')
         plt.grid(True)
-        plt.legend()
         plt.title('HR X Position')
         plt.subplot(4, 3, 11)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.HR_FOOT['r_y'])], self.HR_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HR_FOOT['s_y'])], self.HR_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
-        plt.legend()
         plt.title('HR Y Position')
         plt.subplot(4, 3, 12)  # 2 rows, 2 columns, plot number 1
         plt.plot(self.timeseries[0:len(self.HR_FOOT['r_z'])], self.HR_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HR_FOOT['s_z'])], self.HR_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
         plt.grid(True)
-        plt.legend()
         plt.title('HR Z Position')
-
+        plt.legend(loc='lower right')
         plt.savefig(SAVE_FILE + self.date_time_salt)
         plt.close()
         
@@ -266,13 +253,13 @@ class Tracking:
         plt.plot(self.timeseries[0:len(self.CoM_Pos['r_y'])], self.CoM_Pos['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.CoM_Pos['s_y'])], self.CoM_Pos['s_y'], label='sim', color='blue')
         plt.grid(True)
-        plt.ylim(-0.5,0.5)
+        plt.ylim(-0.3,0.3)
         plt.xlabel('Timestep')
         plt.title('Center of Mass [Y]')
         plt.subplot(1, 3, 3)
         plt.plot(self.timeseries[0:len(self.CoM_Pos['r_z'])], self.CoM_Pos['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.CoM_Pos['s_z'])], self.CoM_Pos['s_z'], label='sim', color='blue')
-        plt.ylim(-0.1,0.5)
+        plt.ylim(-0.00,0.5)
         plt.xlabel('Timestep')
         plt.grid(True)
        

@@ -1,7 +1,7 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['plane', 'plane', 'plane', 'plane']
+map_id : ['plane', 'plane', 'plane']
 custom_camera_view : True
 mesh_scale : 10
 #=========Switches==============
@@ -9,7 +9,7 @@ stance_phase : False
 height_map : True
 track : False
 #=========Hyperparameters=======
-TRAJ_SIZE : 10000
+TRAJ_SIZE : 30000
 SIM_STEPS : 11000
 HZ : 1000
 TIMESTEPS : 0.001
@@ -20,8 +20,8 @@ friction : 1.0
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 25
 v_look_ahead : 2750
-show_com_plan : True
-show_feet_plan : True
+show_com_plan : False
+show_feet_plan : False
 #==Search Proprocess==#
 bool_map_search : True
 step_version : 'spine'
@@ -30,3 +30,5 @@ camera_yaw : 40
 camera_pitch : -25
 camera_roll : 0
 camera_distance : 1.25
+#==GOAL========#
+goal : [3.0, 0, 0.24]

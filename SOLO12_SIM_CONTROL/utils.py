@@ -1,13 +1,30 @@
+import os
+import yaml
 import pybullet as p
 import numpy as np
 import math
 import csv
 import copy
+import subprocess
 import matplotlib.pyplot as plt
 
 from scipy.spatial.transform import Rotation
 
 EE_NAMES = ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT')
+
+scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
+            'copy': 'docker cp <id>:root/catkin_ws/src/towr_solo12/towr/build/traj.csv ./data/traj/towr.csv',
+            'run': 'docker exec <id> ./main',
+            'info': 'docker ps -f ancestor=towr',
+            'data': 'docker cp <id>:root/catkin_ws/src/towr_solo12/towr/build/traj.csv /tmp/towr.csv',
+            'delete': 'rm ./data/traj/towr.csv',
+            'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
+            'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
+            'touch_file' : 'touch ./data/traj/towr.csv',
+}
+
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-resolution', 's_vel', 's_ang_vel', '-duration']
+
 
 def create_cmd(q_ang=None, q_vel=None):
     cmd = {"FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
@@ -229,7 +246,7 @@ def convert12arr_2_16arr(arr):
             idx += 1
         idx += 1
     return arr16
-    
+
 def towr_transform(robot, traj, towr=True, ee_shift=0.015):
     """Helper function to transform 'raw towr data' from world frame to 
        base frame on robot. Then the base frame is converted back to world 
@@ -319,7 +336,7 @@ def look_ahead(file, start_time=0.0, timesteps=6000, decimal_roundoff=3):
     while (True):
         t = next(reader)[0]
         stop_idx += 1
-        if start_time <= round(float(t), ndigits=decimal_roundoff): #Think of a more robust way to check start times??
+        if start_time <= round(float(t), ndigits=decimal_roundoff):
             break
     for i in range(timesteps - 1):
         next(reader)
@@ -367,3 +384,72 @@ def save_bool_map(bool_map, save_file="./data/plots/bool_map.png"):
     ax.set_yticklabels([])
     ax.imshow(bool_map, cmap='binary', origin='upper', extent=(0, len(bool_map[0]), 0, len(bool_map)))
     plt.savefig(save_file)
+
+def cmd_args(args):
+    """Commandline parser to run python subprocesses correctly
+
+    Args:
+        args (dict): user + config inputs for simulation and solver
+
+    Return:
+        _cmd : parsed command line string that can be ran as a excutable
+    """
+
+    def _bracket_rm(s):
+        return s.replace("[", "").replace("]", "")
+
+    def _remove_comma(s):
+        return s.replace(",", "")
+    
+    def _filter(s):
+        return _bracket_rm(_remove_comma(str(s)))
+
+    _cmd = ""
+
+    for key, value in args.items():
+        if key in _flags and value:
+            _cmd += key + " " + _filter(value)
+            _cmd += " "
+
+    return _cmd
+
+def parse_scripts(scripts_dic, docker_id):
+    """Helper function that parsers through the user command arguments
+
+    Args:
+        scripts_dic (dict): The available Bash script commands for the user
+        docker_id (dict): The ID of the Docker container running the local planner
+
+    Returns:
+        scripts_dic: Formated Bash scripts commands for Python process execution
+    """
+    for script_name, script in scripts_dic.items():
+        scripts_dic[script_name] = script.replace("<id>", docker_id)
+    return scripts_dic
+
+def DockerInfo():
+    """Helper function that finds the ID of the Docker runnning on the host system
+    """
+    p = subprocess.run([scripts['info']], shell=True, capture_output=True, text=True)
+    output = p.stdout.replace('\n', ' ')
+    dockerid, idx = output.split(), output.split().index('towr') - 1
+    return dockerid[idx]
+
+
+def experimentInfo(experiement_name):
+    """Helper function to setup different terrain experiments to test the Q-TOS Stack
+
+    Args:
+        experiement_name (string): name of experiment the user is trying to test
+
+    Returns:
+        sim_cfg: The corresponding configuration file to setup + run the the experiment
+    """
+    experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
+                        "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
+                        "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
+                        "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml",
+                        "exp_7" : "experiment_7_climb_obstacle.yml"}
+    file_path = os.path.join("./data/config", experiment_names[experiement_name])
+    sim_cfg = yaml.safe_load(open(file_path, 'r'))
+    return sim_cfg

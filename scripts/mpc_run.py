@@ -17,7 +17,7 @@ import numpy as np
 import yaml
 
 import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
-from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter, transformation_mtx, transformation_inv, transformation_multi
+from SOLO12_SIM_CONTROL.utils import *
 from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
 from SOLO12_SIM_CONTROL.logger import Logger
 from SOLO12_SIM_CONTROL.simulation import Simulation
@@ -40,46 +40,6 @@ CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
 
 mutex = Lock()
-
-def DockerInfo():
-    """Helper function that finds the ID of the Docker runnning on the host system
-    """
-    p = subprocess.run([scripts['info']], shell=True, capture_output=True, text=True)
-    output = p.stdout.replace('\n', ' ')
-    dockerid, idx = output.split(), output.split().index('towr') - 1
-    return dockerid[idx]
-
-def experimentInfo(experiement_name):
-    """Helper function to setup different terrain experiments to test the Q-TOS Stack
-
-    Args:
-        experiement_name (string): name of experiment the user is trying to test
-
-    Returns:
-        sim_cfg: The corresponding configuration file to setup + run the the experiment
-    """
-    experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
-                        "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
-                        "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
-                        "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml",
-                        "exp_7" : "experiment_7_climb_obstacle.yml"}
-    file_path = os.path.join("./data/config", experiment_names[experiement_name])
-    sim_cfg = yaml.safe_load(open(file_path, 'r'))
-    return sim_cfg
-
-def parse_scripts(scripts_dic, docker_id):
-    """Helper function that parsers through the user command arguments
-
-    Args:
-        scripts_dic (dict): The available Bash script commands for the user
-        docker_id (dict): The ID of the Docker container running the local planner
-
-    Returns:
-        scripts_dic: Formated Bash scripts commands for Python process execution
-    """
-    for script_name, script in scripts_dic.items():
-        scripts_dic[script_name] = script.replace("<id>", docker_id)
-    return scripts_dic
 
 def start_config(args):
     args['-s'] = [0, 0, 0.24]
@@ -132,7 +92,7 @@ def _update(args, log, mpc):
                 break
             elif not _wait:
                 args = mpc.plan(args)
-                MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+                MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
                 print(f"Updated with a new plan - \n {MPC_SCRIPT}")
                 p_status = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
                 print(f"P_status {p_status}")
@@ -148,34 +108,6 @@ def _update(args, log, mpc):
                 _wait = False
                 while (not global_cfg.RUN._update):
                             print("towr thread waiting")
-            
-def _cmd_args(args):
-    """Commandline parser to run python subprocesses correctly
-
-    Args:
-        args (dict): user + config inputs for simulation and solver
-
-    Return:
-        _cmd : parsed command line string that can be ran as a excutable
-    """
-
-    def _bracket_rm(s):
-        return s.replace("[", "").replace("]", "")
-
-    def _remove_comma(s):
-        return s.replace(",", "")
-    
-    def _filter(s):
-        return _bracket_rm(_remove_comma(str(s)))
-
-    _cmd = ""
-
-    for key, value in args.items():
-        if key in _flags and value:
-            _cmd += key + " " + _filter(value)
-            _cmd += " "
-
-    return _cmd
 
 def _init(args):
     """Configure trajectory solver in proper restart state
@@ -205,9 +137,9 @@ def _run(args):
     log = _init(args)
     mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     mpc.plan_init(args)
-    MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + _cmd_args(args))
+    MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
     p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
-    p_copy = subprocess.run(shlex.split(scripts['copy'])) #copy trajectory to simulator data
+    p_copy = subprocess.run(shlex.split(scripts['copy']))
     if p_copy.returncode == 0:
         print("Launching Simulation")
         mpc_thread = Thread(target=_update, args=(args, log, mpc))
@@ -222,7 +154,7 @@ def _run(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[4.0,0,0.24])
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[3.0,0,0.24])
     parser.add_argument('-s', '--s', nargs=3, type=float)
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
@@ -245,7 +177,10 @@ def main():
             "f_steps": p_args.f_steps, "record": p_args.record, "mpc_p": p_args.mpc_p}
     args['sim_cfg'] = experimentInfo(p_args.experiment)
     args.update(builder(sim_cfg=args['sim_cfg']))
-    args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5
+    if args['sim_cfg'].get('goal'):
+        args['-g'] = args['sim_cfg']['goal']
+    else:
+        args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5
     _run(args)
 
 if __name__ == "__main__":
