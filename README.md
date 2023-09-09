@@ -112,9 +112,10 @@ python3 scripts/debug.py
 ## Citing
 ```
 @inproceedings{skoutnev2023qtos,
-   title={Quadruped-Trajectory-Optimization-Stack},
+   title={Quadruped Trajectory Optimization Stack},
    author={Skoutnev, Alexy and Cinral, Andrew and Sigdel, Praful and Laine, Forrest},
-   booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
-   year={2024}
+   archivePrefix={arXiv}
+   primaryClass={cs.RO}
+   year={2023}
 }
 ```
