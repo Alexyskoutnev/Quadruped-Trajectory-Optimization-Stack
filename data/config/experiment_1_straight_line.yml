@@ -10,7 +10,7 @@ height_map : True
 track : True
 #=========Hyperparameters=======
 TRAJ_SIZE : 30000
-SIM_STEPS : 11000
+SIM_STEPS : 31000
 HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 300
@@ -31,4 +31,4 @@ camera_pitch : -25
 camera_roll : 0
 camera_distance : 1.25
 #==GOAL========#
-goal : [1.0, 0.0, 0.24]
+# goal : [2.1, 0.0, 0.24]

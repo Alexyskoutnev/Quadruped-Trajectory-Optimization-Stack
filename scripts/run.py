@@ -100,6 +100,11 @@ def simulation(args):
     """Main simulation interface that runs the bullet engine
     
     """
+    print("ARGAS", args)
+    # goal = args['sim_cfg']['goal']
+    goal = [3.1, 0, 0.24]
+    goal[0] -= 0.1
+
     if args.get('sim_cfg'):
         sim_cfg = args['sim_cfg']
     log = Logger("./logs", "simulation_log")
@@ -262,6 +267,11 @@ def simulation(args):
                 sim_step += 1
                 if sim_cfg['custom_camera_view']:
                     pybullet_interface.update()
+
+                if global_cfg.ROBOT_CFG.linkWorldPosition[0] >= goal[0]:
+                    global_cfg.RUN._done = True
+                    global_cfg.RUN._stance = True
+                    break
 
         else:
             loop_time = time.time() - last_loop_time

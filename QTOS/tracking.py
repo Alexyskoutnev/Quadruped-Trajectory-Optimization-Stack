@@ -142,6 +142,8 @@ class Tracking:
         self.logger.write(f"[{self.idx}] COM ERROR : {self.total_error_com_error}\n")
         self.logger.write(f"[{self.idx}] Distance : {self.distance}\n")
         self.logger.write(f"[{self.idx}] x-distance : {self.distance[0]}\n")
+        
+        print(f"x distance {self.distance[0]}")
 
 
     def plot_reference_vs_sim(self, plot_graph=False):

@@ -166,9 +166,10 @@ def default_init(args):
             args['-e4'] = [-0.21, -0.19, 0.0]
             args['-s_ang'] = [0, 0, 0]
     start_config(args)
-    args['-r'] = 30 * args['sim'].num_tiles
-    args['-g'] = args['args']['goal']
-    args['-duration'] = 10 * args['sim'].num_tiles
+    args['-r'] = 120 * args['sim'].num_tiles
+    if args['sim_cfg'].get('goal'):
+        args['-g'] = args['args']['goal']
+    args['-duration'] = 2.5 * args['sim'].num_tiles
     subprocess.run(shlex.split(args['scripts']['delete']))
     subprocess.run(shlex.split(args['scripts']['touch_file']))
     DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
@@ -197,7 +198,7 @@ def main():
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=1.0)
+    parser.add_argument('-step', '--step', type=float, default=0.5)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
     parser.add_argument('-l', '--look', type=float, default=3750)
     parser.add_argument('-r', '--record', type=bool, default=False)
@@ -215,7 +216,8 @@ def main():
     if args.get('towr'):
         print("Default Test")
         args['-r'] = 30 * args['sim'].num_tiles
-        args['-g'] = args['args']['goal']
+        if args['sim_cfg'].get('goal'):
+            args['-g'] = args['args']['goal']
         args['-duration'] = 5 * args['sim'].num_tiles
         run_default(args)
     elif args['sim_cfg'].get('goal'):

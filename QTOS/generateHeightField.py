@@ -158,8 +158,8 @@ class PATH_MAP(object):
         self.num_cols = map.shape[1]
         self.mesh_resolution = 0.1 * (1 / scale)
         self.probe_map(map, multi_map_shift, self.mesh_resolution )
-        neighbors = ((-(scale*3), 0), (scale*3, 0), (0, -(scale*3)), (0, (scale*3)))
-        neighbors_mid = ((-scale*3, 0), (scale*3, 0), (0, scale*3), (0, -scale*3), (-scale*3, 0), (scale*3, 0), (0, -scale*3), (0, -scale*3))
+        neighbors = ((-(scale*2), 0), (scale*2, 0), (0, -(scale*2)), (0, (scale*2)))
+        neighbors_mid = ((-scale*2, 0), (scale*2, 0), (0, scale*2), (0, -scale*2), (-scale*2, 0), (scale*2, 0), (0, -scale*2), (0, -scale*2))
         self.neighbors_start = self.find_convex_hull(neighbors)
         self.neighbors_mid = self.find_convex_hull(neighbors_mid)
         self.neighbors_end = self.find_convex_hull(neighbors)
@@ -272,7 +272,7 @@ class PATH_MAP(object):
             args['-e4'] = (np.array([-0.21, -0.19, 0.0]) + np.array(shift)).tolist()
             args['-s_ang'] = [0, 0, 0]
             args['-g'] = [goal_pt[0], goal_pt[1], goal_pt[2] + 0.24]
-            args['-r'] = 4.0
+            args['-r'] = 5.0
 
         while not queue.empty():
             args = {}
@@ -302,7 +302,7 @@ class PATH_MAP(object):
                     for idx in self.neighbors_end:
                         local_array[goal_idx[0] + idx[0]][goal_idx[1] + idx[1]] = 1
                     
-            # print(np.transpose(local_array), "\n")
+            print(np.transpose(local_array), "\n")
             
 
 class RandomMaps(object):

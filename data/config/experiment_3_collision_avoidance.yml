@@ -2,7 +2,7 @@
 mode : "towr"
 enviroment : "custom"
 map_id : ['feasibility', 'feasibility_1', 'plane']
-custom_camera_view : True
+custom_camera_view : False
 mesh_scale : 1
 #=========Switches==============
 stance_phase : False

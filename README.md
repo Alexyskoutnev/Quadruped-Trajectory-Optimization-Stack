@@ -16,12 +16,12 @@ If you find our work useful in your research, please consider [citing](#citing).
 - [Towr](https://github.com/ethz-adrl/towr)
 - [Docker](https://www.docker.com/)
 
-## Repo Installation and Enviroment Setup
+## Installation and Environment Setup
 To help keep all the packages together in one enviroment, please create conda enviroment.
 
 ```console
-conda create -n soloSIM python=3.10
-conda activate soloSIM
+conda create -n QTOS python=3.10
+conda activate QTOS
 pip3 install -r requirements.txt
 pip3 install -e .
 ```
@@ -47,7 +47,7 @@ sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
 sudo hdiutil detach /Volumes/Docker
 ```
 
-## Docker Installation Steps
+## Docker Installation
 ```console
 DOCKER_BUILDKIT=1 docker build --no-cache -t towr -f Dockerfile .
 docker run -d towr
@@ -76,16 +76,9 @@ catkin_make_isolated -DCMAKE_BUILD_TYPE=Release -j4
 source devel_isolated/setup.sh
 roslaunch towr_ros towr_ros.launch
 ```
-<!-- ## Python Installation Steps
-```
-conda create --name soloSim python=3.10
-conda activate soloSim
-conda install -c conda-forge pybullet
-pip3 install -e .
-conda install pyyaml
-conda install scipy
-conda install matplotlib
-``` -->
+
+# Usage
+
 ## Running Basic Simulation
 Make sure you run all script from the home direction (~/SOLO12_SIM_CONTROL), to run the simulator use run.py. The configuration files for this scripts are ~/data/config/solo12.yml and ~/data/config/simulation.yml. Make all the neccesary changes in the .yml files to configure starting state of the simulation and robot.
 ```
