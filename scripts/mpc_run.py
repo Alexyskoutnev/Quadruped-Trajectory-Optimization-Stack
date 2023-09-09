@@ -168,7 +168,7 @@ def default_init(args):
     start_config(args)
     args['-r'] = 30 * args['sim'].num_tiles
     args['-g'] = args['args']['goal']
-    args['-duration'] = 5 * args['sim'].num_tiles
+    args['-duration'] = 10 * args['sim'].num_tiles
     subprocess.run(shlex.split(args['scripts']['delete']))
     subprocess.run(shlex.split(args['scripts']['touch_file']))
     DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))

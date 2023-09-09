@@ -15,7 +15,7 @@ HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 300
 skip_forward_idx : 1
-track_rate : 250
+track_rate : 500
 friction : 1.0
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 25

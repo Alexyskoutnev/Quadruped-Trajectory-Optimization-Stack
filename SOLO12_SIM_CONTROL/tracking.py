@@ -7,12 +7,16 @@ from collections import namedtuple
 
 
 from SOLO12_SIM_CONTROL.utils import vec_to_cmd, vec_to_cmd_pose
+from SOLO12_SIM_CONTROL.logger import Logger
+from SOLO12_SIM_CONTROL.config.global_cfg import ROBOT_CFG
 
 SAVE_FILE = "./data/tracking_info/ref_sim_track_"
 SAVE_FILE_COM = "./data/tracking_info/CoM_track_"
 SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error_"
 SAVE_DIR = "./data/tracking_info/"
 NUM_TRAJS_TO_SAVE = 2
+
+
 
 def date_salt(f_type=".png"):
     current_datetime = datetime.datetime.now()
@@ -30,6 +34,7 @@ class COMMAND:
 class Tracking:
 
     def __init__(self, robot, num_traj, cfg) -> None:
+        self.logger = Logger("./logs", "experiment_data")
         self.robot = robot
         self.traj = {"reference" : [], "sim" : []}
         self.idx = 0
@@ -66,6 +71,10 @@ class Tracking:
         if self.idx % self.track_rate == 0:
             if self.track_flag:
                 self.plot()
+    
+    @property
+    def distance(self):
+        return ROBOT_CFG.linkWorldPosition
         
     def _update(self):
         self.timeseries = np.linspace(0, self.end_time, self.size)
@@ -129,6 +138,11 @@ class Tracking:
                     self.HR_FOOT['s_y'].append(s_y)
                     self.HR_FOOT['s_z'].append(s_z)
                     self.HR_FOOT['error'].append(error)
+        
+        self.logger.write(f"[{self.idx}] COM ERROR : {self.total_error_com_error}\n")
+        self.logger.write(f"[{self.idx}] Distance : {self.distance}\n")
+        self.logger.write(f"[{self.idx}] x-distance : {self.distance[0]}\n")
+
 
     def plot_reference_vs_sim(self, plot_graph=False):
         plt.figure(figsize=(10, 6))
