@@ -1,13 +1,13 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['plane', 'plane', 'plane']
+map_id : ['plane', 'plane']
 custom_camera_view : True
-mesh_scale : 10
+mesh_scale : 1
 #=========Switches==============
 stance_phase : False
 height_map : True
-track : False
+track : True
 #=========Hyperparameters=======
 TRAJ_SIZE : 30000
 SIM_STEPS : 11000
@@ -31,4 +31,4 @@ camera_pitch : -25
 camera_roll : 0
 camera_distance : 1.25
 #==GOAL========#
-goal : [3.0, 0, 0.24]
+goal : [1.0, 0.0, 0.24]

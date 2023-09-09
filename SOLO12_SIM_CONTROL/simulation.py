@@ -28,6 +28,7 @@ class Simulation(object):
         py_client = None
 
         if cfg['enviroment'] == "custom":
+
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)

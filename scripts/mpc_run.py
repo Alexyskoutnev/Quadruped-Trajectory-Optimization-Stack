@@ -152,6 +152,40 @@ def _run(args):
         print("Error in copying MPC Trajectory")
         sys.exit(1)
 
+def default_init(args):
+    """Default configuration for default TOWR based planning
+
+    Args:
+        args (dict): user + config inputs for simulation and solver
+    """
+    def start_config(args):
+            args['-s'] = [0, 0, 0.24]
+            args['-e1'] = [0.21, 0.19, 0.0]
+            args['-e2'] = [0.21, -0.19, 0.0]
+            args['-e3'] = [-0.21, 0.19, 0.0]
+            args['-e4'] = [-0.21, -0.19, 0.0]
+            args['-s_ang'] = [0, 0, 0]
+    start_config(args)
+    args['-r'] = 30 * args['sim'].num_tiles
+    args['-g'] = args['args']['goal']
+    args['-duration'] = 5 * args['sim'].num_tiles
+    subprocess.run(shlex.split(args['scripts']['delete']))
+    subprocess.run(shlex.split(args['scripts']['touch_file']))
+    DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
+    subprocess.run(DEFAULT_SCRIPT, stderr=subprocess.STDOUT)
+    subprocess.run(shlex.split(scripts['copy']))
+    return p
+
+def run_default(args):
+    """Launch function for default local planner dervived from TOWR
+
+    Args:
+        args (dict): user + config inputs for simulation and solver
+    """
+    _init(args)
+    default_init(args)
+    run.simulation(args)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--g', nargs=3, type=float, default=[3.0,0,0.24])
@@ -169,15 +203,22 @@ def main():
     parser.add_argument('-r', '--record', type=bool, default=False)
     parser.add_argument('-exp', '--experiment', type=str, default="default")
     parser.add_argument('-p', '--mpc_p', type=bool, default=False)
+    parser.add_argument('-t', '--towr', action="store_true", help="Default TOWR local planner", default=False)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
     args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
             "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
-            "f_steps": p_args.f_steps, "record": p_args.record, "mpc_p": p_args.mpc_p}
+            "f_steps": p_args.f_steps, "record": p_args.record, "mpc_p": p_args.mpc_p, "towr" : p_args.towr}
     args['sim_cfg'] = experimentInfo(p_args.experiment)
     args.update(builder(sim_cfg=args['sim_cfg']))
-    if args['sim_cfg'].get('goal'):
+    if args.get('towr'):
+        print("Default Test")
+        args['-r'] = 30 * args['sim'].num_tiles
+        args['-g'] = args['args']['goal']
+        args['-duration'] = 5 * args['sim'].num_tiles
+        run_default(args)
+    elif args['sim_cfg'].get('goal'):
         args['-g'] = args['sim_cfg']['goal']
     else:
         args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5

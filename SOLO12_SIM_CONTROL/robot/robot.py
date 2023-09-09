@@ -109,7 +109,6 @@ class SOLO12(object):
         # Enable torque control for revolute joints
         jointTorques = [0.0 for m in revoluteJointIndices]
         p.setJointMotorControlArray(self.robot, revoluteJointIndices, controlMode=p.TORQUE_CONTROL, forces=jointTorques)
-
         self.offsets = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self._kp = config['kp']
         self._kd = config['kd']

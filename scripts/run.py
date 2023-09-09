@@ -53,7 +53,7 @@ def parser():
     parser.add_argument('-e2', '--e2', nargs=3, type=float)
     parser.add_argument('-e3', '--e3', nargs=3, type=float)
     parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=1.0)
+    parser.add_argument('-step', '--step', type=float, default=0.5)
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
     parser.add_argument('-l', '--look', type=float, default=3750)
     parser.add_argument('-r', '--record', type=bool, default=False)
@@ -285,11 +285,19 @@ def simulation(args):
     p.disconnect()
 
 def init(args):
-    """Configuration Setup for default TOWR based planning
+    """Default configuration for default TOWR based planning
 
     Args:
         args (dict): user + config inputs for simulation and solver
     """
+    def start_config(args):
+            args['-s'] = [0, 0, 0.24]
+            args['-e1'] = [0.21, 0.19, 0.0]
+            args['-e2'] = [0.21, -0.19, 0.0]
+            args['-e3'] = [-0.21, 0.19, 0.0]
+            args['-e4'] = [-0.21, -0.19, 0.0]
+            args['-s_ang'] = [0, 0, 0]
+    start_config(args)
     args['-r'] = 30 * args['sim'].num_tiles
     args['-g'] = args['args']['goal']
     args['-duration'] = 5 * args['sim'].num_tiles
@@ -301,7 +309,9 @@ def init(args):
     return args
 
 if __name__ == "__main__":
+    test = False
     args = parser()
+    
     if args.get('towr'):
         print("Default Test")
         docker_id = DockerInfo()
