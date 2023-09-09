@@ -2,7 +2,7 @@ import sys
 
 import numpy as np
 
-from SOLO12_SIM_CONTROL.containers import FIFOQueue
+from QTOS.containers import FIFOQueue
 
 class ROBOT_CFG:
     robot = None

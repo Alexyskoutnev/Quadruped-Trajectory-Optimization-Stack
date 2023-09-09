@@ -5,10 +5,10 @@ import pybullet as p
 import numpy as np
 import pinocchio as pin
 
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd, trajectory_2_local_frame, EE_NAMES
-from SOLO12_SIM_CONTROL.robot.robot_motor import MotorModel
-from SOLO12_SIM_CONTROL.stateEstimation import State_Estimation
-import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
+from QTOS.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd, trajectory_2_local_frame, EE_NAMES
+from QTOS.robot.robot_motor import MotorModel
+from QTOS.stateEstimation import State_Estimation
+import QTOS.config.global_cfg as global_cfg
 
 
 def links_to_id(robot):

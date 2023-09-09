@@ -1,5 +1,5 @@
-from SOLO12_SIM_CONTROL.robot.robot import SOLO12
-from SOLO12_SIM_CONTROL.simulation import Simulation
+from QTOS.robot.robot import SOLO12
+from QTOS.simulation import Simulation
 
 import yaml
 import pinocchio as pin

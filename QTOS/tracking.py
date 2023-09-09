@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 from collections import namedtuple
 
 
-from SOLO12_SIM_CONTROL.utils import vec_to_cmd, vec_to_cmd_pose
-from SOLO12_SIM_CONTROL.logger import Logger
-from SOLO12_SIM_CONTROL.config.global_cfg import ROBOT_CFG
+from QTOS.utils import vec_to_cmd, vec_to_cmd_pose
+from QTOS.logger import Logger
+from QTOS.config.global_cfg import ROBOT_CFG
 
 SAVE_FILE = "./data/tracking_info/ref_sim_track_"
 SAVE_FILE_COM = "./data/tracking_info/CoM_track_"

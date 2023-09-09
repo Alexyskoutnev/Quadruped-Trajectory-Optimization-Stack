@@ -9,7 +9,7 @@ from matplotlib.colors import ListedColormap
 import scipy.sparse as sp
 from scipy.sparse import identity, csr_matrix
 
-from SOLO12_SIM_CONTROL.utils import is_numeric
+from QTOS.utils import is_numeric
 
 READ_FILE = "./data/traj/towr.csv"
 HEIGHT_MAP = "./data/heightfields/EXAMPLE_HEIGHT_MAP.txt"

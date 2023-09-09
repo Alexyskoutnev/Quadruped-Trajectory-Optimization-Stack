@@ -14,14 +14,14 @@ import yaml
 import numpy as np
 
 #project
-from SOLO12_SIM_CONTROL.robot.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import *
-from SOLO12_SIM_CONTROL.gaitPlanner import Gait
-from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
-from SOLO12_SIM_CONTROL.simulation import Simulation
-from SOLO12_SIM_CONTROL.logger import Logger
-from SOLO12_SIM_CONTROL.tracking import Tracking
-import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
+from QTOS.robot.robot import SOLO12
+from QTOS.utils import *
+from QTOS.gaitPlanner import Gait
+from QTOS.pybulletInterface import PybulletInterface
+from QTOS.simulation import Simulation
+from QTOS.logger import Logger
+from QTOS.tracking import Tracking
+import QTOS.config.global_cfg as global_cfg
 
 
 URDF = "./data/urdf/solo12_test.urdf"

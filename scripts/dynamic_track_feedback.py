@@ -12,10 +12,10 @@ import run
 import collect_towr_data
 import numpy as np
 
-import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
-from SOLO12_SIM_CONTROL.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter, transformation_mtx, transformation_inv, transformation_multi
-from SOLO12_SIM_CONTROL.mpc import MPC, MPC_THREAD
-from SOLO12_SIM_CONTROL.logger import Logger
+import QTOS.config.global_cfg as global_cfg
+from QTOS.utils import norm, tf_2_world_frame, percentage_look_ahead, zero_filter, transformation_mtx, transformation_inv, transformation_multi
+from QTOS.mpc import MPC, MPC_THREAD
+from QTOS.logger import Logger
 
 scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'copy': 'docker cp <id>:/root/catkin_ws/src/towr_solo12/towr/build/traj.csv ./data/traj/towr.csv',

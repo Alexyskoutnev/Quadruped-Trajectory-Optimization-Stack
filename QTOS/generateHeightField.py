@@ -1,4 +1,4 @@
-from SOLO12_SIM_CONTROL.utils import is_numeric, save_bool_map, save_height_grid_map
+from QTOS.utils import is_numeric, save_bool_map, save_height_grid_map
 
 import time
 import matplotlib.pyplot as plt

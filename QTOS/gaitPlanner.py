@@ -6,8 +6,8 @@ import yaml
 import pybullet as p
 import pybullet_data
 
-from SOLO12_SIM_CONTROL.utils import trajectory_2_world_frame
-from SOLO12_SIM_CONTROL.robot.robot import SOLO12
+from QTOS.utils import trajectory_2_world_frame
+from QTOS.robot.robot import SOLO12
 
 def binomial_factor(n, k):
     return np.math.factorial(n) / (np.math.factorial(k)*np.math.factorial(n - k))

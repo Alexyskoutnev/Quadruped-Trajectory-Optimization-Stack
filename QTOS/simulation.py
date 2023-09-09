@@ -1,4 +1,4 @@
-from SOLO12_SIM_CONTROL.generateHeightField import Height_Map_Generator
+from QTOS.generateHeightField import Height_Map_Generator
 
 import time
 

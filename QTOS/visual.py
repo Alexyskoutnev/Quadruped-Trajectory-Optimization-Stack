@@ -1,7 +1,7 @@
 from collections import deque
 
-import SOLO12_SIM_CONTROL.config.global_cfg
-from SOLO12_SIM_CONTROL.containers import FIFOQueue
+import QTOS.config.global_cfg
+from QTOS.containers import FIFOQueue
 
 import numpy as np
 import pybullet as p

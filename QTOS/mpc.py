@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 import pybullet as p
 
-import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
-from SOLO12_SIM_CONTROL.utils import *
-from SOLO12_SIM_CONTROL.planner import Global_Planner
+import QTOS.config.global_cfg as global_cfg
+from QTOS.utils import *
+from QTOS.planner import Global_Planner
 
 
 

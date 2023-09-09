@@ -14,13 +14,13 @@ import yaml
 import numpy as np
 
 #project
-from SOLO12_SIM_CONTROL.robot.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint, trajectory_2_world_frame, create_cmd, combine
-from SOLO12_SIM_CONTROL.gaitPlanner import Gait
-from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
-from SOLO12_SIM_CONTROL.simulation import Simulation
-from SOLO12_SIM_CONTROL.logger import Logger
-import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
+from QTOS.robot.robot import SOLO12
+from QTOS.utils import transformation_mtx, transformation_inv, towr_transform, vec_to_cmd, vec_to_cmd_pose, nearestPoint, trajectory_2_world_frame, create_cmd, combine
+from QTOS.gaitPlanner import Gait
+from QTOS.pybulletInterface import PybulletInterface
+from QTOS.simulation import Simulation
+from QTOS.logger import Logger
+import QTOS.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"

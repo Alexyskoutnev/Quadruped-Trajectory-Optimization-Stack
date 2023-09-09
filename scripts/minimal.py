@@ -6,9 +6,9 @@ import csv
 import numpy
 from numpy import genfromtxt
 
-from SOLO12_SIM_CONTROL.robot.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import *
-from SOLO12_SIM_CONTROL.visual import Visual_Planner
+from QTOS.robot.robot import SOLO12
+from QTOS.utils import *
+from QTOS.visual import Visual_Planner
 
 solo12_urdf_fname = "./data/urdf/solo12.urdf"
 config_fname = "./data/config/solo12.yml"

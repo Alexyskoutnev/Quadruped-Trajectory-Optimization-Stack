@@ -6,9 +6,9 @@ import os
 import heapq
 from scipy.interpolate import CubicSpline
 
-from SOLO12_SIM_CONTROL.config.global_cfg import PLANNER
-from SOLO12_SIM_CONTROL.containers import FIFOQueue, Limited_Stack, LimitedFIFOQueue
-import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
+from QTOS.config.global_cfg import PLANNER
+from QTOS.containers import FIFOQueue, Limited_Stack, LimitedFIFOQueue
+import QTOS.config.global_cfg as global_cfg
 
 TOWR_HEIGHT_MAP = "../data/heightmaps/test_heightfield_towr.txt"
 GLOBAL_TRAJ_DIR = "./data/plots/"
