@@ -7,7 +7,7 @@ mesh_scale : 1
 #=========Switches==============
 stance_phase : False
 height_map : True
-track : False
+track : True
 #=========Hyperparameters=======
 TRAJ_SIZE : 60000
 SIM_STEPS : 61000
@@ -23,7 +23,7 @@ v_look_ahead : 2750
 show_com_plan : False
 show_feet_plan : False
 #==Search Proprocess==#
-bool_map_search : True
+bool_map_search : False
 step_version : 'spine'
 #==Camera Options=====#
 camera_yaw : 85

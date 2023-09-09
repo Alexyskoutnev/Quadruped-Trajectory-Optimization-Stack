@@ -22,7 +22,7 @@
   # kp : 1.0 #values for p-control or pd-control
   # kd : 0.2 #values for p-control or pd-control
   # kp : 10 #Good values for torque control
-  kp : 12.5 #Good values for torque control
+  kp : 15.5 #Good values for torque control
   kd : 0.09 #Good values for torque control
   hip_gain_scale : 2.0
   knee_gain_scale : 1.0

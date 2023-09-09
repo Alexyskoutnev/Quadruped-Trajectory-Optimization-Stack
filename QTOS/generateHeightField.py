@@ -158,8 +158,8 @@ class PATH_MAP(object):
         self.num_cols = map.shape[1]
         self.mesh_resolution = 0.1 * (1 / scale)
         self.probe_map(map, multi_map_shift, self.mesh_resolution )
-        neighbors = ((-(scale*2), 0), (scale*2, 0), (0, -(scale*2)), (0, (scale*2)))
-        neighbors_mid = ((-scale*2, 0), (scale*2, 0), (0, scale*2), (0, -scale*2), (-scale*2, 0), (scale*2, 0), (0, -scale*2), (0, -scale*2))
+        neighbors = ((-(scale*3), 0), (scale*3, 0), (0, -(scale*3)), (0, (scale*3)))
+        neighbors_mid = ((-scale*3, 0), (scale*3, 0), (0, scale*3), (0, -scale*3), (-scale*3, 0), (scale*3, 0), (0, -scale*3), (0, -scale*3))
         self.neighbors_start = self.find_convex_hull(neighbors)
         self.neighbors_mid = self.find_convex_hull(neighbors_mid)
         self.neighbors_end = self.find_convex_hull(neighbors)

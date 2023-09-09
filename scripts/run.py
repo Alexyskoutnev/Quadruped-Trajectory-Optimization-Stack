@@ -310,7 +310,7 @@ def init(args):
     start_config(args)
     args['-r'] = 30 * args['sim'].num_tiles
     args['-g'] = args['args']['goal']
-    args['-duration'] = 5 * args['sim'].num_tiles
+    args['-duration'] = 2.5 * args['sim'].num_tiles
     subprocess.run(shlex.split(args['scripts']['delete']))
     subprocess.run(shlex.split(args['scripts']['touch_file']))
     DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
@@ -319,9 +319,7 @@ def init(args):
     return args
 
 if __name__ == "__main__":
-    test = False
-    args = parser()
-    
+    args = parser()    
     if args.get('towr'):
         print("Default Test")
         docker_id = DockerInfo()
