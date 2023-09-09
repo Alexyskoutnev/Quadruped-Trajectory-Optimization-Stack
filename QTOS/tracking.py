@@ -139,10 +139,11 @@ class Tracking:
                     self.HR_FOOT['s_z'].append(s_z)
                     self.HR_FOOT['error'].append(error)
         
-        self.logger.write(f"[{self.idx}] COM ERROR : {self.total_error_com_error}\n")
+        self.logger.write(f"[{self.idx}] Total COM ERROR : {self.total_error_com_error}\n")
+        self.logger.write(f"[{self.idx}] Average COM ERROR PER Second : {(self.total_error_com_error / self.idx) * 1000}\n")
         self.logger.write(f"[{self.idx}] Distance : {self.distance}\n")
         self.logger.write(f"[{self.idx}] x-distance : {self.distance[0]}\n")
-        
+
         print(f"x distance {self.distance[0]}")
 
 

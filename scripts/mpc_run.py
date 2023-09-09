@@ -170,6 +170,8 @@ def default_init(args):
     if args['sim_cfg'].get('goal'):
         args['-g'] = args['args']['goal']
     args['-duration'] = 2.5 * args['sim'].num_tiles
+    args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
+    global_cfg.ROBOT_CFG.robot_goal = args['-g']
     subprocess.run(shlex.split(args['scripts']['delete']))
     subprocess.run(shlex.split(args['scripts']['touch_file']))
     DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
@@ -183,7 +185,6 @@ def run_default(args):
     Args:
         args (dict): user + config inputs for simulation and solver
     """
-    _init(args)
     default_init(args)
     run.simulation(args)
 
@@ -218,7 +219,7 @@ def main():
         args['-r'] = 30 * args['sim'].num_tiles
         if args['sim_cfg'].get('goal'):
             args['-g'] = args['args']['goal']
-        args['-duration'] = 5 * args['sim'].num_tiles
+        args['-duration'] = 5.0 * args['sim'].num_tiles
         run_default(args)
     elif args['sim_cfg'].get('goal'):
         args['-g'] = args['sim_cfg']['goal']
