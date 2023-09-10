@@ -379,12 +379,14 @@ class Maps(object):
 
 class Height_Map_Generator(Maps):
 
-    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, random_shift_num=50):
+    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, randomize_env=False, random_shift_num=50, random_height_num=5):
         super(Height_Map_Generator, self).__init__(maps, dim, scale_factor)
         self.towr_map = np.transpose(self.map)
-        if random_shift_num is not 0:
-            self.towr_map = self.random_map_shift(self.towr_map, random_shift_num)
-            self.map = self.random_map_shift(self.map, random_shift_num)
+        if randomize_env:
+            self.towr_map = self.random_map_shift(self.towr_map, 50)
+            self.map = self.random_map_shift(self.map, 50)
+            self.towr_map = self.random_height_shift(self.towr_map, 5)
+            self.map = self.random_height_shift(self.map, 5)
         self.towr_map_adjusted = self.towr_map_adjustment(np.transpose(self.map.copy()), shift_z=0.0, shift_down_num=0)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map_adjusted)
@@ -445,5 +447,25 @@ class Height_Map_Generator(Maps):
             _map = np.roll(_map, shift=1, axis=1)
         elif direction == 'down':
             _map = np.roll(_map, shift=1, axis=0)
+        return _map
+
+    def random_height_shift(self, map, shift=0):
+        _map = map
+        for i in range(shift):
+            _map = self.random_height(_map)
+        return _map
+
+    def random_height(self, map, height_delta=0.005):
+        _map = np.copy(map)
+        unique_h = np.unique(_map[_map != 0])
+        for h in unique_h:
+            delta_h = random.uniform(-height_delta, height_delta)
+            n = random.choice((0, 1, 2))
+            if n is 0:
+                _map[_map == h] += delta_h
+            elif n is 1:
+                _map[_map == h] -= delta_h
+            elif n is 2:
+                _map[_map == h] += 0.0
         return _map
 

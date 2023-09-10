@@ -19,6 +19,7 @@ stance_period : 500
 skip_forward_idx : 1
 track_rate : 250
 friction : 2.0
+random_env : False
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 50
 v_look_ahead : 5000
