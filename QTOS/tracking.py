@@ -145,6 +145,7 @@ class Tracking:
         self.logger.write(f"[{self.idx}] x-distance : {self.distance[0]}\n")
 
         print(f"x distance {self.distance[0]}")
+        print(f"[{self.idx}] Average COM ERROR PER Second : {(self.total_error_com_error / self.idx) * 1000}\n")
 
 
     def plot_reference_vs_sim(self, plot_graph=False):

@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 from collections import namedtuple
 import multiprocessing
+import random
 import subprocess
 import shlex
 
@@ -378,9 +379,12 @@ class Maps(object):
 
 class Height_Map_Generator(Maps):
 
-    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1):
+    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, random_shift_num=50):
         super(Height_Map_Generator, self).__init__(maps, dim, scale_factor)
         self.towr_map = np.transpose(self.map)
+        if random_shift_num is not 0:
+            self.towr_map = self.random_map_shift(self.towr_map, random_shift_num)
+            self.map = self.random_map_shift(self.map, random_shift_num)
         self.towr_map_adjusted = self.towr_map_adjustment(np.transpose(self.map.copy()), shift_z=0.0, shift_down_num=0)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map_adjusted)
@@ -422,3 +426,24 @@ class Height_Map_Generator(Maps):
         map[not_zero_mask] = shift_values
         map = shift_rows_down(map, shift_down_num)
         return map
+
+    def random_map_shift(self, map, shift=0):
+        _map = map
+        for i in range(shift):
+            _map = self.shift_map(_map)
+        return _map
+
+    def shift_map(self, map):
+        directions = ['left', 'right', 'up', 'down']
+        direction = random.choice(directions)
+        _map = np.copy(map)
+        if direction == 'left':
+            _map = np.roll(_map, shift=-1, axis=1)
+        elif direction == 'up':
+            _map = np.roll(_map, shift=-1, axis=0)
+        elif direction == 'right':
+            _map = np.roll(_map, shift=1, axis=1)
+        elif direction == 'down':
+            _map = np.roll(_map, shift=1, axis=0)
+        return _map
+
