@@ -42,6 +42,10 @@ def scale_map(map, scale_factor=1):
         scaled_map.extend([scaled_row]  * scale_factor)
     return np.array(scaled_map)
 
+
+def is_index_in_bounds(idx_row, idx_col, array):
+    return 0 <= idx_row < array.shape[0] and 0 <= idx_col < array.shape[1]
+
 def DockerInfo():
     p = subprocess.run([scripts['info']], shell=True, capture_output=True, text=True)
     output = p.stdout.replace('\n', ' ')
@@ -297,11 +301,14 @@ class PATH_MAP(object):
                 with self.lock:
                     mid_idx_x, mid_idx_y = start_idx[0], start_idx[1] + 1
                     for idx in self.neighbors_start:
-                        local_array[start_idx[0] + idx[0]][start_idx[1] + idx[1]] = 1
+                        if is_index_in_bounds(start_idx[0] + idx[0], start_idx[1] + idx[1], local_array):
+                            local_array[start_idx[0] + idx[0]][start_idx[1] + idx[1]] = 1
                     for idx in self.neighbors_mid:
-                        local_array[mid_idx_x + idx[0]][mid_idx_y + idx[1]]
+                        if is_index_in_bounds(mid_idx_x + idx[0], mid_idx_y + idx[1], local_array):
+                            local_array[mid_idx_x + idx[0]][mid_idx_y + idx[1]]
                     for idx in self.neighbors_end:
-                        local_array[goal_idx[0] + idx[0]][goal_idx[1] + idx[1]] = 1
+                        if is_index_in_bounds(goal_idx[0] + idx[0], goal_idx[1] + idx[1], local_array):
+                            local_array[goal_idx[0] + idx[0]][goal_idx[1] + idx[1]] = 1
                     
             print(np.transpose(local_array), "\n")
             
@@ -461,11 +468,11 @@ class Height_Map_Generator(Maps):
         for h in unique_h:
             delta_h = random.uniform(-height_delta, height_delta)
             n = random.choice((0, 1, 2))
-            if n is 0:
+            if n == 0:
                 _map[_map == h] += delta_h
-            elif n is 1:
+            elif n == 1:
                 _map[_map == h] -= delta_h
-            elif n is 2:
+            elif n == 2:
                 _map[_map == h] += 0.0
         return _map
 
