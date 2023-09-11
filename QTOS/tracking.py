@@ -5,7 +5,6 @@ import pybullet
 import matplotlib.pyplot as plt
 from collections import namedtuple
 
-
 from QTOS.utils import vec_to_cmd, vec_to_cmd_pose
 from QTOS.logger import Logger
 from QTOS.config.global_cfg import ROBOT_CFG

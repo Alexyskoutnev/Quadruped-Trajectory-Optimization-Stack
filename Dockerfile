@@ -6,7 +6,6 @@ RUN DEBIAN_FRONTEND=noninteractive
 WORKDIR /root
 RUN echo "Trying to install dependecies to Docker image"
 RUN apt-get -y update
-# RUN apt-get -y upgrade
 #install dependecies
 RUN apt-get -y install gcc g++ gfortran git patch wget pkg-config liblapack-dev libmetis-dev curl python3 python3-pip cmake lsb-core vim
 #install Towr dependecies

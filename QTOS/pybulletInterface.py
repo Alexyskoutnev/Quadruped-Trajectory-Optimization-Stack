@@ -3,38 +3,59 @@ import time
 import sys
 import numpy as np
 
-
 class RecordInterface(object):
+    """
+    This class manages the camera settings and view for recording robot simulations in PyBullet.
+
+    Args:
+        args (dict): A dictionary containing camera settings, including camera_yaw, camera_pitch, camera_roll, and camera_distance.
+        robot: The robot object for which the simulation is being recorded.
+    """
     
     def __init__(self, args, robot):
-        print()
-        if args.get('camera_yaw'):
-            self.camera_yaw = args['camera_yaw']
-        else:
-             self.camera_yaw = 40
-        if args.get('camera_pitch'):
-            self.camera_pitch = args['camera_pitch']
-        else:
-            self.camera_pitch = -15
-        if args.get('camera_roll'):
-            self.camera_roll = args['camera_roll']
-        else:
-            self.camera_roll = 0
-        if args.get('camera_distance'):
-            self.camera_distance = args['camera_distance']
-        else:
-            self.camera_distance = 1.25
+        """
+        Initialize the RecordInterface object with camera settings and robot information.
+
+        Args:
+            args (dict): A dictionary containing camera settings, including camera_yaw, camera_pitch, camera_roll, and camera_distance.
+            robot: The robot object for which the simulation is being recorded.
+        """
+        self.camera_yaw = args.get('camera_yaw', 40)
+        self.camera_pitch = args.get('camera_pitch', -15)
+        self.camera_roll = args.get('camera_roll', 0)
+        self.camera_distance = args.get('camera_distance', 1.25)
+        
         self.robot = robot
 
     def update(self):
+        """
+        Update the camera view based on the robot's position and camera settings.
+        """
         cubePos, cubeOrn = p.getBasePositionAndOrientation(self.robot)
-        p.resetDebugVisualizerCamera(cameraDistance=self.camera_distance, cameraYaw=self.camera_yaw, cameraPitch=self.camera_pitch, cameraTargetPosition=cubePos)
+        p.resetDebugVisualizerCamera(
+            cameraDistance=self.camera_distance,
+            cameraYaw=self.camera_yaw,
+            cameraPitch=self.camera_pitch,
+            cameraRoll=self.camera_roll,
+            cameraTargetPosition=cubePos
+        )
 
 class PybulletInterface(object):
+    """
+    This class manages the PyBullet interface for controlling a robot's position and orientation during simulation.
+
+    It allows changing the position, orientation, and other parameters of the robot in real-time using PyBullet's user interface.
+
+    Args:
+        None
+    """
 
     def __init__(self):
+        """
+        Initialize the PybulletInterface object.
 
-       
+        This method sets up user debug parameters for controlling the robot's position, orientation, and other parameters.
+        """
         self.xId = p.addUserDebugParameter('x', -0.1, 0.1, 0.0)
         self.yId = p.addUserDebugParameter('y', -0.1, 0.1, 0.0)
         self.zId = p.addUserDebugParameter('z', -0.1, 0.1, 0.0)
@@ -47,9 +68,18 @@ class PybulletInterface(object):
         self.periodId = p.addUserDebugParameter('stepPeriod', 0.1, 3.0, 2.0)
 
     def robostates(self, boxId):
-        cubePos, cubeOrn = p.getBasePositionAndOrientation(boxId)
+        """
+        Get the robot's position, orientation, and other parameters for real-time control.
 
-        #Add interface to change orientation and position of pybullet camera
+        This method retrieves the user-set parameters and returns them as position, angle, velocity, angular velocity, and step period.
+
+        Args:
+            boxId: The ID of the robot or object in the PyBullet simulation.
+
+        Returns:
+            tuple: A tuple containing the robot's position, angle, velocity, angular velocity, and step period.
+        """
+        cubePos, cubeOrn = p.getBasePositionAndOrientation(boxId)
         p.resetDebugVisualizerCamera(cameraDistance=self.camera_distance, cameraYaw=self.camera_yaw, cameraPitch=self.camera_pitch, cameraTargetPosition=cubePos)
         keys = p.getKeyboardEvents()
         for k in keys:
