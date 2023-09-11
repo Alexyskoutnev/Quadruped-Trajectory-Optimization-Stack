@@ -14,11 +14,22 @@ from QTOS.planner import Global_Planner
 
 
 class MPC_THREAD(threading.Thread):
-    def __init__(self, obj) -> None:
-        threading.Thread.__init__(self)
+    """A custom thread class for running Model Predictive Control (MPC) updates.
+
+    Args:
+        obj (object): The object with the 'update' method to be called in the loop.
+    """
+
+    def __init__(self, obj):
+        super().__init__(self)
         self.obj = obj
 
     def run(self):
+        """The main run loop of the thread.
+
+        This method continuously calls the 'update' method of the provided object
+        and sleeps for a short duration to control the update frequency.
+        """
         while True:
             self.obj.update()
             time.sleep(0.01)
@@ -26,6 +37,15 @@ class MPC_THREAD(threading.Thread):
 class MPC(object):
 
     def __init__(self, args, current_traj, new_traj, lookahead=None, hz=1000) -> None:
+        """Initialize the Model Predictive Control (MPC) class.
+
+        Args:
+            args (dict): Configuration arguments.
+            current_traj (str): Path to the current trajectory file.
+            new_traj (str): Path to the new trajectory file.
+            lookahead (int, optional): Number of time steps to look ahead. Defaults to None.
+            hz (int, optional): Control loop frequency. Defaults to 1000 Hz.
+        """
         self.args = args
         self.current_traj = current_traj
         self.current_traj_temp = "/tmp/towr_old_temp.csv"
@@ -53,6 +73,15 @@ class MPC(object):
         return set(height_values)
         
     def check_legs_contact(self, state, tol=6):
+        """Check if the robot's legs are in contact with the ground.
+
+        Args:
+            state (dict): Robot state containing leg positions.
+            tol (int, optional): Tolerance for height comparison. Defaults to 6.
+
+        Returns:
+            bool: True if all legs are in contact, False otherwise.
+        """
         for leg in state:
             if leg in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
                 if round(state[leg][2], tol) not in self.height_set:
@@ -61,24 +90,38 @@ class MPC(object):
 
     @property
     def global_plan_state(self):
+        """Get the global planner's reference state.
+
+        Returns:
+            List[float]: List of reference X and Y coordinates.
+        """
         x_ref = self.spine_x(self.last_timestep)
         y_ref = self.spine_y(self.last_timestep)
         return [x_ref.item(), y_ref.item()]
 
     @property
     def plan_state(self):
+        """Get the current state from the trajectory plan.
+
+        Returns:
+            np.ndarray: Current state.
+        """
         state = np.squeeze(self.traj_plan[np.where(self.traj_plan[:, 0] == round(self.last_timestep, int(self.decimal_precision)))[0]])
         return state
 
     @property
     def robot_state(self):
+        """Get the current robot state.
+
+        Returns:
+            dict: Robot state.
+        """
         state = global_cfg.ROBOT_CFG.state
         return state
 
     def combine(self):
         """Combines the old and new csv trajectories together
         """
-        time_combine = time.process_time()
         _old_traj = open(self.current_traj, "r")
         _new_traj = open(self.new_traj, "r")
         df_old = self._truncate_csv(_old_traj).to_numpy()
@@ -86,10 +129,17 @@ class MPC(object):
         combined_df = np.concatenate((df_old, df_new), axis=0)
         self.traj_plan = combined_df
         combined_df = pd.DataFrame(combined_df)
-        combined_df.to_csv(self.new_traj, index=False, header=None)    
+        combined_df.to_csv(self.new_traj, index=False, header=None) 
 
     def plan_init(self, args):
+        """Initialize the planning process.
 
+        Args:
+            args (dict): Configuration arguments.
+
+        Returns:
+            dict: Updated configuration arguments.
+        """
         def start_config(args):
             args['-s'] = [0, 0, 0.24]
             args['-e1'] = [0.21, 0.19, 0.0]
@@ -97,34 +147,26 @@ class MPC(object):
             args['-e3'] = [-0.21, 0.19, 0.0]
             args['-e4'] = [-0.21, -0.19, 0.0]
             args['-s_ang'] = [0, 0, 0]
+
         start_config(args)
-        step_size = args['step_size'] #try implementing in config-file
-        if self.set_spine_flag:
-            global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
-            goal = self.spine_step(args['-s'], self.last_timestep)
-            diff_vec = np.clip(goal - global_pos, -step_size, step_size)
-            diff_vec[2] = 0.0
-            args['-g'] = list(global_pos + diff_vec)
-            z_goal = self.global_planner.get_map_height((args['-g'][0], args['-g'][1]))
-            args['-g'][2] = z_goal + 0.20
-        else:
-            global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
-            goal = global_cfg.ROBOT_CFG.robot_goal
-            diff_vec = np.clip(goal - global_pos, -step_size, step_size)
-            diff_vec[2] = 0.0
-            args['-g'] = list(global_pos + diff_vec)
-            args['-g'][2] = 0.20
+        step_size = args['step_size']
+        global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
+        goal = self.spine_step(args['-s'], self.last_timestep) if self.set_spine_flag else global_cfg.ROBOT_CFG.robot_goal
+        diff_vec = np.clip(goal - global_pos, -step_size, step_size)
+        diff_vec[2] = 0.0
+        args['-g'] = list(global_pos + diff_vec)
+        args['-g'][2] = 0.20
         return args
 
 
     def plan(self, args):
-        """
-        Trajectory plan towards the final goal
+        """Perform trajectory planning.
 
-        Args: 
-            args (dic) : updates the input arguments to Towr script
+        Args:
+            args (dict): Configuration arguments.
+
         Returns:
-            self.args (dic) : input argument to Towr script
+            dict: Updated configuration arguments.
         """
         if self.set_spine_flag or self.global_planner.P_correction and not self.global_planner.empty():
             _state_dic = self._state()
@@ -152,10 +194,19 @@ class MPC(object):
             self.args['s_vel'] = _state_dic['CoM_vel']
             self.args['s_ang_vel'] = _state_dic['CoM_vel_ang']
             self._step(_state_dic["CoM"])
-        print("ARRGS", self.args)
         return self.args
 
     def spine_step(self, CoM, timestep, total_traj_time=5.0):
+        """Compute the next step towards the spine.
+
+        Args:
+            CoM (np.ndarray): Current center of mass.
+            timestep (float): Current time step.
+            total_traj_time (float, optional): Total trajectory time. Defaults to 5.0.
+
+        Returns:
+            np.ndarray: New center of mass position.
+        """
         step_size = self.args['step_size']
         timestep_future = timestep + total_traj_time
         z_goal = self.global_planner.get_map_height((self.spine_x(timestep_future), self.spine_y(timestep_future)))
@@ -177,7 +228,6 @@ class MPC(object):
         if self.global_planner.max_t < self.last_timestep - 5.0:
             print("STOPING MPC CONTROLLER")
             global_cfg.RUN._done = True
-
 
     def update_timestep(self):
         """
@@ -250,7 +300,7 @@ class MPC(object):
         self.next_traj_step = step + self.lookahead - 1
         return state
 
-    def _truncate_csv(self, file : object):
+    def _truncate_csv(self, file):
         """Predicts where robot is in simulation and truncates old trajectory points
 
         Args:

@@ -16,24 +16,46 @@ SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error_"
 SAVE_DIR = "./data/tracking_info/"
 NUM_TRAJS_TO_SAVE = 2
 
-
-
 def date_salt(f_type=".png"):
     current_datetime = datetime.datetime.now()
     timestamp = current_datetime.strftime("%Y%m%d_%H%M%S")
     return timestamp + f_type
 
 class COMMAND:
+    """
+    Represents a robot command at a specific timestep.
+    """
+
     def __init__(self, timestep, cmd) -> None:
+        """
+        Initialize a COMMAND object.
+
+        Args:
+            timestep (float): The timestep when the command was issued.
+            cmd (dict): The robot command data.
+        """
         self.timestep = timestep
         self.cmd = cmd
         self.CoM = {"CoM_pos": tuple(self.cmd['COM'][0:3]), "CoM_ang": tuple(self.cmd['COM'][3:6])}
-        self.position = {"FL_FOOT": tuple(self.cmd['FL_FOOT']['P']), "FR_FOOT": tuple(self.cmd['FR_FOOT']['P']), "HL_FOOT": tuple(self.cmd['HL_FOOT']['P']), "HR_FOOT": tuple(self.cmd['HR_FOOT']['P'])}
-        self.velocity = {"FL_FOOT": tuple(self.cmd['FL_FOOT']['D']), "FR_FOOT": tuple(self.cmd['FR_FOOT']['D']), "HL_FOOT": tuple(self.cmd['HL_FOOT']['D']), "HR_FOOT": tuple(self.cmd['HR_FOOT']['D'])}
+        self.position = {"FL_FOOT": tuple(self.cmd['FL_FOOT']['P']), "FR_FOOT": tuple(self.cmd['FR_FOOT']['P']),
+                         "HL_FOOT": tuple(self.cmd['HL_FOOT']['P']), "HR_FOOT": tuple(self.cmd['HR_FOOT']['P'])}
+        self.velocity = {"FL_FOOT": tuple(self.cmd['FL_FOOT']['D']), "FR_FOOT": tuple(self.cmd['FR_FOOT']['D']),
+                         "HL_FOOT": tuple(self.cmd['HL_FOOT']['D']), "HR_FOOT": tuple(self.cmd['HR_FOOT']['D'])}
 
 class Tracking:
+    """
+    A class for tracking and visualizing robot trajectory data.
+    """
 
     def __init__(self, robot, num_traj, cfg) -> None:
+        """
+        Initialize a Tracking object.
+
+        Args:
+            robot: The robot object.
+            num_traj (int): The number of trajectories to track.
+            cfg (dict): Configuration data.
+        """
         self.logger = Logger("./logs", "experiment_data")
         self.robot = robot
         self.traj = {"reference" : [], "sim" : []}
@@ -61,6 +83,13 @@ class Tracking:
                     os.remove(file_path)
     
     def update(self, reference_cmd, timestep):
+        """
+        Update tracking data with a new robot command.
+
+        Args:
+            reference_cmd (dict): The reference robot command.
+            timestep (float): The timestep when the command was issued.
+        """
         sim_cmd = self.get_sim_cmd()
         self.traj['reference'].append(COMMAND(timestep, reference_cmd))
         self.traj['sim'].append(COMMAND(timestep, sim_cmd))
@@ -74,9 +103,23 @@ class Tracking:
     
     @property
     def distance(self):
+        """
+        Property method to retrieve the robot's distance information.
+
+        Returns:
+            np.ndarray: An array representing the robot's distance information.
+        """
         return ROBOT_CFG.linkWorldPosition
         
     def _update(self):
+        """
+        Update method to compute errors and update data dictionaries with simulation results.
+        Calculates and stores errors between reference and simulated values for various robot parts.
+        Also, logs important information.
+
+        Returns:
+            None
+        """
         self.timeseries = np.linspace(0, self.end_time, self.size)
         for NAME in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'CoM_pos'):
             if NAME in ('CoM_pos'):
@@ -149,71 +192,79 @@ class Tracking:
 
 
     def plot_reference_vs_sim(self, plot_graph=False):
+        """
+        Generate a multi-panel plot comparing reference and simulated positions of robot parts.
+        
+        Args:
+            plot_graph (bool, optional): Whether to display the generated plot. Defaults to False.
+
+        Returns:
+            None
+        """
         plt.figure(figsize=(10, 6))
         plt.tight_layout()
-        plt.subplot(4, 3, 1)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 1)
         plt.plot(self.timeseries[0:len(self.FL_FOOT['r_x'])], self.FL_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FL_FOOT['s_x'])], self.FL_FOOT['s_x'], label='sim', color='blue')
         plt.grid(True)
         plt.title('FL X Position')
-        plt.subplot(4, 3, 2)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 2) 
         plt.plot(self.timeseries[0:len(self.FL_FOOT['r_y'])], self.FL_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FL_FOOT['s_y'])], self.FL_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
         plt.title('FL Y Position')
-        plt.subplot(4, 3, 3)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 3)
         plt.plot(self.timeseries[0:len(self.FL_FOOT['r_z'])], self.FL_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FL_FOOT['s_z'])], self.FL_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
         plt.grid(True)
         plt.title('FL Z Position')
 
-        plt.subplot(4, 3, 4)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 4)
         plt.plot(self.timeseries[0:len(self.FR_FOOT['r_x'])], self.FR_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FR_FOOT['s_x'])], self.FR_FOOT['s_x'], label='sim', color='blue')
         plt.grid(True)
         plt.title('FR X Position')
-        plt.subplot(4, 3, 5)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 5)
         plt.plot(self.timeseries[0:len(self.FR_FOOT['r_y'])], self.FR_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FR_FOOT['s_y'])], self.FR_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
         plt.title('FR Y Position')
-        plt.subplot(4, 3, 6)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 6)
         plt.plot(self.timeseries[0:len(self.FR_FOOT['r_z'])], self.FR_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.FR_FOOT['s_z'])], self.FR_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
         plt.grid(True)
         plt.title('FR Z Position')
 
-        plt.subplot(4, 3, 7)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 7)
         plt.plot(self.timeseries[0:len(self.HL_FOOT['r_x'])], self.HL_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HL_FOOT['s_x'])], self.HL_FOOT['s_x'], label='sim', color='blue')
         plt.grid(True)
         plt.title('HL X Position')
-        plt.subplot(4, 3, 8)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 8)
         plt.plot(self.timeseries[0:len(self.HL_FOOT['r_y'])], self.HL_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HL_FOOT['s_y'])], self.HL_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
         plt.title('HL Y Position')
-        plt.subplot(4, 3, 9)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 9)
         plt.plot(self.timeseries[0:len(self.HL_FOOT['r_z'])], self.HL_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HL_FOOT['s_z'])], self.HL_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
         plt.grid(True)
         plt.title('HL Z Position')
 
-
-        plt.subplot(4, 3, 10)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 10)
         plt.plot(self.timeseries[0:len(self.HR_FOOT['r_x'])], self.HR_FOOT['r_x'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HR_FOOT['s_x'])], self.HR_FOOT['s_x'], label='sim', color='blue')
         plt.grid(True)
         plt.title('HR X Position')
-        plt.subplot(4, 3, 11)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 11)
         plt.plot(self.timeseries[0:len(self.HR_FOOT['r_y'])], self.HR_FOOT['r_y'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HR_FOOT['s_y'])], self.HR_FOOT['s_y'], label='sim', color='blue')
         plt.grid(True)
         plt.title('HR Y Position')
-        plt.subplot(4, 3, 12)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 3, 12)
         plt.plot(self.timeseries[0:len(self.HR_FOOT['r_z'])], self.HR_FOOT['r_z'], label='reference', color='green', linestyle="dashed")
         plt.plot(self.timeseries[0:len(self.HR_FOOT['s_z'])], self.HR_FOOT['s_z'], label='sim', color='blue')
         plt.ylim(-0.1,0.3)
@@ -227,26 +278,35 @@ class Tracking:
             plt.show()
 
     def plot_error(self, plot_graph=False):
+        """
+        Generate a multi-panel plot displaying errors related to different robot parts.
+        
+        Args:
+            plot_graph (bool, optional): Whether to display the generated plot. Defaults to False.
+
+        Returns:
+            None
+        """
         plt.figure(figsize=(10, 6))
         plt.tight_layout()
-        plt.subplot(4, 1, 1)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 1, 1)
         plt.plot(self.timeseries[0:len(self.FL_FOOT['error'])], self.FL_FOOT['error'], label='error', color='red')
         plt.grid(True)
         plt.legend()
 
-        plt.subplot(4, 1, 2)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 1, 2)
         plt.plot(self.timeseries[0:len(self.FR_FOOT['error'])], self.FR_FOOT['error'], label='error', color='red')
         plt.grid(True)
         plt.legend()
         plt.title('FR X Error')
 
-        plt.subplot(4, 1, 3)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 1, 3)
         plt.plot(self.timeseries[0:len(self.HL_FOOT['error'])], self.HL_FOOT['error'], label='error', color='red')
         plt.grid(True)
         plt.legend()
         plt.title('HL X Error')
 
-        plt.subplot(4, 1, 4)  # 2 rows, 2 columns, plot number 1
+        plt.subplot(4, 1, 4)
         plt.plot(self.timeseries[0:len(self.HR_FOOT['error'])], self.HR_FOOT['error'], label='error', color='red')
         plt.grid(True)
         plt.legend()
@@ -258,6 +318,15 @@ class Tracking:
             plt.show()
 
     def plot_CoM(self, plot_graph=False):
+        """
+        Generate a multi-panel plot for displaying the center of mass (CoM) position in X, Y, and Z directions.
+        
+        Args:
+            plot_graph (bool, optional): Whether to display the generated plot. Defaults to False.
+
+        Returns:
+            None
+        """
         plt.figure(figsize=(10, 6))
         plt.tight_layout()
         plt.subplot(1, 3, 1)
@@ -289,6 +358,17 @@ class Tracking:
             plt.show()
 
     def plot(self, plot_graph=False):
+        """
+        Generate and save various plots to visualize simulation results.
+        This method calls plot_CoM, plot_reference_vs_sim, and plot_error methods.
+        It also prints out total feet and CoM errors.
+        
+        Args:
+            plot_graph (bool, optional): Whether to display the generated plots. Defaults to False.
+
+        Returns:
+            None
+        """
         self.plot_CoM(plot_graph)
         self.plot_reference_vs_sim(plot_graph)
         self.plot_error(plot_graph)
@@ -296,10 +376,11 @@ class Tracking:
         print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
 
     def get_sim_cmd(self):
+        """
+        Retrieve a simulation command based on robot properties.
+
+        Returns:
+            cmd_pose: A command for the simulation based on robot properties.
+        """
         vec = self.robot.traj_vec
-        # vec = self.robot.traj_vec_estimated
         return vec_to_cmd_pose(vec)
-
-
-if __name__ == "__main__":
-    pass

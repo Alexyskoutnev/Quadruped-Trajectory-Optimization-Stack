@@ -29,8 +29,8 @@ class Global_Planner(object):
         self.plan_desired_goal_pt = np.zeros(3)
         self.plan_desired_start_pt = np.zeros(3)
         self.args = args
-        self.origin_x_shift = 1.0 #PUT IN CONFIG FILE
-        self.origin_y_shift = 1.0 #PUT IN CONFIG FILE
+        self.origin_x_shift = 1.0
+        self.origin_y_shift = 1.0
         self.grid_res = args['args']['resolution']
         self.map = args['sim'].height_map
         if not os.path.exists(GLOBAL_TRAJ_DIR):
