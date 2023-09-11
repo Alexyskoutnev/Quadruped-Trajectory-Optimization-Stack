@@ -7,7 +7,7 @@ mesh_scale : 10
 #=========Switches==============
 stance_phase : False
 height_map : True
-track : True
+track : False
 #=========Hyperparameters=======
 TRAJ_SIZE : 32000
 SIM_STEPS : 33000

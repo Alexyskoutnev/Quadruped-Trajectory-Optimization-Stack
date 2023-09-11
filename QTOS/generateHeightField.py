@@ -1,4 +1,4 @@
-from QTOS.utils import is_numeric, save_bool_map, save_height_grid_map
+from QTOS.utils import is_numeric, save_bool_map, save_height_grid_map, DockerInfo, parse_scripts, cmd_args
 
 import time
 import matplotlib.pyplot as plt
@@ -25,6 +25,16 @@ scripts =  {'run': 'docker exec <id> ./main',
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r']
 
 def strip(x):
+    """
+    Removes square brackets from a string.
+
+    Args:
+        x (str): The input string containing square brackets.
+
+    Returns:
+        str: The input string with square brackets removed.
+    """
+
     st = " "
     for s in x:
         if s == "[" or s == "]":
@@ -34,6 +44,16 @@ def strip(x):
     return st
 
 def scale_map(map, scale_factor=1):
+    """
+    Scales a 2D map by replicating its elements to achieve a specified scaling factor.
+
+    Args:
+        map (numpy.ndarray): The input 2D map to be scaled.
+        scale_factor (int, optional): The scaling factor. Defaults to 1.
+
+    Returns:
+        numpy.ndarray: The scaled 2D map.
+    """
     scaled_map = []
     for row in map:
         scaled_row = []
@@ -44,56 +64,35 @@ def scale_map(map, scale_factor=1):
 
 
 def is_index_in_bounds(idx_row, idx_col, array):
-    return 0 <= idx_row < array.shape[0] and 0 <= idx_col < array.shape[1]
-
-def DockerInfo():
-    p = subprocess.run([scripts['info']], shell=True, capture_output=True, text=True)
-    output = p.stdout.replace('\n', ' ')
-    dockerid, idx = output.split(), output.split().index('towr') - 1
-    return dockerid[idx]
-
-def parse_scripts(scripts_dic, docker_id):
-    for script_name, script in scripts_dic.items():
-        scripts_dic[script_name] = script.replace("<id>", docker_id)
-    return scripts_dic
-
-def cmd_args(args):
-    """Commandline parser to run python subprocesses correctly
+    """
+    Checks if a given row and column index is within the bounds of a 2D array.
 
     Args:
-        args (dict): user + config inputs for simulation and solver
+        idx_row (int): The row index to check.
+        idx_col (int): The column index to check.
+        array (numpy.ndarray): The 2D array to check against.
 
-    Return:
-        _cmd : parsed command line string that can be ran as a excutable
+    Returns:
+        bool: True if the index is within bounds, False otherwise.
     """
-
-    def _bracket_rm(s):
-        return s.replace("[", "").replace("]", "")
-
-    def _remove_comma(s):
-        return s.replace(",", "")
-    
-    def _filter(s):
-        return _bracket_rm(_remove_comma(str(s)))
-
-    _cmd = ""
-
-    for key, value in args.items():
-        if key in _flags and value:
-            _cmd += key + " " + _filter(value)
-            _cmd += " "
-
-    return _cmd
-
+    return 0 <= idx_row < array.shape[0] and 0 <= idx_col < array.shape[1]
 
 class Map_2_Idx(object):
+    """
+    Represents a mapping between coordinates and indices in a map.
+
+    Args:
+        map_coords_start (tuple): The starting coordinates (x, y, z) in the map.
+        map_coords_goal (tuple): The goal coordinates (x, y, z) in the map.
+        map_idx_start (tuple): The starting indices (row, column) in the map.
+        map_idx_goal (tuple): The goal indices (row, column) in the map.
+    """
 
     def __init__(self, map_coords_start, map_coords_goal, map_idx_start, map_idx_goal):
         self.map_coords_start = map_coords_start
         self.map_idx_start = map_idx_start
         self.map_coords_goal = map_coords_goal
         self.map_idx_goal =  map_idx_goal
-        
 
     def __repr__(self) -> str:
         return f"Map_2_Idx(map_coords_start={self.map_coords_start}, map_coords_goal={self.map_coords_goal}, map_idx_start={self.map_idx_start}, map_idx_goal={self.map_idx_goal})"
@@ -106,6 +105,16 @@ class Map_2_Idx(object):
         self.__dict__.update(state)
 
 def heighmap_2_np_reader(file, delimiter=','):
+    """
+    Reads heightmap data from a text file and returns it as a numpy array.
+
+    Args:
+        file (str): The path to the text file containing heightmap data.
+        delimiter (str, optional): The delimiter used in the file. Defaults to ','.
+
+    Returns:
+        numpy.ndarray: A numpy array containing the heightmap data.
+    """
     data = []
     with open(file, 'r') as f:
         reader = f.readlines()
@@ -116,6 +125,17 @@ def heighmap_2_np_reader(file, delimiter=','):
     return np.transpose(np.array(data))
 
 def scale_values(file, scale=1.0):
+    """
+    Scales numeric values in a text file by a specified factor.
+
+    Args:
+        file (str): The path to the text file containing numeric values.
+        scale (float, optional): The scaling factor. Defaults to 1.0.
+
+    Returns:
+        list: A list of lists containing the scaled numeric values.
+    """
+
     scaled_values = []
     with open(file, 'r') as f:
         lines = f.readlines()
@@ -134,6 +154,15 @@ def scale_values(file, scale=1.0):
     return scaled_values
 
 def max_height(file):
+    """
+    Finds the maximum numeric value in a text file.
+
+    Args:
+        file (str): The path to the text file containing numeric values.
+
+    Returns:
+        float: The maximum numeric value found in the file.
+    """
     max_num = 0
     with open(file, 'r') as f:
         lines = f.readlines()
@@ -148,8 +177,36 @@ def max_height(file):
     return max_num
 
 class PATH_MAP(object):
+    """A class for path mapping and obstacle detection.
+
+    This class generates a path map and performs obstacle detection using
+    multiprocessing. It probes the input height map for path planning.
+
+    Attributes:
+        map (numpy.ndarray): The input height map.
+        origin_shift_x (float): X-axis origin shift value.
+        origin_shift_y (float): Y-axis origin shift value.
+        docker_id (DockerInfo): An instance of DockerInfo for Docker-related information.
+        scripts (dict): A dictionary containing various script paths.
+        bool_map (numpy.ndarray): A binary map representing obstacle presence.
+        data_queue (multiprocessing.Queue): A queue for passing data to worker processes.
+        lock (multiprocessing.Lock): A lock for synchronization.
+        shared_arr (multiprocessing.Array): A shared memory array for communication with workers.
+        num_cols (int): Number of columns in the height map.
+        mesh_resolution (float): Mesh resolution for probing the map.
+        neighbors_start (numpy.ndarray): Indices of neighbors around the start point.
+        neighbors_mid (numpy.ndarray): Indices of neighbors around the middle point.
+        neighbors_end (numpy.ndarray): Indices of neighbors around the end point.
+    """
     
     def __init__(self, map, multi_map_shift=1, scale=1):
+        """Initialize a PATH_MAP object.
+
+        Args:
+            map (numpy.ndarray): The input height map.
+            multi_map_shift (int, optional): Multi-map shift value. Defaults to 1.
+            scale (int, optional): Scaling factor. Defaults to 1.
+        """
         self.map = map
         self.origin_shift_x = 1.0
         self.origin_shift_y = 1.0
@@ -174,6 +231,14 @@ class PATH_MAP(object):
             self.run()
 
     def find_convex_hull(self, points):
+        """Find the convex hull of a set of points.
+
+        Args:
+            points (list): List of (x, y) coordinates.
+
+        Returns:
+            numpy.ndarray: Indices of the convex hull points.
+        """
         points = np.array(points)
         hull = ConvexHull(points)
         hull_vertices = points[hull.vertices]
@@ -205,13 +270,33 @@ class PATH_MAP(object):
         return neighbor_indices
 
     def check_flat_ground(self, map):
+        """Check if the ground is flat.
+
+        Args:
+            map (numpy.ndarray): The input height map.
+
+        Returns:
+            bool: True if the ground is flat, False otherwise.
+        """
         return np.all(map == 0) or np.all(map == 0.0)
 
     def setup(self):
+        """Run setup scripts for path mapping."""
         subprocess.run(shlex.split(self.scripts['heightfield_rm']))
         subprocess.run(shlex.split(self.scripts['heightfield_copy']))
 
     def neighbors_danger_test(self, map, idx_x, idx_y, sz=1):
+        """Test for dangerous neighbors.
+
+        Args:
+            map (numpy.ndarray): The input height map.
+            idx_x (int): X-coordinate of the point to test.
+            idx_y (int): Y-coordinate of the point to test.
+            sz (int, optional): Size parameter. Defaults to 1.
+
+        Returns:
+            bool: True if dangerous neighbors are present, False otherwise.
+        """
         neighbor = ((sz, 0), (-sz, 0), (0, sz), (0, -sz), (sz, sz), (sz, -sz), (-sz, -sz), (-sz, sz))
         for idx in neighbor:
             if idx[0] + idx_x >= map.shape[0] or idx[0] + idx_x < 0:
@@ -223,6 +308,13 @@ class PATH_MAP(object):
         return False
 
     def probe_map(self, map, multi_map_shift = 1, mesh_resolution_meters = 0.1):
+        """Probe the height map for path planning.
+
+        Args:
+            map (numpy.ndarray): The input height map.
+            multi_map_shift (int, optional): Multi-map shift value. Defaults to 1.
+            mesh_resolution_meters (float, optional): Mesh resolution in meters. Defaults to 0.1.
+        """
         step_x = mesh_resolution_meters
         step_y = mesh_resolution_meters
         x_start = - mesh_resolution_meters * (map.shape[1] / 2) - mesh_resolution_meters / 2 + ((multi_map_shift - 1) * self.origin_shift_x)
@@ -257,6 +349,7 @@ class PATH_MAP(object):
                 _idx_x += 1
 
     def run(self):
+        """Run path mapping using multiprocessing."""
         processes = []
         for i in range(NUM_PROCESSES):
             process = multiprocessing.Process(target=self.worker_f, args=(self.shared_arr, self.data_queue, self.num_cols))
@@ -268,6 +361,13 @@ class PATH_MAP(object):
         self.bool_map = np.frombuffer(self.shared_arr.get_obj(), dtype=np.float32).reshape(self.map.shape[0], self.map.shape[1]).astype('int')
 
     def worker_f(self, map, queue, num_cols):
+        """Worker function for path mapping.
+
+        Args:
+            map (multiprocessing.Array): Shared memory array for the height map.
+            queue (multiprocessing.Queue): Queue for passing data to workers.
+            num_cols (int): Number of columns in the height map.
+        """
 
         def state_config(args, start_pt, goal_pt, shift=[0, 0]):
             args['-s'] = [start_pt[0], start_pt[1], start_pt[2] + 0.24]
@@ -309,14 +409,36 @@ class PATH_MAP(object):
                     for idx in self.neighbors_end:
                         if is_index_in_bounds(goal_idx[0] + idx[0], goal_idx[1] + idx[1], local_array):
                             local_array[goal_idx[0] + idx[0]][goal_idx[1] + idx[1]] = 1
-                    
-            print(np.transpose(local_array), "\n")
-            
-
-class RandomMaps(object):
-    pass
 
 class Maps(object):
+    """A class for managing and generating height maps.
+
+    This class provides access to various pre-defined height maps and allows
+    for the generation of custom maps by combining multiple pre-defined maps.
+
+    Attributes:
+        calibration_file (str): Path to the calibration height map file.
+        step_file (str): Path to the step height map file.
+        step_1_file (str): Path to the step_1 height map file.
+        step_2_file (str): Path to the step_2 height map file.
+        step_3_file (str): Path to the step_3 height map file.
+        wall_1_file (str): Path to the wall_1 height map file.
+        wall_2_file (str): Path to the wall_2 height map file.
+        wall_3_file (str): Path to the wall_3 height map file.
+        wall_4_file (str): Path to the wall_4 height map file.
+        test_file (str): Path to the test height map file.
+        stairs_file (str): Path to the staircase height map file.
+        plane_file (str): Path to the plane height map file.
+        feasibility (str): Path to the feasibility_test height map file.
+        feasibility_1 (str): Path to the feasibility_test_1 height map file.
+        random_terrain_1 (str): Path to the random_terrain height map file.
+        climb_1 (str): Path to the climb_1 height map file.
+        climb_2 (str): Path to the climb_2 height map file.
+        plane_file_200 (str): Path to the plane_200 height map file.
+        stairs (str): Path to the stairs height map file.
+        stairs_1 (str): Path to the stairs_1 height map file.
+        collision_hills (str): Path to the collision_wall_hills height map file.
+    """
     calibration_file = "./data/heightfields/calibration.txt"
     step_file = "./data/heightfields/step.txt"
     step_1_file = "./data/heightfields/step_1.txt"
@@ -340,6 +462,13 @@ class Maps(object):
     collision_hills = "./data/heightfields/collision_wall_hills.txt"
 
     def __init__(self, maps=['plane'], dim=20, scale_factor=1):
+        """Initialize a Maps object.
+
+        Args:
+            maps (str or list, optional): Type of map or list of map names. Defaults to 'plane'.
+            dim (int, optional): Dimension of the map. Defaults to 20.
+            scale_factor (int, optional): Scaling factor for the map. Defaults to 1.
+        """
         self._generate(scale_factor)
         self.dim = self.name_2_np_arr[maps[0]].shape[0]
         self.standard_map_dim = (self.dim, self.dim)
@@ -352,48 +481,87 @@ class Maps(object):
             self.map = self.multi_map_generator(maps)
 
     def multi_map_generator(self, maps):
+        """Generate a map by combining multiple pre-defined maps.
+
+        Args:
+            maps (list): List of map names to combine.
+
+        Returns:
+            numpy.ndarray: A combined map generated from the input maps.
+        """
         map_arr = np.zeros((self.standard_map_dim[1], self.standard_map_dim[0] * len(maps)))
         for i, map_id in enumerate(maps):
             map_arr[:, (i * self.dim):(i + 1) * self.dim] = self.name_2_np_arr[map_id]
         return map_arr
 
     def _generate(self, scale_factor):
-        calibration = scale_map(heighmap_2_np_reader(self.calibration_file), scale_factor)
-        step = scale_map(heighmap_2_np_reader(self.step_file), scale_factor)
-        step_1 = scale_map(heighmap_2_np_reader(self.step_1_file), scale_factor)
-        step_2 = scale_map(heighmap_2_np_reader(self.step_2_file), scale_factor)
-        step_3 = scale_map(heighmap_2_np_reader(self.step_3_file), scale_factor)
-        wall_1 = scale_map(heighmap_2_np_reader(self.wall_1_file), scale_factor)
-        wall_2 =  scale_map(heighmap_2_np_reader(self.wall_2_file), scale_factor)
-        wall_3 =  scale_map(heighmap_2_np_reader(self.wall_3_file), scale_factor)
-        wall_4 =  scale_map(heighmap_2_np_reader(self.wall_4_file), scale_factor)
-        stairs =  scale_map(heighmap_2_np_reader(self.stairs_file), scale_factor)
-        plane =   scale_map(heighmap_2_np_reader(self.plane_file), scale_factor)
-        climb_1 = scale_map(heighmap_2_np_reader(self.climb_1), scale_factor)
-        climb_2 = scale_map(heighmap_2_np_reader(self.climb_2), scale_factor)
-        stair = scale_map(heighmap_2_np_reader(self.stairs), scale_factor)
-        stair_1 = scale_map(heighmap_2_np_reader(self.stairs_1), scale_factor)
-        test = scale_map(heighmap_2_np_reader(self.test_file), scale_factor)
-        feasibility = scale_map(heighmap_2_np_reader(self.feasibility), scale_factor)
-        feasibility_1 = scale_map(heighmap_2_np_reader(self.feasibility_1), scale_factor)
-        random_terrain_1 = scale_map(heighmap_2_np_reader(self.random_terrain_1), scale_factor)
-        collision_hills = scale_map(heighmap_2_np_reader(self.collision_hills), scale_factor)
-        self.name_2_np_arr = {'climb_2': climb_2, 'climb_1' : climb_1, 'step_1': step_1, 'step_2': step_2, 'step_3': step_3, 'calibration' : calibration, 'step' : step, 
-                               'plane' : plane, 'wall_1' : wall_1, 'wall_2' : wall_2, 'wall_3' : wall_3, 'test': test, 'stairs': stairs,
-                               'feasibility' : feasibility, 'feasibility_1' : feasibility_1, 'wall_4' : wall_4, "random_terrain_1": random_terrain_1,
-                               "stair" : stair, "stair_1": stair_1, "collision_hill" : collision_hills}
+        """Generate pre-defined height maps and store them as attributes.
+
+        Args:
+            scale_factor (int): Scaling factor for the maps.
+        """
+        map_files = {
+            'calibration': self.calibration_file,
+            'step': self.step_file,
+            'step_1': self.step_1_file,
+            'step_2': self.step_2_file,
+            'step_3': self.step_3_file,
+            'wall_1': self.wall_1_file,
+            'wall_2': self.wall_2_file,
+            'wall_3': self.wall_3_file,
+            'wall_4': self.wall_4_file,
+            'stairs': self.stairs_file,
+            'plane': self.plane_file,
+            'climb_1': self.climb_1,
+            'climb_2': self.climb_2,
+            'stair': self.stairs,
+            'stair_1': self.stairs_1,
+            'test': self.test_file,
+            'feasibility': self.feasibility,
+            'feasibility_1': self.feasibility_1,
+            'random_terrain_1': self.random_terrain_1,
+            'collision_hill': self.collision_hills
+        }
+        self.name_2_np_arr = {}
+        for map_name, file_path in map_files.items():
+            map_data = scale_map(heighmap_2_np_reader(file_path), scale_factor)
+            self.name_2_np_arr[map_name] = map_data
 
 
 class Height_Map_Generator(Maps):
 
-    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, randomize_env=False, random_shift_num=50, random_height_num=5):
+    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, randomize_env=False, random_shift_num=10, random_height_num=10):
+        """Initialize a Height_Map_Generator object.
+
+        Args:
+            dim (int, optional): Dimension of the map. Defaults to 20.
+            maps (str or list, optional): Type of map or list of map names. Defaults to 'plane'.
+            bool_map_search (bool, optional): Whether to perform boolean map search. Defaults to False.
+            scale_factor (int, optional): Scaling factor for the map. Defaults to 1.
+            randomize_env (bool, optional): Whether to randomize the environment. Defaults to False.
+            random_shift_num (int, optional): Number of random shifts to apply. Defaults to 500.
+            random_height_num (int, optional): Number of random height adjustments to apply. Defaults to 10.
+
+        Attributes:
+            climb_map (bool): True if 'climb_1' or 'climb_2' is found in the list of maps; False otherwise.
+            towr_map (numpy.ndarray): Transposed version of the map.
+            towr_map_adjusted (numpy.ndarray): Adjusted transposed map.
+            height_shift (float): Maximum height shift in the heightmap.
+            num_rows (int): Number of rows in the map.
+            num_cols (int): Number of columns in the map.
+            resolution (float): Map resolution.
+            multi_map_shift (int): Number of maps in the list.
+            bool_map_search (bool): True if boolean map search is enabled; False otherwise.
+            bool_map (numpy.ndarray): Boolean map resulting from pathfinding.
+        """
         super(Height_Map_Generator, self).__init__(maps, dim, scale_factor)
+        self.climb_map = self.climb_map_check(maps)
         self.towr_map = np.transpose(self.map)
         if randomize_env:
-            self.towr_map = self.random_map_shift(self.towr_map, 50)
-            self.map = self.random_map_shift(self.map, 50)
-            self.towr_map = self.random_height_shift(self.towr_map, 5)
-            self.map = self.random_height_shift(self.map, 5)
+            self.towr_map = self.random_map_shift(self.towr_map, random_shift_num * scale_factor)
+            self.map = self.random_map_shift(self.map, random_shift_num * scale_factor)
+            self.towr_map = self.random_height_shift(self.towr_map, random_height_num)
+            self.map = self.random_height_shift(self.map, random_height_num)
         self.towr_map_adjusted = self.towr_map_adjustment(np.transpose(self.map.copy()), shift_z=0.0, shift_down_num=0)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map_adjusted)
@@ -411,17 +579,35 @@ class Height_Map_Generator(Maps):
             self.bool_map = np.zeros((self.map.shape[0], self.map.shape[1]))
 
     def create_height_file(self, file, h_data):
-            rows = len(h_data)
-            with open(file, 'w') as f:
-                for row_n, line in enumerate(h_data):
-                    s = ', '.join(str(value) for value in line)
-                    s += ','
-                    f.write(s)
-                    if row_n < rows - 1:
-                        f.write('\n')
+        """Create a height data file from a 2D array.
+
+        Args:
+            file (str): The name of the file to create.
+            h_data (numpy.ndarray): The 2D array containing height data.
+
+        """
+        rows = len(h_data)
+        with open(file, 'w') as f:
+            for row_n, line in enumerate(h_data):
+                s = ', '.join(str(value) for value in line)
+                s += ','
+                f.write(s)
+                if row_n < rows - 1:
+                    f.write('\n')
 
     def towr_map_adjustment(self, map, shift_z=0.00, shift_down_num = 0):
-        
+        """Adjust a given map by shifting non-zero values vertically.
+
+        Args:
+            map (numpy.ndarray): The input map as a NumPy array.
+            shift_z (float, optional): The amount to vertically shift non-zero values.
+                Defaults to 0.00.
+            shift_down_num (int, optional): The number of rows to shift non-zero values
+                downwards. Defaults to 0.
+
+        Returns:
+            numpy.ndarray: A modified map with adjusted non-zero values.
+        """   
         def shift_rows_down(map, amount):
             rows, cols = map.shape
             shift_arr = np.zeros_like(map)
@@ -435,15 +621,50 @@ class Height_Map_Generator(Maps):
         map[not_zero_mask] = shift_values
         map = shift_rows_down(map, shift_down_num)
         return map
+    
+    def climb_map_check(self, maps):
+        """Check if a list of maps contains 'climb_1' or 'climb_2'.
+
+        Args:
+            maps (list): A list of map names to check.
+
+        Returns:
+            bool: True if 'climb_1' or 'climb_2' is found in the list; False otherwise.
+        """
+        for map in maps:
+            if map == "climb_1" or map == "climb_2":
+                return True
+        return False
 
     def random_map_shift(self, map, shift=0):
+        """Randomly shift a given map multiple times.
+        Args:
+            map (numpy.ndarray): The input map as a NumPy array.
+            shift (int, optional): The number of times to apply the `shift_map`
+                function to the map. Defaults to 0, meaning no shift.
+
+        Returns:
+            numpy.ndarray: A modified map with cumulative random shifts.
+        """
         _map = map
         for i in range(shift):
             _map = self.shift_map(_map)
         return _map
 
     def shift_map(self, map):
-        directions = ['left', 'right', 'up', 'down']
+        """Shift a given map in a random direction.
+
+        Args:
+            map (numpy.ndarray): The input map as a NumPy array.
+
+        Returns:
+            numpy.ndarray: A modified map with a random shift in the chosen direction.
+        """
+        directions = None
+        if self.climb_map:
+            directions = ['up', 'down']
+        else:
+            directions = ['left', 'right', 'up', 'down']
         direction = random.choice(directions)
         _map = np.copy(map)
         if direction == 'left':
@@ -457,12 +678,32 @@ class Height_Map_Generator(Maps):
         return _map
 
     def random_height_shift(self, map, shift=0):
+        """Randomly shift the height values in a given map multiple times.
+
+        Args:
+            map (numpy.ndarray): The heightmap as a NumPy array.
+            shift (int, optional): The number of times to apply the `random_height`
+                function to the heightmap. Defaults to 0.
+
+        Returns:
+            numpy.ndarray: A modified heightmap with cumulative random height shifts.
+        """
         _map = map
         for i in range(shift):
             _map = self.random_height(_map)
         return _map
 
-    def random_height(self, map, height_delta=0.005):
+    def random_height(self, map, height_delta=0.01):
+        """Randomly perturb the height values in a given map.
+
+        Args:
+            map (numpy.ndarray): The heightmap as a NumPy array.
+            height_delta (float, optional): The maximum absolute height change allowed
+                for each point. Defaults to 0.01.
+
+        Returns:
+            numpy.ndarray: A modified heightmap with randomly perturbed heights.
+        """
         _map = np.copy(map)
         unique_h = np.unique(_map[_map != 0])
         for h in unique_h:

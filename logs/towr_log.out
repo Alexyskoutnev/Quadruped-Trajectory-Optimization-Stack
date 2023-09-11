@@ -5,9 +5,9 @@
            https://github.com/ethz-adrl/towr
 ************************************************************
 
-0.520000318742596
-3.541584398612406e-07
-0.2
+0.504
+4.561412003533202e-59
+0.250143078643133
 0
 0
 0.24
@@ -31,7 +31,7 @@ next line
 -0.21
 -0.19
 0.0
-0.1
+0.01
 ee start pos x -> 0.21
 ee start pos y -> 0.19
 ee start pos z -> 0
@@ -47,9 +47,9 @@ ee start pos z -> 0
 start pos x -> 0
 start pos y -> 0
 start pos z -> 0.24
-goal pos x -> 0.52
-goal pos y -> 3.54158e-07
-goal pos z -> 0.2
+goal pos x -> 0.504
+goal pos y -> 4.56141e-59
+goal pos z -> 0.250143
 ee start pos x -> 0.21
 ee start pos y -> 0.19
 ee start pos z -> 0
@@ -89,22 +89,22 @@ Total number of inequality constraints...............:     1024
 
 iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
    0  0.0000000e+00 9.71e+00 1.00e+00   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
-   1  0.0000000e+00 8.66e+00 3.24e+01   0.0 4.96e+00    -  4.07e-01 1.08e-01f  1
-   2  0.0000000e+00 6.05e+00 5.87e+01   0.5 6.52e+00    -  9.94e-01 3.02e-01f  1
-   3  0.0000000e+00 3.29e-01 1.56e+02   0.4 5.22e+00    -  6.66e-01 1.00e+00f  1
-   4  0.0000000e+00 3.75e-03 7.24e+00   0.1 6.28e-01    -  9.98e-01 1.00e+00f  1
-   5  0.0000000e+00 2.16e-06 1.09e+00  -5.9 2.56e-02    -  9.80e-01 1.00e+00h  1
-   6  0.0000000e+00 1.13e-06 9.24e-04  -3.5 1.43e-02    -  9.99e-01 1.00e+00h  1
-   7  0.0000000e+00 3.90e-11 1.43e-05  -9.5 1.50e-06    -  9.99e-01 1.00e+00h  1
+   1  0.0000000e+00 8.38e+00 1.66e+01  -0.1 4.90e+00    -  3.91e-01 1.37e-01f  1
+   2  0.0000000e+00 6.46e+00 4.12e+01   0.3 7.38e+00    -  9.93e-01 2.29e-01f  1
+   3  0.0000000e+00 3.46e-01 1.61e+02   0.4 5.97e+00    -  5.56e-01 9.78e-01h  1
+   4  0.0000000e+00 4.52e-03 7.44e+00   0.0 6.59e-01    -  9.45e-01 1.00e+00f  1
+   5  0.0000000e+00 4.99e-06 1.35e+00  -2.1 1.15e-01    -  9.88e-01 1.00e+00h  1
+   6  0.0000000e+00 1.93e-06 1.24e-03  -3.6 2.13e-02    -  1.00e+00 1.00e+00h  1
+   7  0.0000000e+00 3.32e-11 1.81e-05  -9.6 2.46e-06    -  9.99e-01 1.00e+00h  1
 
 Number of Iterations....: 7
 
                                    (scaled)                 (unscaled)
 Objective...............:   0.0000000000000000e+00    0.0000000000000000e+00
-Dual infeasibility......:   1.4303851760933779e-05    1.4303851760933779e-05
-Constraint violation....:   1.3585268329194261e-11    3.9049652400535706e-11
-Complementarity.........:   3.9022278899517791e-07    3.9022278899517791e-07
-Overall NLP error.......:   1.4303851760933779e-05    1.4303851760933779e-05
+Dual infeasibility......:   1.8112716368983450e-05    1.8112716368983450e-05
+Constraint violation....:   1.8942727739235460e-11    3.3217872896784684e-11
+Complementarity.........:   4.4336222153735175e-07    4.4336222153735175e-07
+Overall NLP error.......:   1.8112716368983450e-05    1.8112716368983450e-05
 
 
 Number of objective function evaluations             = 8
@@ -114,8 +114,8 @@ Number of inequality constraint evaluations          = 8
 Number of equality constraint Jacobian evaluations   = 8
 Number of inequality constraint Jacobian evaluations = 8
 Number of Lagrangian Hessian evaluations             = 0
-Total CPU secs in IPOPT (w/o function evaluations)   =      0.332
-Total CPU secs in NLP function evaluations           =      0.479
+Total CPU secs in IPOPT (w/o function evaluations)   =      0.311
+Total CPU secs in NLP function evaluations           =      0.441
 
 EXIT: Optimal Solution Found.
 status -> 0
@@ -173,67 +173,67 @@ cost-terms:
            https://github.com/ethz-adrl/towr
 ************************************************************
 
-0.9100042764299588
+0.8820000000000002
 0.0
-0.2
-0.323476
--0.00993438
-0.234569
--0.0174737
--0.0275164
--0.0142446
+0.2842920923377332
+0.301143
+-0.00797673
+0.25784
+-0.00562728
+-0.142018
+-0.0155403
 t
 -e1
-0.537985
-value fo cmd_return -> t -e1 0.537985
+0.536162
+value fo cmd_return -> t -e1 0.536162
 next line
-0.537985
-0.147627
+0.536162
+0.151227
+0.0501431
+0.583768
+-0.18459
+0.0680574
+0.0944466
+0.178447
 0
-0.584876
--0.187948
+0.131754
+-0.167885
 0
-0.0940098
-0.177769
-0
-0.127975
--0.167853
-0
-3.757
+3.75
 s_vel
-0.110838
-0.1
+0.114138
+0.01
 -t
-3.757
-ee start pos x -> 0.537985
-ee start pos y -> 0.147627
+3.75
+ee start pos x -> 0.536162
+ee start pos y -> 0.151227
+ee start pos z -> 0.0501431
+ee start pos x -> 0.583768
+ee start pos y -> -0.18459
+ee start pos z -> 0.0680574
+ee start pos x -> 0.0944466
+ee start pos y -> 0.178447
 ee start pos z -> 0
-ee start pos x -> 0.584876
-ee start pos y -> -0.187948
+ee start pos x -> 0.131754
+ee start pos y -> -0.167885
 ee start pos z -> 0
-ee start pos x -> 0.0940098
-ee start pos y -> 0.177769
-ee start pos z -> 0
-ee start pos x -> 0.127975
-ee start pos y -> -0.167853
-ee start pos z -> 0
-start pos x -> 0.323476
-start pos y -> -0.00993438
-start pos z -> 0.234569
-goal pos x -> 0.910004
+start pos x -> 0.301143
+start pos y -> -0.00797673
+start pos z -> 0.25784
+goal pos x -> 0.882
 goal pos y -> 0
-goal pos z -> 0.2
-ee start pos x -> 0.537985
-ee start pos y -> 0.147627
+goal pos z -> 0.284292
+ee start pos x -> 0.536162
+ee start pos y -> 0.151227
+ee start pos z -> 0.0501431
+ee start pos x -> 0.583768
+ee start pos y -> -0.18459
+ee start pos z -> 0.0680574
+ee start pos x -> 0.0944466
+ee start pos y -> 0.178447
 ee start pos z -> 0
-ee start pos x -> 0.584876
-ee start pos y -> -0.187948
-ee start pos z -> 0
-ee start pos x -> 0.0940098
-ee start pos y -> 0.177769
-ee start pos z -> 0
-ee start pos x -> 0.127975
-ee start pos y -> -0.167853
+ee start pos x -> 0.131754
+ee start pos y -> -0.167885
 ee start pos z -> 0
 SOLVER RUN TIME : 15
 
@@ -262,36 +262,45 @@ Total number of inequality constraints...............:     1024
 
 iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
    0  0.0000000e+00 9.71e+00 1.00e+00   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
-   1  0.0000000e+00 8.72e+00 4.20e+01   0.0 4.83e+00    -  4.11e-01 1.02e-01f  1
-   2  0.0000000e+00 5.28e+00 5.99e+01   0.4 6.13e+00    -  9.93e-01 3.95e-01f  1
-   3  0.0000000e+00 2.25e-01 1.14e+02   0.3 4.43e+00    -  7.34e-01 1.00e+00f  1
-   4  0.0000000e+00 1.45e-03 1.77e+00  -0.2 3.28e-01    -  9.96e-01 1.00e+00f  1
-   5  0.0000000e+00 4.86e-07 3.12e-01  -6.2 9.55e-03    -  9.86e-01 1.00e+00h  1
-   6  0.0000000e+00 1.16e-11 3.16e-03  -8.1 8.37e-05    -  9.90e-01 1.00e+00h  1
-   7  0.0000000e+00 2.32e-13 9.98e-06 -10.1 1.41e-04    -  9.97e-01 1.00e+00h  1
+   1  0.0000000e+00 9.02e+00 6.28e+01   0.2 5.07e+00    -  4.35e-01 7.07e-02f  1
+   2  0.0000000e+00 5.32e+00 5.42e+01   0.5 6.94e+00    -  9.95e-01 4.10e-01f  1
+   3  0.0000000e+00 2.23e-01 1.48e+02   0.4 4.80e+00    -  7.10e-01 1.00e+00f  1
+   4  0.0000000e+00 1.48e-03 2.15e+00  -0.1 3.31e-01    -  1.00e+00 1.00e+00f  1
+   5  0.0000000e+00 6.24e-04 3.33e-01  -6.1 1.01e-02    -  9.87e-01 1.00e+00h  1
+   6  0.0000000e+00 6.24e-04 1.22e-04  -3.9 5.04e-03    -  1.00e+00 1.00e+00h  1
+   7  0.0000000e+00 6.24e-04 4.26e-06  -9.9 2.16e-07    -  9.99e-01 1.00e+00h  1
+   8  0.0000000e+00 6.24e-04 2.22e-09 -11.0 9.64e-11    -  9.99e-01 9.99e-01s 22
+   9  0.0000000e+00 6.24e-04 3.49e-10 -10.4 3.93e-10    -  1.00e+00 1.00e+00s 22
+ERROR: Ipopt failed to find a solution. Return Code: -2
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  10r 0.0000000e+00 6.24e-04 9.99e+02  -3.2 0.00e+00  -4.0 0.00e+00 0.00e+00R  1
+  11r 0.0000000e+00 6.24e-04 4.42e-05  -5.1 8.46e-05    -  1.00e+00 9.87e-01f  1
+Restoration phase converged to a feasible point that is
+unacceptable to the filter for the original problem.
+Restoration phase in the restoration phase failed.
 
-Number of Iterations....: 7
+Number of Iterations....: 11
 
                                    (scaled)                 (unscaled)
 Objective...............:   0.0000000000000000e+00    0.0000000000000000e+00
-Dual infeasibility......:   9.9752150669188521e-06    9.9752150669188521e-06
-Constraint violation....:   2.3156476736119203e-13    2.3156476736119203e-13
-Complementarity.........:   3.3012727054528429e-07    3.3012727054528429e-07
-Overall NLP error.......:   9.9752150669188521e-06    9.9752150669188521e-06
+Dual infeasibility......:   1.0788332100449536e-05    1.0788332100449536e-05
+Constraint violation....:   6.2360415186385465e-04    6.2360415186385465e-04
+Complementarity.........:   4.0599544443081671e-06    4.0599544443081671e-06
+Overall NLP error.......:   6.2360415186385465e-04    6.2360415186385465e-04
 
 
-Number of objective function evaluations             = 8
-Number of objective gradient evaluations             = 8
-Number of equality constraint evaluations            = 8
-Number of inequality constraint evaluations          = 8
-Number of equality constraint Jacobian evaluations   = 8
-Number of inequality constraint Jacobian evaluations = 8
+Number of objective function evaluations             = 56
+Number of objective gradient evaluations             = 12
+Number of equality constraint evaluations            = 56
+Number of inequality constraint evaluations          = 56
+Number of equality constraint Jacobian evaluations   = 14
+Number of inequality constraint Jacobian evaluations = 14
 Number of Lagrangian Hessian evaluations             = 0
-Total CPU secs in IPOPT (w/o function evaluations)   =      0.388
-Total CPU secs in NLP function evaluations           =      0.514
+Total CPU secs in IPOPT (w/o function evaluations)   =      0.416
+Total CPU secs in NLP function evaluations           =      0.835
 
-EXIT: Optimal Solution Found.
-status -> 0
+EXIT: Restoration Failed!
+status -> -2
 
 ************************************************************
     IFOPT - Interface to Nonlinear Optimizers (v2.0)
