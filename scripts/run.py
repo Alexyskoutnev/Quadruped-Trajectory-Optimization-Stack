@@ -102,7 +102,7 @@ def simulation(args):
     """
     print("ARGAS", args)
     goal = global_cfg.ROBOT_CFG.robot_goal
-    # goal[0] -= 0.5
+    goal[0] -= 0.1
     print(goal)
 
     if args.get('sim_cfg'):

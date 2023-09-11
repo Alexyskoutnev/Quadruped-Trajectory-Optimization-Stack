@@ -169,7 +169,7 @@ def default_init(args):
     args['-r'] = 120 * args['sim'].num_tiles
     if args['sim_cfg'].get('goal'):
         args['-g'] = args['args']['goal']
-    args['-duration'] = 3.0 * args['sim'].num_tiles
+    args['-duration'] = 4.0 * args['sim'].num_tiles
     args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
     subprocess.run(shlex.split(args['scripts']['delete']))
@@ -177,6 +177,7 @@ def default_init(args):
     DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
     subprocess.run(DEFAULT_SCRIPT, stderr=subprocess.STDOUT)
     subprocess.run(shlex.split(scripts['copy']))
+    subprocess.run(shlex.split(args['scripts']['heightfield_copy']))
     return p
 
 def run_default(args):

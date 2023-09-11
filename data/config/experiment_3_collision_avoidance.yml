@@ -24,7 +24,7 @@ v_look_ahead : 2750
 show_com_plan : False
 show_feet_plan : False
 #==Search Proprocess==#
-bool_map_search : True
+bool_map_search : False
 step_version : 'spine'
 #==Camera Options=====#
 camera_yaw : 85
