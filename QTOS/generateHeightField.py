@@ -1,4 +1,4 @@
-from QTOS.utils import is_numeric, save_bool_map, save_height_grid_map, DockerInfo, parse_scripts, cmd_args
+from QTOS.utils import is_numeric, save_bool_map, save_height_grid_map, DockerInfo, parse_scripts, cmd_args, _flags, scripts
 
 import time
 import matplotlib.pyplot as plt
@@ -16,13 +16,6 @@ np.set_printoptions(threshold=np.inf)
 HEIGHT_FIELD_OUT = "./data/heightfields/heightfield.txt"
 TOWR_HEIGHTFIELD_OUT = "./data/heightfields/from_pybullet/towr_heightfield.txt"
 NUM_PROCESSES = 32
-
-scripts =  {'run': 'docker exec <id> ./main',
-            'info': 'docker ps -f ancestor=towr',
-            'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
-            'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt'}
-
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r']
 
 def strip(x):
     """
