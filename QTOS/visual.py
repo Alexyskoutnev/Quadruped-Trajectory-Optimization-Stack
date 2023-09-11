@@ -10,6 +10,28 @@ import pybullet_data
 TRAJ = "../data/traj/towr.csv"
 
 class Visual_Planner:
+    """
+    A class for visualizing planned trajectories in PyBullet.
+
+    Args:
+        traj_file (str): The path to the trajectory file.
+        cfg (dict): Configuration parameters.
+
+    Attributes:
+        CoM_id (FIFOQueue): Queue for storing CoM visual body IDs.
+        CoM_radius (float): Radius of the CoM visualization sphere.
+        foot_radius (float): Radius of the foot visualization sphere.
+        CoM_orientation (list): Orientation of the CoM visualization.
+        foot_orientation (list): Orientation of the foot visualization.
+        CoM_goal_flag (bool): Flag indicating if the CoM goal is reached.
+        foot_id (FIFOQueue): Queue for storing foot visual body IDs.
+        feet_id_flag (bool): Flag indicating if foot IDs are generated.
+        traj_file (str): Path to the trajectory file.
+        step_size (float): Step size for trajectory visualization.
+        look_ahead (int): Number of time steps to look ahead.
+        show_com (bool): Whether to show the CoM plan.
+        show_feet (bool): Whether to show the feet plan.
+    """
     def __init__(self, traj_file, cfg) -> None:
         self.CoM_id = FIFOQueue()
         self.CoM_radius = 0.010
@@ -30,12 +52,28 @@ class Visual_Planner:
             self.plot_foot_plan_init(0)
 
 
-    def load_plan(self, timestep, lookahead=5000):
+    def load_plan(self, timestep, lookahead=2750):
+        """
+        Load a trajectory plan from a file.
+
+        Args:
+            timestep (int): Current time step.
+            lookahead (int): Number of time steps to look ahead.
+
+        Returns:
+            numpy.ndarray: Loaded trajectory data.
+        """
         data = np.loadtxt(self.traj_file, delimiter=',')
         new_traj = data[data[:,0] >= timestep][:,1:][0:lookahead]
         return new_traj
 
     def plot_CoM_plan_init(self, timestep):
+        """
+        Initialize and plot the CoM plan at a specific time step.
+
+        Args:
+            timestep (int): Current time step.
+        """
         plan = self.load_plan(timestep)
         orientation = self.CoM_orientation
         num_com_points = self.look_ahead // self.step_size
@@ -50,6 +88,12 @@ class Visual_Planner:
             self.CoM_id.enqueue(visual_body_id)
 
     def plot_Com_plan(self, timestep):
+        """
+        Plot the CoM plan at a specific time step.
+
+        Args:
+            timestep (int): Current time step.
+        """
         plan = self.load_plan(timestep)
         length_remaining_traj = plan.shape[0]
         length_q = self.CoM_id.size()
@@ -76,6 +120,12 @@ class Visual_Planner:
             pass #Done planning ahead
 
     def plot_foot_plan_init(self, timestep):
+        """
+        Initialize and plot the feet plan at a specific time step.
+
+        Args:
+            timestep (int): Current time step.
+        """
         plan = self.load_plan(timestep)
         orientation = self.CoM_orientation
         num_com_points = self.look_ahead // self.step_size
@@ -112,6 +162,12 @@ class Visual_Planner:
                 self.foot_id.enqueue(id)
     
     def plot_foot_plan(self, timestep):
+        """
+        Plot the feet plan at a specific time step.
+
+        Args:
+            timestep (int): Current time step.
+        """
         plan = self.load_plan(timestep)
         length_remaining_traj = plan.shape[0]
         length_q = int(self.foot_id.size() / 4)
@@ -185,43 +241,67 @@ class Visual_Planner:
     
 
     def delete_CoM_one(self):
+        """
+        Delete the oldest CoM visual body from the queue.
+        """
         if not self.CoM_id.is_empty():
             p.removeBody(self.CoM_id.dequeue())
 
     def delete_CoM_plan_all(self):
+        """
+        Delete all CoM visual bodies in the queue.
+        """
         for id in self.CoM_id:
             p.removeBody(id)
 
     def delete_foot_plan_all(self):
+        """
+        Delete all feet visual bodies in the queue.
+        """
         for id in self.foot_id:
             p.removeBody(id)
 
     def delete_foot_plan_one(self):
+        """
+        Delete the oldest set of feet visual bodies (4 bodies) from the queue.
+        """
         if not self.foot_id.is_empty():
             for _ in range(4):
                 p.removeBody(self.foot_id.dequeue())
 
     def step(self, idx, timestamp):
+        """
+        Execute a simulation step.
+
+        Args:
+            idx (int): Current time step index.
+            timestamp (int): Current time step timestamp.
+        """
         if self.show_com:
             self.CoM_step(idx, timestamp)
         if self.show_feet:
             self.feet_step(idx, timestamp)
-        else:
-            pass
 
     def CoM_step(self, idx, timestamp):
+        """
+        Visualize the CoM plan at a specific time step.
+
+        Args:
+            idx (int): Current time step index.
+            timestamp (int): Current time step timestamp.
+        """
         if idx % self.step_size == 0:
             self.plot_Com_plan(timestamp)
             self.delete_CoM_one()
-        else:
-            pass
 
     def feet_step(self, idx, timestamp):
+        """
+        Visualize the CoM plan at a specific time step.
+
+        Args:
+            idx (int): Current time step index.
+            timestamp (int): Current time step timestamp.
+        """
         if idx % self.step_size == 0:
             self.plot_foot_plan(timestamp)
             self.delete_foot_plan_one()
-        else:
-            pass
-
-if __name__ == "__main__":
-    pass

@@ -21,8 +21,8 @@ random_env : True
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 25
 v_look_ahead : 2750
-show_com_plan : False
-show_feet_plan : False
+show_com_plan : True
+show_feet_plan : True
 #==Search Proprocess==#
 bool_map_search : False
 step_version : 'spine'

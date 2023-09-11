@@ -315,4 +315,3 @@ class MPC(object):
         end_idx = self.next_traj_step
         _new_csv = df.iloc[start_idx:end_idx]
         return _new_csv
-
