@@ -12,8 +12,20 @@ HEIGHT_FIELD_FILE = "./data/heightmaps/heightfield_test.txt"
 HEIGHT_FIELD_OUT = "./data/heightmaps/heightfield.out"
 
 class Simulation(object):
+    """
+    This class manages the simulation environment in PyBullet for various scenarios.
+
+    Args:
+        cfg (dict): A dictionary containing configuration settings for the simulation environment.
+    """
 
     def __init__(self, cfg):
+        """
+        Initialize the Simulation object based on the provided configuration.
+
+        Args:
+            cfg (dict): A dictionary containing configuration settings for the simulation environment.
+        """
         self._wall = "./data/urdf/wall.urdf"
         self._stairs = "./data/urdf/stair.urdf"
         self._box = "./data/urdf/box.urdf"
@@ -24,11 +36,19 @@ class Simulation(object):
         self.p = self.setup(cfg)
 
     def setup(self, cfg):
+        """
+        Set up the PyBullet simulation environment based on the provided configuration.
+
+        Args:
+            cfg (dict): A dictionary containing configuration settings for the simulation environment.
+
+        Returns:
+            pybullet.Client: The PyBullet client for the simulation.
+        """
 
         py_client = None
 
         if cfg['enviroment'] == "custom":
-
             py_client = p.connect(p.GUI)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
@@ -43,7 +63,7 @@ class Simulation(object):
             num_rows, num_cols = height_map_generator.num_rows, height_map_generator.num_cols
             terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[self.resolution_xy,self.resolution_xy, 1.0], heightfieldTextureScaling=128, heightfieldData=height_map_generator.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1), .0, height_shift+0.001], [0,0,0,1.0]) # fix
+            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1), .0, height_shift+0.0001], [0,0,0,1.0])
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
             p.changeVisualShape(terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
             p.changeDynamics(1, -1, lateralFriction=cfg['friction'])
@@ -54,68 +74,23 @@ class Simulation(object):
             py_client = p.connect(p.DIRECT)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
-            height_map_generator = Height_Map_Generator(maps=cfg['map_id'])
+            height_map_generator = Height_Map_Generator(maps=cfg['map_id'], bool_map_search=cfg['bool_map_search'], scale_factor=cfg['mesh_scale'], randomize_env=cfg['random_env'])
             height_shift = height_map_generator.height_shift
             tiles = len(cfg['map_id'])
             self.bool_map = height_map_generator.bool_map
             self.num_tiles = tiles
             self.height_map = height_map_generator.map
+            self.resolution_xy = height_map_generator.resolution
+            cfg['resolution'] =  height_map_generator.resolution
             num_rows, num_cols = height_map_generator.num_rows, height_map_generator.num_cols
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[.1,.1, 1.0], heightfieldTextureScaling=64, heightfieldData=height_map_generator.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
+            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[self.resolution_xy,self.resolution_xy, 1.0], heightfieldTextureScaling=128, heightfieldData=height_map_generator.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
             terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1), .0, height_shift+0.001], [0,0,0,1.0]) # fix
+            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1), .0, height_shift+0.0001], [0,0,0,1.0])
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
             p.changeVisualShape(terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
+            p.changeDynamics(1, -1, lateralFriction=cfg['friction'])
             p.changeDynamics(terrain, -1, lateralFriction=cfg['friction'])
-
-        elif cfg['enviroment'] == "testing":
-            py_client = p.connect(p.DIRECT)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-10)
-            p.loadURDF("plane.urdf")
-
-        elif cfg['enviroment'] == "plane":
-            py_client = p.connect(p.GUI)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-10.0)
-            p.loadURDF("plane.urdf")
-
-        elif cfg['enviroment'] == "towr_no_gui":
-            py_client = p.connect(p.DIRECT)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-10)
-            p.loadURDF("plane.urdf")
-
-        elif cfg['enviroment'] == "height_terrian":
-            py_client = p.connect(p.GUI)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,-10)
-            p.loadURDF("plane.urdf")
-            rot_stair1 =  Rotation.from_euler('xyz', [0, 0, 180], degrees=True)
-            rot_wall = Rotation.from_euler('xyz', [0, 0, 0], degrees=True)
-            stair1_pos, stair1_rot = [2, 0, 0], rot_stair1.as_quat()
-            wall1_pos, wall1_rot = [2, -1.0, 0.4], rot_wall.as_quat()
-            wall2_pos, wall2_rot = [2, 1.0,0.4], rot_wall.as_quat()
-            p.loadURDF(self._stairs, basePosition = stair1_pos, baseOrientation = stair1_rot, useFixedBase = 1)
-            p.loadURDF(self._wall, basePosition = wall2_pos, baseOrientation = wall1_rot, useFixedBase = 1)
-
-        elif cfg['enviroment'] == "towr_track_no_contact":
-            py_client = p.connect(p.GUI)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,0)
-            p.loadURDF("plane.urdf")
-
-        elif cfg['enviroment'] == "towr_track_no_contact_no_gui":
-            py_client = p.connect(p.DIRECT)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,0)
-            p.loadURDF("plane.urdf")
-            
-        elif cfg['enviroment'] == "fixed_in_air":
-            py_client = p.connect(p.GUI)
-            p.setAdditionalSearchPath(pybullet_data.getDataPath())
-            p.setGravity(0,0,0)
-            p.loadURDF("plane.urdf")
+            p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) 
 
