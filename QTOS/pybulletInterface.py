@@ -32,13 +32,8 @@ class RecordInterface(object):
         Update the camera view based on the robot's position and camera settings.
         """
         cubePos, cubeOrn = p.getBasePositionAndOrientation(self.robot)
-        p.resetDebugVisualizerCamera(
-            cameraDistance=self.camera_distance,
-            cameraYaw=self.camera_yaw,
-            cameraPitch=self.camera_pitch,
-            cameraRoll=self.camera_roll,
-            cameraTargetPosition=cubePos
-        )
+        p.resetDebugVisualizerCamera(cameraDistance=self.camera_distance, cameraYaw=self.camera_yaw, cameraPitch=self.camera_pitch, cameraTargetPosition=cubePos)
+
 
 class PybulletInterface(object):
     """

@@ -9,10 +9,10 @@ from QTOS.utils import vec_to_cmd, vec_to_cmd_pose
 from QTOS.logger import Logger
 from QTOS.config.global_cfg import ROBOT_CFG
 
-SAVE_FILE = "./data/tracking_info/ref_sim_track_"
-SAVE_FILE_COM = "./data/tracking_info/CoM_track_"
-SAVE_FILE_ERROR = "./data/tracking_info/ref_sim_error_"
-SAVE_DIR = "./data/tracking_info/"
+SAVE_FILE = "./data/tracking/ref_sim_track_"
+SAVE_FILE_COM = "./data/tracking/CoM_track_"
+SAVE_FILE_ERROR = "./data/tracking/ref_sim_error_"
+SAVE_DIR = "./data/tracking/"
 NUM_TRAJS_TO_SAVE = 2
 
 def date_salt(f_type=".png"):
