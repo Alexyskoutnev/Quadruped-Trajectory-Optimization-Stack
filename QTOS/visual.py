@@ -51,7 +51,6 @@ class Visual_Planner:
         if self.show_feet:
             self.plot_foot_plan_init(0)
 
-
     def load_plan(self, timestep, lookahead=2750):
         """
         Load a trajectory plan from a file.
@@ -116,8 +115,6 @@ class Visual_Planner:
                                                 basePosition=last_CoM,
                                                 baseOrientation=self.CoM_orientation)
             self.CoM_id.enqueue(visual_body_id)
-        else:
-            pass #Done planning ahead
 
     def plot_foot_plan_init(self, timestep):
         """
@@ -235,10 +232,6 @@ class Visual_Planner:
                                             baseOrientation=self.foot_orientation)
             for id in (v_ee_1_id, v_ee_2_id, v_ee_3_id, v_ee_4_id):
                 self.foot_id.enqueue(id)
-        else:
-            pass #Done with planning feet positions
-
-    
 
     def delete_CoM_one(self):
         """

@@ -23,7 +23,7 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
             'touch_file' : 'touch ./data/traj/towr.csv',
 }
 
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-resolution', 's_vel', 's_ang_vel', '-duration']
+_flags = ['-g', '-s', '-s_ang', '-s_vel', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-resolution', 's_vel', 's_ang_vel', '-duration']
 
 
 def create_cmd(q_ang=None, q_vel=None):

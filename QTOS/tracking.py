@@ -75,6 +75,9 @@ class Tracking:
         self.track_rate = cfg['track_rate']
         self.track_flag = cfg['track']
         self.date_time_salt = date_salt()
+        self.delay_tracking_itr = 500
+        self.delay_flag = False
+        self.delay_num = 0
         if os.path.exists(SAVE_DIR) and os.path.isdir(SAVE_DIR):
             if len(os.listdir(SAVE_DIR)) > (NUM_TRAJS_TO_SAVE * 3):
                 for file in os.listdir(SAVE_DIR):
@@ -89,17 +92,24 @@ class Tracking:
             reference_cmd (dict): The reference robot command.
             timestep (float): The timestep when the command was issued.
         """
-        sim_cmd = self.get_sim_cmd()
-        self.traj['reference'].append(COMMAND(timestep, reference_cmd))
-        self.traj['sim'].append(COMMAND(timestep, sim_cmd))
-        self._update()
-        self.idx += 1
-        self.size = self.idx + 1
-        self.end_time = timestep
-        if self.idx % self.track_rate == 0:
-            if self.track_flag:
-                self.plot()
-    
+        
+        self.delay_num += 1
+        if self.delay_num < self.delay_tracking_itr and not self.delay_flag:
+            pass
+        elif self.delay_num> self.delay_tracking_itr and not self.delay_flag:
+            self.delay_flag = True
+        else:
+            sim_cmd = self.get_sim_cmd()
+            self.traj['reference'].append(COMMAND(timestep, reference_cmd))
+            self.traj['sim'].append(COMMAND(timestep, sim_cmd))
+            self._update()
+            self.idx += 1
+            self.size = self.idx + 1
+            self.end_time = timestep
+            if self.idx % self.track_rate == 0:
+                if self.track_flag:
+                    self.plot()
+
     @property
     def distance(self):
         """
@@ -368,11 +378,12 @@ class Tracking:
         Returns:
             None
         """
-        self.plot_CoM(plot_graph)
-        self.plot_reference_vs_sim(plot_graph)
-        self.plot_error(plot_graph)
-        print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
-        print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
+        if self.delay_flag:
+            self.plot_CoM(plot_graph)
+            self.plot_reference_vs_sim(plot_graph)
+            self.plot_error(plot_graph)
+            print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
+            print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
 
     def get_sim_cmd(self):
         """

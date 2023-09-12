@@ -23,19 +23,6 @@ from QTOS.logger import Logger
 from QTOS.simulation import Simulation
 from QTOS.builder import builder
 
-scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
-            'copy': 'docker cp <id>:root/catkin_ws/src/towr_solo12/towr/build/traj.csv ./data/traj/towr.csv',
-            'run': 'docker exec <id> ./main',
-            'info': 'docker ps -f ancestor=towr',
-            'data': 'docker cp <id>:root/catkin_ws/src/towr_solo12/towr/build/traj.csv /tmp/towr.csv',
-            'delete': 'rm ./data/traj/towr.csv',
-            'heightfield_rm' : 'docker exec -t <id> rm /root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
-            'heightfield_copy': 'docker cp ./data/heightfields/from_pybullet/towr_heightfield.txt <id>:root/catkin_ws/src/towr_solo12/towr/data/heightfields/from_pybullet/towr_heightfield.txt',
-            'touch_file' : 'touch ./data/traj/towr.csv',
-}
-
-_flags = ['-g', '-s', '-s_ang', '-s_vel', '-n', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-resolution', 's_vel', 's_ang_vel']
-
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
 
@@ -124,7 +111,6 @@ def _init(args):
     subprocess.run(shlex.split(args['scripts']['touch_file']))
     subprocess.run(shlex.split(args['scripts']['heightfield_rm']))
     subprocess.run(shlex.split(args['scripts']['heightfield_copy']))
-    args = _step(args)
     args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     return log
 
@@ -169,7 +155,7 @@ def default_init(args):
     args['-r'] = 120 * args['sim'].num_tiles
     if args['sim_cfg'].get('goal'):
         args['-g'] = args['args']['goal']
-    args['-duration'] = 2.5 * args['sim'].num_tiles
+    args['-duration'] = 4.0 * args['sim'].num_tiles
     args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     global_cfg.ROBOT_CFG.robot_goal = args['-g']
     subprocess.run(shlex.split(args['scripts']['delete']))
@@ -191,26 +177,25 @@ def run_default(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[3.0,0,0.24])
-    parser.add_argument('-s', '--s', nargs=3, type=float)
-    parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
-    parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
-    parser.add_argument('-n', '--n', nargs=1, type=str, default="t")
-    parser.add_argument('-e1', '--e1', nargs=3, type=float)
-    parser.add_argument('-e2', '--e2', nargs=3, type=float)
-    parser.add_argument('-e3', '--e3', nargs=3, type=float)
-    parser.add_argument('-e4', '--e4', nargs=3, type=float)
-    parser.add_argument('-step', '--step', type=float, default=1.0)
-    parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
-    parser.add_argument('-l', '--look', type=float, default=3750)
-    parser.add_argument('-r', '--record', type=bool, default=False)
-    parser.add_argument('-exp', '--experiment', type=str, default="default")
-    parser.add_argument('-p', '--mpc_p', type=bool, default=False)
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[3.0,0,0.24], help="The initial global position of the robot")
+    parser.add_argument('-s', '--s', nargs=3, type=float, default=[0.0, 0.0, 0.24], help="The initial position of the robot")
+    parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float, help="The initial angular velocity of the robot")
+    parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float, help="The initial velocity of the robot")
+    parser.add_argument('-e1', '--e1', nargs=3, type=float, help="The starting state for front left leg")
+    parser.add_argument('-e2', '--e2', nargs=3, type=float, help="The starting state for front right leg")
+    parser.add_argument('-e3', '--e3', nargs=3, type=float, help="The starting state for back right leg")
+    parser.add_argument('-e4', '--e4', nargs=3, type=float, help="The starting state for back left leg")
+    parser.add_argument('-step', '--step', type=float, default=1.0, help="The step size to traverse along the global trajectory spline")
+    parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500, help="The amount of timesteps to force the robot to run and then start stitching the next planned trajectory")
+    parser.add_argument('-l', '--look', type=float, default=3750, help='Number of timesteps to lookahead in the planned trajectory (the next starting state for the optimizer)')
+    parser.add_argument('-r', '--record', type=bool, default=False, help="Record the joint-angle, joint-velocity, and torque while running the simulator")
+    parser.add_argument('-exp', '--experiment', type=str, default="default", help="Selects the experiment to run in the simulator")
+    parser.add_argument('-p', '--mpc_p', type=bool, default=False, help="Switch for global plan correction")
     parser.add_argument('-t', '--towr', action="store_true", help="Default TOWR local planner", default=False)
     p_args = parser.parse_args()
     docker_id = DockerInfo()
-    args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-n": p_args.n,
-            "-e1": p_args.e1, "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
+    args = {"-s": p_args.s, "-g": p_args.g, "-s_ang": p_args.s_ang, "s_ang": p_args.s_vel, "-e1": p_args.e1, 
+            "-e2": p_args.e2, "-e3": p_args.e3, "-e4": p_args.e4, docker_id : docker_id,
             "scripts": parse_scripts(scripts, docker_id), "step_size": p_args.step, "look_ahead": p_args.look,
             "f_steps": p_args.f_steps, "record": p_args.record, "mpc_p": p_args.mpc_p, "towr" : p_args.towr}
     args['sim_cfg'] = experimentInfo(p_args.experiment)
