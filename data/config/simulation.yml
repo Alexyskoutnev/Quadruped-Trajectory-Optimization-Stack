@@ -1,9 +1,10 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['feasibility', 'feasibility_1', 'feasibility', 'feasibility_1', 'feasibility', 'plane']
+# map_id : ['feasibility', 'feasibility_1', 'feasibility', 'feasibility_1', 'feasibility', 'plane']
+map_id : ['step_1', 'step_1', 'step_1', 'step_1', 'step_1', 'step_1']
 custom_camera_view : False
-mesh_scale : 1
+mesh_scale : 10
 #=========Switches==============
 stance_phase : False
 height_map : True
@@ -24,7 +25,7 @@ v_look_ahead : 2750
 show_com_plan : False
 show_feet_plan : False
 #==Search Proprocess==#
-bool_map_search : True
+bool_map_search : False
 step_version : 'spine'
 #==Camera Options=====#
 camera_yaw : 40

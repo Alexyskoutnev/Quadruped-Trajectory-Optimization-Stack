@@ -12,13 +12,14 @@ import QTOS.config.global_cfg as global_cfg
 
 
 def links_to_id(robot):
-    """Helper function to retrieve the joint info of a robot into a dictionary
+    """
+    Helper function to retrieve the joint info of a robot into a dictionary.
 
     Args:
         robot (pybullet obj): pybullet robot object
 
     Returns:
-        dict: dictionary filled with corresponding link name and id
+        dict: Dictionary filled with corresponding link name and id.
     """
     _link_name_to_index = {p.getBodyInfo(robot)[0].decode('UTF-8'):-1,}
     for _id in range(p.getNumJoints(robot)):
@@ -27,11 +28,29 @@ def links_to_id(robot):
     return _link_name_to_index
 
 def link_info(link):
+    """
+    Retrieve information about a robot link.
+
+    Args:
+        link (tuple): A tuple containing information about a robot link.
+
+    Returns:
+        dict: A dictionary containing various properties of the link, such as position and orientation in the world frame,
+        and local inertial frame information.
+    """
     return {"linkWorldPosition": link[0], "linkWorldOrientation": link[1], "localInertialFramePosition": link[2], "localInertialFrameOrientation": link[3], 
      "worldLinkFramePosition": link[4], "worldLinkFrameOrientation": link[5]}
 
 def q_init_16_arr(q_init):
-    "places q_init into a 16 index array to account for fixed joints in urdf"
+    """
+    Place q_init values into a 16-index array to account for fixed joints in URDF.
+
+    Args:
+        q_init (list or np.array): Initial joint values.
+
+    Returns:
+        np.array: An array with 16 elements, with the values from q_init at specific indexes.
+    """
     indexes = [0,1,2,4,5,6,8,9,10,12,13,14]
     q_init_new = np.zeros(16)
     for i, q_val in zip(indexes, q_init):
@@ -39,34 +58,46 @@ def q_init_16_arr(q_init):
     return q_init_new
 
 def base_frame_tf(mtx, pt):
-    """Helper function to transform a vec from one frame to another
+    """
+    Helper function to transform a vector from one frame to another using a transformation matrix.
 
     Args:
-        mtx (np.array): transformation matrix
-        pt (np.array): position vector
+        mtx (np.array): Transformation matrix.
+        pt (np.array): Position vector.
 
     Returns:
-        np.array: transformed position vector 
+        np.array: Transformed position vector.
     """
     vec = np.concatenate((np.array([pt[0]]), np.array([pt[1]]),np.array([pt[2]]), np.ones(1)))
     tf_vec = mtx @ vec
     return tf_vec[:3]
 
 def shift_z(v, shift):
-    """Helper function to shift bezier curve into fix position and adjust the z-axis variable
+    """
+    Helper function to shift a 3D vector and adjust the z-axis variable.
 
     Args:
-        v (np.array or list): 3d vec to shift
-        shift (float or int): scalar value to shift the z-coord
+        v (np.array or list): 3D vector to shift.
+        shift (float or int): Scalar value to shift the z-coordinate.
 
     Returns:
-        np.array or list: resulting 3d vec from shift
+        np.array or list: The resulting 3D vector after the shift.
     """
     v[2] += shift
     return v
         
 class SOLO12(object):
     def __init__(self, URDF, config, fixed = 0, sim_cfg=None, loader=None):
+        """
+        Initialize the SOLO12 robot object.
+
+        Args:
+            URDF: The URDF file for the robot.
+            config (dict): Configuration parameters for the robot.
+            fixed (int, optional): Fixed parameter description. Defaults to 0.
+            sim_cfg: Simulation configuration (if applicable).
+            loader: Loader description (if applicable).
+        """
         self.config = config
         self.ROBOT = loader
         self.robot = self.ROBOT.robot
@@ -85,17 +116,8 @@ class SOLO12(object):
         self.tfBaseMtx = transformation_inv(transformation_mtx(self.CoM_states()['linkWorldPosition'], self.CoM_states()['linkWorldOrientation']))
         self.EE_WORLD = {"FL_W_POSE": base_frame_tf(self.tfBaseMtx, self.get_endeffector_pose()['FL_FOOT']['linkWorldPosition']), "FR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['FR_FOOT']['linkWorldPosition']),
                                     "HL_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HL_FOOT']['linkWorldPosition']), "HR_W_POSE": base_frame_tf(self.tfBaseMtx , self.get_endeffector_pose()['HR_FOOT']['linkWorldPosition'])}
-        if sim_cfg['mode'] == "bezier":
-            self.shiftZ = 0.12
-            self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
-                     'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
-        elif sim_cfg['mode'] == "towr":
-            self.shiftZ = 0.00
-            self.shift = {'FL_FOOT': shift_z(self.EE_WORLD['FL_W_POSE'], self.shiftZ), 'FR_FOOT': shift_z(self.EE_WORLD['FR_W_POSE'], self.shiftZ),
-                     'HL_FOOT': shift_z(self.EE_WORLD['HL_W_POSE'], self.shiftZ), 'HR_FOOT': shift_z(self.EE_WORLD['HR_W_POSE'], self.shiftZ)}
-        else:
-            self.shift = {'FL_FOOT': np.zeros(3), 'FR_FOOT': np.zeros(3),
-                        'HL_FOOT': np.zeros(3), 'HR_FOOT': np.zeros(3)}
+        self.shift = {'FL_FOOT': np.zeros(3), 'FR_FOOT': np.zeros(3),
+                      'HL_FOOT': np.zeros(3), 'HR_FOOT': np.zeros(3)}
         #initial robot pose and configuration
         for i in self.jointidx['idx']:
             p.resetJointState(self.robot, i, self.q_init16[i])
@@ -129,16 +151,23 @@ class SOLO12(object):
 
 
     def CoM_states(self):
-        """Returns the Center of mass and orientation of robot
+        """
+        Returns the Center of Mass (CoM) and orientation of the robot.
 
         Returns:
-            dict: The CoM and orientation of robot
+            dict: Dictionary containing CoM position and orientation.
         """
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         return {"linkWorldPosition": CoM_pos, "linkWorldOrientation": CoM_angle}
 
     @property
     def state_np(self):
+        """
+        Get the robot's state as a NumPy array.
+
+        Returns:
+            np.array: NumPy array containing various robot state values.
+        """
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         EE = self.get_endeffector_pose()
         CoM_pos = np.array(CoM_pos)
@@ -153,6 +182,12 @@ class SOLO12(object):
 
     @property
     def state_np_estimated(self):
+        """
+        Get the estimated robot state as a NumPy array.
+
+        Returns:
+            np.array: NumPy array containing estimated robot state values.
+        """
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         EE = self.get_endeffector_pose()
         CoM_pos = self.state_estimated['COM']
@@ -167,10 +202,11 @@ class SOLO12(object):
      
     @property
     def state(self):
-        """Return the known state of the robot
+        """
+        Get the known state of the robot.
 
         Returns:
-            dict: return the current CoM, orientation, endeffector positions
+            dict: Dictionary containing CoM, orientation, and end-effector positions.
         """
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
         EE = self.get_endeffector_pose()
@@ -179,10 +215,11 @@ class SOLO12(object):
     
     @property
     def state_estimated(self):
-        """Return the known state of the robot
+        """
+        Get the estimated state of the robot.
 
         Returns:
-            dict: return the current CoM, orientation, endeffector positions
+            dict: Dictionary containing estimated CoM and CoM velocity.
         """
         timestep = self.time
         lin_vel, ang_vel = p.getBaseVelocity(self.robot)
@@ -369,7 +406,7 @@ class SOLO12(object):
             q_cmd += (q_cmd - q_cmd_pin)
             self._update()
             q_mes, v_mes = self.get_PD_values()
-            q_toq = self._motor.convert_to_torque_v(q_cmd, q_mes, v_mes, q_vel)
+            q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes, q_vel)
         else:
             q_cmd = np.zeros(12)
             q_vel = np.zeros(12)

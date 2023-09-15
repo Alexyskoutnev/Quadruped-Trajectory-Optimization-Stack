@@ -455,6 +455,7 @@ class Maps(object):
     collision_hills = "./data/heightfields/collision_wall_hills.txt"
     obstacle = "./data/heightfields/obstacle_1.txt"
     example = "./data/heightfields/example_height_map.txt"
+    bridge = "./data/heightfields/bridge.txt"
 
     def __init__(self, maps=['plane'], dim=20, scale_factor=1, dynamic=False):
         """Initialize a Maps object.
@@ -526,7 +527,8 @@ class Maps(object):
             'random_terrain_1': self.random_terrain_1,
             'collision_hill': self.collision_hills,
             'obstacle' : self.obstacle,
-            'example' : self.example
+            'example' : self.example,
+            'bridge' : self.bridge
         }
         self.name_2_np_arr = {}
         for map_name, file_path in map_files.items():

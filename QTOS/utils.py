@@ -374,6 +374,7 @@ def save_height_grid_map(height_map, save_file="./data/plots/height_map.png"):
     plt.axis('off')
     ax.imshow(height_map, cmap='gray_r', origin='upper', extent=(0, len(height_map[0]), 0, len(height_map)))
     plt.savefig(save_file, dpi=dpi, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
 
 def save_bool_map(bool_map, save_file="./data/plots/bool_map.png"):
     dpi = 600
@@ -385,6 +386,7 @@ def save_bool_map(bool_map, save_file="./data/plots/bool_map.png"):
     plt.axis('off')
     ax.imshow(bool_map, cmap='binary', origin='upper', extent=(0, len(bool_map[0]), 0, len(bool_map)))
     plt.savefig(save_file, dpi=dpi, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
 
 
 def cmd_args(args):
@@ -451,7 +453,8 @@ def experimentInfo(experiement_name):
                         "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
                         "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
                         "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml",
-                        "exp_7" : "experiment_7_climb_obstacle.yml", "exp_8" : "experiment_8_dynamic_terrain.yml"}
+                        "exp_7" : "experiment_7_climb_obstacle.yml", "exp_8" : "experiment_8_dynamic_terrain.yml",
+                        "exp_9" : "experiment_9_continous_walking.yml", "exp_10" : "experiment_10_continous_climbing.yml"}
     file_path = os.path.join("./data/config", experiment_names[experiement_name])
     sim_cfg = yaml.safe_load(open(file_path, 'r'))
     return sim_cfg

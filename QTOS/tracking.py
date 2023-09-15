@@ -11,6 +11,7 @@ from QTOS.config.global_cfg import ROBOT_CFG
 
 SAVE_FILE = "./data/tracking/ref_sim_track_"
 SAVE_FILE_COM = "./data/tracking/CoM_track_"
+SAVE_FILE_ERROR_TIME = "./data/tracking/tracking_error_vs_time"
 SAVE_FILE_ERROR = "./data/tracking/ref_sim_error_"
 SAVE_DIR = "./data/tracking/"
 NUM_TRAJS_TO_SAVE = 2
@@ -78,6 +79,8 @@ class Tracking:
         self.delay_tracking_itr = 500
         self.delay_flag = False
         self.delay_num = 0
+        self.error_v_time = list()
+        self.distance_v_time = list()
         if os.path.exists(SAVE_DIR) and os.path.isdir(SAVE_DIR):
             if len(os.listdir(SAVE_DIR)) > (NUM_TRAJS_TO_SAVE * 3):
                 for file in os.listdir(SAVE_DIR):
@@ -195,6 +198,7 @@ class Tracking:
         self.logger.write(f"[{self.idx}] Average COM ERROR PER Second : {(self.total_error_com_error / self.idx) * 1000}\n")
         self.logger.write(f"[{self.idx}] Distance : {self.distance}\n")
         self.logger.write(f"[{self.idx}] x-distance : {self.distance[0]}\n")
+        
 
         print(f"x distance {self.distance[0]}")
         print(f"[{self.idx}] Average COM ERROR PER Second : {(self.total_error_com_error / self.idx) * 1000}\n")
@@ -366,6 +370,15 @@ class Tracking:
         if plot_graph:
             plt.show()
 
+    def plot_error_over_time(self, plot_graph=False):
+        plt.figure(figsize=(10, 6))
+        plt.tight_layout()
+        plt.plot(self.distance_v_time, self.error_v_time)
+        plt.xlabel('Distance [m]')
+        plt.savefig(SAVE_FILE_ERROR_TIME + self.date_time_salt)
+        plt.close()
+
+
     def plot(self, plot_graph=False):
         """
         Generate and save various plots to visualize simulation results.
@@ -382,6 +395,9 @@ class Tracking:
             self.plot_CoM(plot_graph)
             self.plot_reference_vs_sim(plot_graph)
             self.plot_error(plot_graph)
+            self.plot_error_over_time(plot_graph)
+            self.distance_v_time.append(self.distance[0])
+            self.error_v_time.append(self.total_error_com_error / self.idx * 1000) 
             print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
             print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
 

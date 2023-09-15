@@ -61,7 +61,7 @@ class MotorModel(object):
         self._kp = kp
         self._kd = kd
 
-    def convert_to_torque(self, motor_ang_cmd, motor_ang, motor_vel, motor_vel_cmd):
+    def convert_to_torque(self, motor_ang_cmd, motor_ang, motor_vel, motor_vel_cmd=0.0):
         """
         Convert the motor position signal to torque.
 

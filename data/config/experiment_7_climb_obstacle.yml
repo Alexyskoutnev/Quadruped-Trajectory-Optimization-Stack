@@ -1,27 +1,28 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-map_id : ['step', 'collision_hill']
-custom_camera_view : True
-mesh_scale : 1
+map_id : ['stair', 'bridge']
+custom_camera_view : False
+mesh_scale : 10
 #=========Switches==============
-stance_phase : True
+stance_phase : False
 height_map : True
 track : True
 #=========Hyperparameters=======
-TRAJ_SIZE : 20000
-SIM_STEPS : 21000
+TRAJ_SIZE : 32000
+SIM_STEPS : 33000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_period : 300
+stance_period : 500
 skip_forward_idx : 1
-track_rate : 250
-friction : 1.0
+track_rate : 500
+friction : 0.90
+random_env : False
 #==Visual Planner CONFIGURATIONS==
-v_step_size : 100
-v_look_ahead : 3000
+v_step_size : 25
+v_look_ahead : 2750
 show_com_plan : False
-show_feet_plan : True
+show_feet_plan : False
 #==Search Proprocess==#
 bool_map_search : False
 step_version : 'spine'
