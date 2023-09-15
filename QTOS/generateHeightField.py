@@ -453,8 +453,10 @@ class Maps(object):
     stairs = "./data/heightfields/stairs.txt"
     stairs_1 = "./data/heightfields/stairs_1.txt"
     collision_hills = "./data/heightfields/collision_wall_hills.txt"
+    obstacle = "./data/heightfields/obstacle_1.txt"
+    example = "./data/heightfields/example_height_map.txt"
 
-    def __init__(self, maps=['plane'], dim=20, scale_factor=1):
+    def __init__(self, maps=['plane'], dim=20, scale_factor=1, dynamic=False):
         """Initialize a Maps object.
 
         Args:
@@ -466,12 +468,15 @@ class Maps(object):
         self.dim = self.name_2_np_arr[maps[0]].shape[0]
         self.standard_map_dim = (self.dim, self.dim)
         self.maps = maps
-        if len(maps) == 0:
-            self.map = self.plane
-        elif len(maps) == 1:
-            self.map = self.name_2_np_arr[maps[0]]
+        if dynamic:
+            pass
         else:
-            self.map = self.multi_map_generator(maps)
+            if len(maps) == 0:
+                self.map = self.plane
+            elif len(maps) == 1:
+                self.map = self.name_2_np_arr[maps[0]]
+            else:
+                self.map = self.multi_map_generator(maps)
 
     def multi_map_generator(self, maps):
         """Generate a map by combining multiple pre-defined maps.
@@ -482,6 +487,12 @@ class Maps(object):
         Returns:
             numpy.ndarray: A combined map generated from the input maps.
         """
+        map_arr = np.zeros((self.standard_map_dim[1], self.standard_map_dim[0] * len(maps)))
+        for i, map_id in enumerate(maps):
+            map_arr[:, (i * self.dim):(i + 1) * self.dim] = self.name_2_np_arr[map_id]
+        return map_arr
+
+    def dynamic_map_generator(self, maps):
         map_arr = np.zeros((self.standard_map_dim[1], self.standard_map_dim[0] * len(maps)))
         for i, map_id in enumerate(maps):
             map_arr[:, (i * self.dim):(i + 1) * self.dim] = self.name_2_np_arr[map_id]
@@ -513,7 +524,9 @@ class Maps(object):
             'feasibility': self.feasibility,
             'feasibility_1': self.feasibility_1,
             'random_terrain_1': self.random_terrain_1,
-            'collision_hill': self.collision_hills
+            'collision_hill': self.collision_hills,
+            'obstacle' : self.obstacle,
+            'example' : self.example
         }
         self.name_2_np_arr = {}
         for map_name, file_path in map_files.items():
@@ -523,7 +536,7 @@ class Maps(object):
 
 class Height_Map_Generator(Maps):
 
-    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, randomize_env=False, random_shift_num=10, random_height_num=10):
+    def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, randomize_env=False, random_shift_num=10, random_height_num=10, dynamic=False):
         """Initialize a Height_Map_Generator object.
 
         Args:
@@ -547,7 +560,7 @@ class Height_Map_Generator(Maps):
             bool_map_search (bool): True if boolean map search is enabled; False otherwise.
             bool_map (numpy.ndarray): Boolean map resulting from pathfinding.
         """
-        super(Height_Map_Generator, self).__init__(maps, dim, scale_factor)
+        super(Height_Map_Generator, self).__init__(maps, dim, scale_factor, dynamic=False)
         self.climb_map = self.climb_map_check(maps)
         self.towr_map = np.transpose(self.map)
         if randomize_env:
@@ -570,6 +583,16 @@ class Height_Map_Generator(Maps):
             save_bool_map(self.bool_map)
         else:
             self.bool_map = np.zeros((self.map.shape[0], self.map.shape[1]))
+
+    def update(self, direction=None):
+        self.towr_map = self.shift_map(self.towr_map, direction)
+        self.map = self.shift_map(self.map, direction)
+        self.create_height_file(HEIGHT_FIELD_OUT, self.map)
+        self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map_adjusted)
+
+
+    def read_obstacle_map(self, obs_map):
+        pass
 
     def create_height_file(self, file, h_data):
         """Create a height data file from a 2D array.
@@ -644,7 +667,7 @@ class Height_Map_Generator(Maps):
             _map = self.shift_map(_map)
         return _map
 
-    def shift_map(self, map):
+    def shift_map(self, map, direction=None):
         """Shift a given map in a random direction.
 
         Args:
@@ -653,11 +676,14 @@ class Height_Map_Generator(Maps):
         Returns:
             numpy.ndarray: A modified map with a random shift in the chosen direction.
         """
-        directions = None
-        if self.climb_map:
-            directions = ['up', 'down']
+        if direction:
+            directions = direction
         else:
-            directions = ['left', 'right', 'up', 'down']
+            directions = None
+            if self.climb_map:
+                directions = ['up', 'down']
+            else:
+                directions = ['left', 'right', 'up', 'down']
         direction = random.choice(directions)
         _map = np.copy(map)
         if direction == 'left':

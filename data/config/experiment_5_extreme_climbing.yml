@@ -15,7 +15,7 @@ HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 500
 skip_forward_idx : 1
-track_rate : 250
+track_rate : 500
 friction : 0.90
 random_env : True
 #==Visual Planner CONFIGURATIONS==

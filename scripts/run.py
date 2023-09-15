@@ -272,6 +272,9 @@ def simulation(args):
                     global_cfg.RUN._stance = True
                     break
 
+                # if sim_step % 10 == 0:
+                #     args['sim'].update(idx = sim_step / 100)
+
         else:
             loop_time = time.time() - last_loop_time
             time_loop = time.time()

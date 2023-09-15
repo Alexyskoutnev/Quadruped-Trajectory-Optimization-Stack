@@ -2,7 +2,7 @@
 mode : "towr"
 enviroment : "custom"
 map_id : ['feasibility', 'feasibility_1', 'plane']
-custom_camera_view : False
+custom_camera_view : True
 mesh_scale : 1
 #=========Switches==============
 stance_phase : False
@@ -15,7 +15,7 @@ HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 500
 skip_forward_idx : 1
-track_rate : 250
+track_rate : 25000
 friction : 1.0
 random_env : True
 #==Visual Planner CONFIGURATIONS==

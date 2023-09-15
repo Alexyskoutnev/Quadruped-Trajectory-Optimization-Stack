@@ -369,7 +369,7 @@ class SOLO12(object):
             q_cmd += (q_cmd - q_cmd_pin)
             self._update()
             q_mes, v_mes = self.get_PD_values()
-            q_toq = self._motor.convert_to_torque_v1(q_cmd, q_mes, v_mes, q_vel)
+            q_toq = self._motor.convert_to_torque_v(q_cmd, q_mes, v_mes, q_vel)
         else:
             q_cmd = np.zeros(12)
             q_vel = np.zeros(12)

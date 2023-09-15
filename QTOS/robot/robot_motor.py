@@ -29,12 +29,17 @@ class MOTOR(object):
 
 class MotorModel(object):
     def __init__(self, kp=1.2, kd=0, hip_scale=1.0, knee_scale=1.0, ankle_scale=1.0, motor_mode=None, toq_max=None) -> None:
-        """_summary_
+        """
+        Initialize a MotorModel object.
 
-        Args:
-            kp (float, optional): _description_. Defaults to 1.2.
-            kd (int, optional): _description_. Defaults to 0.
-            motor_mode (_type_, optional): _description_. Defaults to None.
+        Parameters:
+            kp (float, optional): Proportional gain for the motor model. Defaults to 1.2.
+            kd (int, optional): Derivative gain for the motor model. Defaults to 0.
+            hip_scale (float, optional): Scaling factor for hip motors. Defaults to 1.0.
+            knee_scale (float, optional): Scaling factor for knee motors. Defaults to 1.0.
+            ankle_scale (float, optional): Scaling factor for ankle motors. Defaults to 1.0.
+            motor_mode (type, optional): Description of motor mode (if applicable). Defaults to None.
+            toq_max (type, optional): Maximum torque limit (if applicable). Defaults to None.
         """
         self.hip_scale = hip_scale
         self.knee_scale = knee_scale
@@ -46,55 +51,43 @@ class MotorModel(object):
             MOTOR.OBSERVED_TORQUE_LIMIT = toq_max
 
     def set_motor_gains(self, kp, kd):
-        """Set the motor postional and derivative gains
+        """
+        Set the motor positional and derivative gains.
 
-        Args:
-            kp (float): Positioanl gain
-            kd (float): Derivative gain
+        Parameters:
+            kp (float): Proportional gain for the motor model.
+            kd (float): Derivative gain for the motor model.
         """
         self._kp = kp
         self._kd = kd
 
-    def convert_to_torque(self, motor_ang_cmd, motor_ang, motor_vel):
-        """Convert the motor position signal to torque
-
-        Args:
-            motor_cmd (_type_): _description_
-            motor_ang (_type_): _description_
-            motor_vel (_type_): _description_
+    def convert_to_torque(self, motor_ang_cmd, motor_ang, motor_vel, motor_vel_cmd):
         """
-        kp = self._kp
-        kd = self._kd
-        desired_motor_angle = motor_ang_cmd
-        desired_motor_velocities = np.full(12, 0)
-        # motor_torque = -(kp * (motor_ang - desired_motor_angle)) - kd * (motor_vel - desired_motor_velocities)
-        motor_torque = kp * (desired_motor_angle - motor_ang) + kd * (desired_motor_velocities - motor_vel)
+        Convert the motor position signal to torque.
 
-        return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
-
-    def convert_to_torque_v1(self, motor_ang_cmd, motor_ang, motor_vel, motor_vel_cmd):
-        """Convert the motor position signal to torque
-
-        Args:
-            motor_cmd (_type_): _description_
-            motor_ang (_type_): _description_
-            motor_vel (_type_): _description_
+        Parameters:
+            motor_ang_cmd (type): Description of the motor angle command.
+            motor_ang (type): Description of the current motor angle.
+            motor_vel (type): Description of the current motor velocity.
         """
         kp = self._kp
         kd = self._kd
         desired_motor_angle = motor_ang_cmd
         desired_motor_velocities = motor_vel_cmd
-        # motor_torque = -(kp * (motor_ang - desired_motor_angle)) - kd * (motor_vel - desired_motor_velocities)
         motor_torque = kp * (desired_motor_angle - motor_ang) + kd * (desired_motor_velocities - motor_vel)
 
         return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
 
     def convert_to_torque_ff(self, motor_ang_cmd, motor_ang, motor_vel, motor_vel_cmd, toq_ff):
-        """Convert the motor position signal to torque
-        Args:
-            motor_cmd (_type_): _description_
-            motor_ang (_type_): _description_
-            motor_vel (_type_): _description_
+        """
+        Convert the motor position signal to torque with feedforward term.
+
+        Parameters:
+            motor_ang_cmd (type): Description of the motor angle command.
+            motor_ang (type): Description of the current motor angle.
+            motor_vel (type): Description of the current motor velocity.
+            motor_vel_cmd (type): Description of the motor velocity command.
+            toq_ff (type): Description of the feedforward torque term.
         """
         kp = self._kp
         kd = self._kd
@@ -104,11 +97,11 @@ class MotorModel(object):
         return np.clip(motor_torque, -1.0 * MOTOR.OBSERVED_TORQUE_LIMIT, MOTOR.OBSERVED_TORQUE_LIMIT)
 
     def _convert_to_torque_from_pwm(self, pwm):
-        """converting a pwm signal to motor torque
+        """
+        Convert a PWM signal to motor torque.
 
-        Args:
-            pwm (_type_): _description_
-            true_motor_vel (_type_): _description_
+        Parameters:
+            pwm (type): Description of the PWM signal.
         """
         observed_torque = np.clip(MOTOR.MOTOR_TORQUE_CONSTANT * np.asarray(pwm) 
                                   * MOTOR.MOTOR_VOLTAGE / MOTOR.MOTOR_RESISTANCE, 
@@ -117,6 +110,18 @@ class MotorModel(object):
 
     @classmethod
     def UPDATE_GAIT(self, gain, hip_scale=2.0, knee_scale=1.0, ankle_scale=1.0):
+        """
+        Update gait gains.
+
+        Parameters:
+            gain: The gain to be updated.
+            hip_scale (float, optional): Scaling factor for hip motors. Defaults to 2.0.
+            knee_scale (float, optional): Scaling factor for knee motors. Defaults to 1.0.
+            ankle_scale (float, optional): Scaling factor for ankle motors. Defaults to 1.0.
+
+        Returns:
+            gains: Updated gains.
+        """
         gains = np.ones(MOTOR.NUM_MOTORS) * gain
         for i in (0, 3, 6, 9):
             gains[i] *= hip_scale

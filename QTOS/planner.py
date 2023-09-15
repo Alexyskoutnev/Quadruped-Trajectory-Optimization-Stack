@@ -269,7 +269,9 @@ class PATH_Solver(object):
         x_range = np.arange(0, self.visual_map.shape[1]) * self.grid_res
         y_range = np.arange(0, self.visual_map.shape[0]) * self.grid_res
         X, Y = np.meshgrid(x_range, y_range)
-        plt.figure()
+        dpi = 600
+        width, height = 10, 6
+        fig, ax = plt.subplots(figsize=(width, height))
         plt.pcolormesh(X, Y, self.visual_map, cmap='gray_r', shading='auto')
         plt.scatter(self.start_pos_x_y[0] + self.origin_x_shift, self.start_pos_x_y[1] + self.origin_y_shift, color='green', marker='o', label='Start')
         plt.scatter(self.goal_pos_x_y[0] + self.origin_x_shift, self.goal_pos_x_y[1] + self.origin_y_shift, color='red', marker='x', label='Goal')
@@ -287,7 +289,7 @@ class PATH_Solver(object):
         plt.ylabel('Y')
         plt.title('Global Trajectory Path')
         plt.axis('off')
-        plt.legend()
+        # plt.legend()
         plt.savefig(GLOBAL_TRAJ_MAP)
 
 if __name__ == "__main__":
