@@ -6,7 +6,7 @@ categories: projects
 
 <link href='https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic' rel='stylesheet' type='text/css'>
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>Learning to Walk by Steering: Perceptive Quadrupedal Locomotion in Dynamic Environments</title>
+  <title>Quadruped Trajectory Optimization Stack</title>
 
 
 <!-- <meta property="og:image" content="images/teaser_fb.jpg"> -->
@@ -125,7 +125,7 @@ highlight {
 </style>
 
 <div id="primarycontent">
-<center><h1><strong>Quadruped-Trajectory-Optimization-Stack</strong></h1></center>
+<center><h1><strong>QTOS: An Open-Source Quadruped Trajectory Optimization Stackk</strong></h1></center>
 <center><h2>
     <a href="https://alexyskoutnev.github.io/alexyskoutnev-github.io/">Alexy Skountev <sup>1</sup></a>&nbsp;&nbsp;&nbsp;
     <a href="https://github.com/cinaral">Andrew Cinral<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
@@ -135,50 +135,16 @@ highlight {
   <h2>
     <a href="https://www.vanderbilt.edu/"><sup>1</sup>Vanderbilt University</a>
   </h2>
-  <h3>IEEE International Conference on Robotics and Automation (ICRA), 2024</h3>
   <h2><a href="http://arxiv.org">Paper</a> | <a href="https://github.com/Alexyskoutnev/Quadruped-Trajectory-Optimization-Stack">Code</a></h2>
   </center>
 
  <center><p><span style="font-size:20px;"></span></p></center>
-<!-- <p> -->
-<!--   </p><table border="0" cellspacing="10" cellpadding="0" align="center">  -->
-<!--   <tbody> -->
-<!--   <tr> -->
-<!--   <\!-- For autoplay -\-> -->
-<!-- <iframe width="560" height="315" -->
-<!--   src="https://www.youtube.com/embed/GCfs3DJ4aO4?autoplay=1&mute=1&loop=1" -->
-<!--   autoplay="true" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>   -->
-<!--   <\!-- No autoplay -\-> -->
-<!-- <\!-- <iframe width="560" height="315" -\-> -->
-<!-- <\!--   src="https://www.youtube.com/embed/GCfs3DJ4aO4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>   -\-> -->
 
-<!-- </tr> -->
-<!-- </tbody> -->
-<!-- </table> -->
 
-<!--
-<table border="0" cellspacing="10" cellpadding="0" align="center"> 
-  <tbody>
-    <tr> 
-      <td align="center" valign="middle">
-        <iframe width="800" height="450" src="https://www.youtube.com/embed/PdT8vBv9Asg?showinfo=0&playlist=PdT8vBv9Asg&autoplay=1&loop=1" autoplay="true" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </td>
-    </tr>
-  </tbody>
-</table>
--->
+<video width="640" height="360" controls autoplay loop>
+  <source src="./assets/Extreme_Climbing_Demostration.mp4" type="video/mp4">
+</video>
 
-<table border="0" cellspacing="10" cellpadding="0" align="center">
-  <tbody>
-    <tr>
-      <td align="center" valign="middle">
-        <video muted autoplay loop width="798">
-          <source src="./src/video/header.mp4"  type="video/mp4">
-        </video>
-      </td>
-    </tr>
-  </tbody>
-</table>
 
 <p>
 <div width="500"><p>
@@ -186,7 +152,7 @@ highlight {
                 <tr>
                     <td>
 <p align="justify" width="20%">
-We introduce a new open-source framework, Quadruped Trajectory Optimization Stack (QTOS), which integrates a global planner, local planner, simulator, controller, and robot interface into a single package. QTOS serves as a full-stack interface, simplifying continuous motion planning on an open-source quadruped platform by bridging the gap between middleware and gait planning. It empowers users to effortlessly translate high-level navigation objectives into low-level robot commands. Furthermore, QTOS enhances the stability and adaptability of long-distance gait planning across challenging terrain.
+We introduce a new open-source framework, Quadruped Trajectory Optimization Stack (</b>QTOS</b>), which integrates a global planner, local planner, simulator, controller, and robot interface into a single package. QTOS serves as a full-stack interface, simplifying continuous motion planning on an open-source quadruped platform by bridging the gap between middleware and gait planning. It empowers users to effortlessly translate high-level navigation objectives into low-level robot commands. Furthermore, QTOS enhances the stability and adaptability of long-distance gait planning across challenging terrain.
 </p></td></tr></table>
 </p>
   </div>
@@ -200,7 +166,7 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
     <tbody>
       <tr> 
         <td align="center" valign="middle">
-          <a href="./src/figure/approach.gif"><img src="./src/figure/approach.gif" style="width:100%;"> </a>
+          <embed src="./assets/QTOS_SYSTEM.pdf" type="application/pdf" width="100%" height="500px" />
         </td>
       </tr>
     </tbody>
@@ -213,111 +179,16 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
   Finish
 </p></td></tr></table>
 
-  
-<br><br><hr> <h1 align="center">Hierarchical Perceptive Locomotion Model</h1> <!-- <h2
-align="center"></h2> --> <table border="0" cellspacing="10"
-cellpadding="0" align="center"><tbody><tr><td align="center"
-valign="middle"><a href="./src/figure/pipeline.png"> <img
-src="./src/figure/pipeline.png" style="width:100%;"> </a></td>
-</tr> </tbody> </table>
 
-<table align=center width=800px><tr><td> <p align="justify" width="20%">finish</a>.
-</p></td></tr></table>
-<br>
 
 <hr>
 
-<h1 align="center">Real Robot Evaluation</h1>
+<h1 align="center">Demostration</h1>
 
   <table align=center width=800px><tr><td> <p align="justify" width="20%">Description of evalutation
 
   </p></td></tr></table>
 
-  <!--
-  <table border="0" cellspacing="10" cellpadding="0" align="center"> 
-    <tbody>
-      <tr> 
-        <td align="center" valign="middle">
-          <iframe width="798" height="300" src="https://www.youtube.com/embed/csr5hi5v_Bs?autoplay=1&mute=1&playlist=csr5hi5v_Bs&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  -->
-  
-  <!-- <table border="0" cellspacing="10" cellpadding="0" align="center">
-    <tbody>
-      <tr>
-        <td align="center" valign="middle">
-          <video muted controls width="798">
-            <source src="./src/video/evaluation.mp4"  type="video/mp4">
-          </video>
-        </td>
-      </tr>
-    </tbody>
-  </table> -->
-
-
-<hr>
-
-<h1 align="center">....</h1>
-
-  <table align=center width=800px><tr><td> <p align="justify" width="20%">
-  put text
-  </p></td></tr></table>
-
-
-  <!--
-  <table border="0" cellspacing="10" cellpadding="0" align="center"> 
-    <tr>
-        <td align="center" valign="middle">
-          <iframe width="600" height="337" src="https://www.youtube.com/embed/K3pYobHhzDs?autoplay=1&mute=1&playlist=K3pYobHhzDs&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </td>
-      </tr>
-      <tr>
-        <td align="center" valign="middle">
-          <iframe width="600" height="337" src="https://www.youtube.com/embed/cc3b8VM7Jb0?autoplay=1&mute=1&playlist=cc3b8VM7Jb0&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </td>
-      </tr>
-      <tr>
-        <td align="center" valign="middle">
-          <iframe width="600" height="337" src="https://www.youtube.com/embed/9yEtgGHy9Aw?autoplay=1&mute=1&playlist=9yEtgGHy9Aw&loop=1" autoplay="true" frameborder="5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </td>
-      </tr>
-  </table>
-  -->
-  <!-- <table border="0" cellspacing="10" cellpadding="0" align="center">
-    <tbody>
-      <tr>
-        <td align="center" valign="middle">
-          <video muted controls width="394">
-            <source src="./src/video/deploy1.mp4"  type="video/mp4">
-          </video>
-        </td>
-
-        <td align="center" valign="middle">
-          <video muted controls width="394">
-            <source src="./src/video/deploy2.mp4"  type="video/mp4">
-          </video>
-        </td>
-      </tr>
-
-      <tr>
-        <td align="center" valign="middle">
-          <video muted controls width="394">
-            <source src="./src/video/deploy3.mp4"  type="video/mp4">
-          </video>
-        </td>
-
-        <td align="center" valign="middle">
-          <video muted controls width="394">
-            <source src="./src/video/deploy4.mp4"  type="video/mp4">
-          </video>
-        </td>
-      </tr>
-
-    </tbody>
-  </table> -->
 
 
 <hr>
