@@ -1,0 +1,45 @@
+# mode : "bezier"
+mode : "towr"
+enviroment : "custom"
+# enviroment : "plane"
+
+custom_camera_view : False
+py_interface : False
+fix-base : False
+mesh_scale : 2
+#==BEZIER INIT CONFIGURATION==
+pos : [0, 0, 0]
+angle : 0.0
+velocity: 1.0
+angle_velocity : 0.0
+step_period : 1.0
+trot_2_stance_ratio : 0.5
+#============================
+terrain_offset : [1.5, 0, 0]
+
+TRAJ_SIZE : 500000
+SIM_STEPS : 510000
+
+HZ : 1000
+TIMESTEPS : 0.001
+stance_phase : False
+stance_period : 100
+skip_forward_idx : 1 #USE THIS TO SPEED UP THE SIMULATION (SKIP # TRAJECTORY POINTS)
+record : False
+base_stable : False
+track : True
+track_rate : 500
+height_map : True
+
+map_id : ['feasibility', 'feasibility_1', 'plane']
+friction : 0.99
+
+#==Visual Planner CONFIGURATIONS==
+v_step_size : 50
+v_look_ahead : 2500
+show_com_plan : False
+show_feet_plan : False
+
+#==Search Proprocess==#
+bool_map_search : True
+step_version : 'spine'

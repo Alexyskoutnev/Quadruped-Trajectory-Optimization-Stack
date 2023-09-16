@@ -6,7 +6,6 @@ RUN DEBIAN_FRONTEND=noninteractive
 WORKDIR /root
 RUN echo "Trying to install dependecies to Docker image"
 RUN apt-get -y update
-# RUN apt-get -y upgrade
 #install dependecies
 RUN apt-get -y install gcc g++ gfortran git patch wget pkg-config liblapack-dev libmetis-dev curl python3 python3-pip cmake lsb-core vim
 #install Towr dependecies
@@ -34,7 +33,7 @@ WORKDIR /root/
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu bionic main" > /etc/apt/sources.list.d/ros-melodic.list'
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 RUN apt update
-RUN apt-get -y install ros-melodic-desktop-full
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install ros-melodic-desktop-full
 WORKDIR /
 RUN bash -c "source /opt/ros/melodic/setup.bash >> /root/.bashrc"
 RUN bash -c "source /root/.bashrc"
@@ -50,4 +49,4 @@ WORKDIR /root/catkin_ws/src/towr_solo12/towr/build
 RUN cmake -S ../ -DCMAKE_BUILD_TYPE=Release
 RUN make -j4
 RUN make install
-WORKDIR /root/catkin_ws/
+WORKDIR /root/catkin_ws/src/towr_solo12/towr/build

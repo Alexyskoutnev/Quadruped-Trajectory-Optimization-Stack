@@ -1,0 +1,35 @@
+#======Goal=====================
+goal : [0, 0, 0.24]
+#======Mode + Enviroment========
+mode : "towr"
+enviroment : "custom"
+map_id : ['random_terrain_1', 'random_terrain_1', 'random_terrain_1']
+custom_camera_view : False
+mesh_scale : 5
+#=========Switches==============
+stance_phase : False
+height_map : True
+track : False
+#=========Hyperparameters=======
+TRAJ_SIZE : 60000
+SIM_STEPS : 601000
+HZ : 1000
+TIMESTEPS : 0.001
+stance_period : 500
+skip_forward_idx : 1
+track_rate : 250
+friction : 2.0
+random_env : False
+#==Visual Planner CONFIGURATIONS==
+v_step_size : 50
+v_look_ahead : 5000
+show_com_plan : False
+show_feet_plan : False
+#==Search Proprocess==#
+bool_map_search : False
+step_version : 'spine'
+#==Camera Options=====#
+camera_yaw : 40
+camera_pitch : -25
+camera_roll : 0
+camera_distance : 1.25

@@ -1,15 +1,25 @@
+#======Mode + Enviroment========
 mode : "towr"
-enviroment : "plane"
-py_interface : False
-fix-base : False
-velocity: 0.5
-angle_velocity : 0.0
-angle : 0.0
-step_period : 3.0
-offsets : [0.5, 0.0, 0.0, 0.5]
-trot_2_stance_ratio : 0.5
-NUM_TIME_STEPS : 100
+enviroment : "custom"
+map_id : ['random_terrain', 'random_terrain_1', 'random_terrain_2']
+#=========Switches==============
+stance_phase : False
+height_map : True
+track : True
+#=========Hyperparameters=======
+TRAJ_SIZE : 10000
+SIM_STEPS : 11000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_phase : True
-stance_period : 10
+stance_period : 100
+skip_forward_idx : 1
+track_rate : 250
+friction : 1.0
+#==Visual Planner CONFIGURATIONS==
+v_step_size : 50
+v_look_ahead : 5000
+show_com_plan : False
+show_feet_plan : False
+#==Search Proprocess==#
+bool_map_search : True
+step_version : 'spine'

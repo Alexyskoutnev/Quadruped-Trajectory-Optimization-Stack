@@ -1,0 +1,33 @@
+#======Mode + Enviroment========
+mode : "towr"
+enviroment : "custom"
+map_id : ['plane', 'obstacle', 'plane']
+custom_camera_view : False
+mesh_scale : 1
+#=========Switches==============
+stance_phase : False
+height_map : True
+track : True
+#=========Hyperparameters=======
+TRAJ_SIZE : 60000
+SIM_STEPS : 61000
+HZ : 1000
+TIMESTEPS : 0.001
+stance_period : 500
+skip_forward_idx : 1
+track_rate : 250
+friction : 1.0
+random_env : True
+#==Visual Planner CONFIGURATIONS==
+v_step_size : 50
+v_look_ahead : 2750
+show_com_plan : False
+show_feet_plan : False
+#==Search Proprocess==#
+bool_map_search : False
+step_version : 'spine'
+#==Camera Options=====#
+camera_yaw : 85
+camera_pitch : 145
+camera_roll : 0
+camera_distance : 3.0

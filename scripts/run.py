@@ -1,4 +1,4 @@
-#! /opt/homebrew/Caskroom/miniforge/base/envs/soloSim/bin/python3
+#! /usr/bin/python3
 
 import time
 import os
@@ -7,6 +7,8 @@ import math
 import csv
 import argparse
 from threading import Thread, Lock
+import subprocess
+import shlex
 
 #third party
 import pybullet as p
@@ -15,16 +17,16 @@ import yaml
 import numpy as np
 
 #project
-from SOLO12_SIM_CONTROL.robot.robot import SOLO12
-from SOLO12_SIM_CONTROL.utils import *
-from SOLO12_SIM_CONTROL.gaitPlanner import Gait
-from SOLO12_SIM_CONTROL.pybulletInterface import PybulletInterface
-from SOLO12_SIM_CONTROL.simulation import Simulation
-from SOLO12_SIM_CONTROL.logger import Logger
-from SOLO12_SIM_CONTROL.tracking import Tracking
-from SOLO12_SIM_CONTROL.visual import Visual_Planner
-from SOLO12_SIM_CONTROL.builder import builder
-import SOLO12_SIM_CONTROL.config.global_cfg as global_cfg
+from QTOS.robot.robot import SOLO12
+from QTOS.utils import *
+from QTOS.gaitPlanner import Gait
+from QTOS.pybulletInterface import PybulletInterface, RecordInterface
+from QTOS.simulation import Simulation
+from QTOS.logger import Logger
+from QTOS.tracking import Tracking
+from QTOS.visual import Visual_Planner
+from QTOS.builder import builder
+import QTOS.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"
@@ -41,8 +43,23 @@ mutex = Lock()
 
 def parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--test', action="store_true", help="Sets testing flag for CI")
-    args = parser.parse_args()
+    parser.add_argument('-t', '--towr', action="store_true", help="Default TOWR local planner")
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=[3.0,0,0.24])
+    parser.add_argument('-s', '--s', nargs=3, type=float)
+    parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float)
+    parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float)
+    parser.add_argument('-n', '--n', nargs=1, type=str, default="t")
+    parser.add_argument('-e1', '--e1', nargs=3, type=float)
+    parser.add_argument('-e2', '--e2', nargs=3, type=float)
+    parser.add_argument('-e3', '--e3', nargs=3, type=float)
+    parser.add_argument('-e4', '--e4', nargs=3, type=float)
+    parser.add_argument('-step', '--step', type=float, default=0.5)
+    parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500)
+    parser.add_argument('-l', '--look', type=float, default=3750)
+    parser.add_argument('-r', '--record', type=bool, default=False)
+    parser.add_argument('-exp', '--experiment', type=str, default="default")
+    parser.add_argument('-p', '--mpc_p', type=bool, default=False)
+    args = vars(parser.parse_args())
     return args
 
 def update_file_name(file, cfg, sim_cfg):
@@ -63,7 +80,7 @@ def _global_update(ROBOT, kwargs):
     global_cfg.ROBOT_CFG.runtime = ROBOT.time
     if sim_cfg['skip_forward_idx'] > 1:
         global_cfg.RUN.step += sim_cfg['skip_forward_idx'] + 1
-    elif sim_cfg['enviroment'] == "towr_no_gui":
+    else:
         global_cfg.RUN.step += 1
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 
@@ -83,6 +100,12 @@ def simulation(args):
     """Main simulation interface that runs the bullet engine
     
     """
+    print("ARGAS", args)
+    goal = global_cfg.ROBOT_CFG.robot_goal
+    print(goal)
+
+    if args.get('sim_cfg'):
+        sim_cfg = args['sim_cfg']
     log = Logger("./logs", "simulation_log")
     global key_press_init_phase
     ROBOT = args['robot']
@@ -99,11 +122,12 @@ def simulation(args):
         TRAJ_SIZE = sum(1 for row in reader)
         traj = np.genfromtxt(TOWR, delimiter=',')
         first_traj_point = traj[0]
-        if sim_cfg['stance_phase']:
+        print("SIMIMIM ",sim_cfg)
+        v_planner = Visual_Planner(TOWR, sim_cfg)
+        if sim_cfg.get('stance_phase'):
             time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
             ref_start_cmd = vec_to_cmd_pose(EE_POSE)
-            q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)
-        v_planner = Visual_Planner(TOWR, sim_cfg)
+            q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)    
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
         if args.get('record') or sim_cfg.get('record'):
@@ -124,8 +148,10 @@ def simulation(args):
             writer = csv.writer(record_file) 
             record_timestep = 0
             RECORD_TRAJ = True
-    if sim_cfg['py_interface']:
+    if sim_cfg.get('py_interface'):
         pybullet_interface = PybulletInterface()
+    elif sim_cfg.get('custom_camera_view'):
+        pybullet_interface = RecordInterface(args, ROBOT.robot)
     """=========================================="""
     cmd = np.zeros((12, 1))
     keypress_io = Thread(target=keypress)
@@ -138,7 +164,7 @@ def simulation(args):
     stance_step = 0
     while (key_press_init_phase):
         loop_time = time.time() - last_loop_time
-        if stance_step >= sim_cfg['stance_period']:
+        if stance_step >= sim_cfg.get('stance_period'):
             key_press_init_phase = False
             break
         if init_phase and key_press_init_phase:
@@ -238,6 +264,16 @@ def simulation(args):
 
                 last_loop_time = time.time()
                 sim_step += 1
+                if sim_cfg['custom_camera_view']:
+                    pybullet_interface.update()
+
+                if global_cfg.ROBOT_CFG.linkWorldPosition[0] >= goal[0]:
+                    global_cfg.RUN._done = True
+                    global_cfg.RUN._stance = True
+                    break
+
+                # if sim_step % 10 == 0:
+                #     args['sim'].update(idx = sim_step / 100)
 
         else:
             loop_time = time.time() - last_loop_time
@@ -258,19 +294,43 @@ def simulation(args):
         TRACK_RECORD.plot()
     if RECORD_TRAJ:
         print(f"TRAJ RECORD PATH -> {record_file}")
-
     p.disconnect()
 
+def init(args):
+    """Default configuration for default TOWR based planning
+
+    Args:
+        args (dict): user + config inputs for simulation and solver
+    """
+    def start_config(args):
+            args['-s'] = [0, 0, 0.24]
+            args['-e1'] = [0.21, 0.19, 0.0]
+            args['-e2'] = [0.21, -0.19, 0.0]
+            args['-e3'] = [-0.21, 0.19, 0.0]
+            args['-e4'] = [-0.21, -0.19, 0.0]
+            args['-s_ang'] = [0, 0, 0]
+    start_config(args)
+    args['-r'] = 30 * args['sim'].num_tiles
+    args['-g'] = args['args']['goal']
+    args['-duration'] = 2.5 * args['sim'].num_tiles
+    subprocess.run(shlex.split(args['scripts']['delete']))
+    subprocess.run(shlex.split(args['scripts']['touch_file']))
+    DEFAULT_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
+    subprocess.run(DEFAULT_SCRIPT, stderr=subprocess.STDOUT)
+    subprocess.run(shlex.split(scripts['copy']))
+    return args
+
 if __name__ == "__main__":
-    args = parser()
-    if args.test:
-        print("End-to-End Test")
-        config = "./test/data/config/solo12_test.yml"
-        config_sim = "./test/data/config/simulation_towr_test.yml"
-        cfg = yaml.safe_load(open(config, 'r'))
-        sim_cfg = yaml.safe_load(open(config_sim, 'r'))
+    args = parser()    
+    if args.get('towr'):
+        print("Default Test")
+        docker_id = DockerInfo()
+        args['sim_cfg'] = experimentInfo(args['experiment'])
+        args['scripts'] = parse_scripts(scripts, docker_id)
+        sim_cfg = args['sim_cfg']
         TOWR = "./test/data/traj/towr.csv"
-        args = builder(cfg=cfg, sim_cfg=sim_cfg)
+        args.update(builder(sim_cfg=args['sim_cfg']))
+        init(args)
         simulation(args)
     else:
         args = builder()

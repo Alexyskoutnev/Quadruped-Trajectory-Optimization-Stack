@@ -1,0 +1,3 @@
+[submodule "SOLO12_SDK"]
+	path = SOLO12_SDK
+	url = https://github.com/Alexyskoutnev/SOLO12_SDK
