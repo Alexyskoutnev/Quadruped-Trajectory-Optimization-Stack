@@ -125,7 +125,7 @@ highlight {
 </style>
 
 <div id="primarycontent">
-<center><h1><strong>QTOS: An Open-Source Quadruped Trajectory Optimization Stackk</strong></h1></center>
+<center><h1><strong>QTOS: An Open-Source Quadruped Trajectory Optimization Stack</strong></h1></center>
 <center><h2>
     <a href="https://alexyskoutnev.github.io/alexyskoutnev-github.io/">Alexy Skountev <sup>1</sup></a>&nbsp;&nbsp;&nbsp;
     <a href="https://github.com/cinaral">Andrew Cinral<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
@@ -140,10 +140,11 @@ highlight {
 
  <center><p><span style="font-size:20px;"></span></p></center>
 
-
-<video width="640" height="360" controls autoplay loop>
+<center>
+<video width="800" height="400" controls autoplay loop>
   <source src="./assets/Extreme_Climbing_Demostration.mp4" type="video/mp4">
 </video>
+<center>
 
 
 <p>
@@ -160,26 +161,24 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
 
 <hr>
 
-<h1 align="center">Method Overview</h1>
-
+<h1 align="center">System Architecture</h1>
   <table border="0" cellspacing="10" cellpadding="0" align="center"> 
     <tbody>
       <tr> 
         <td align="center" valign="middle">
-          <embed src="./assets/QTOS_SYSTEM.pdf" type="application/pdf" width="100%" height="500px" />
+          <img src="./assets/QTOS_SYSTEM.png" type="application/pdf" width="800" height="500px" />
         </td>
       </tr>
     </tbody>
   </table>
-
   <table align=center width=800px>
                 <tr>
                     <td>
   <p align="justify" width="20%">
-  Finish
+  
 </p></td></tr></table>
 
-
+The QTOS system architecture follows a hierarchical structure in which high-level commands, such as the desired starting and ending locations, are translated into low-level robot commands. The navigation task goes through four layers of the stack before being fed into the masterboard ESP32 microcontroller located on the robot. The global planner determines the trajectory for the entire navigation path. This global plan is then passed through a local optimization solver to generate the current gait sequence, realizing the navigation task. Once the gait plan is determined, the controller identifies the necessary robot commands and relays that information through the robot interface to establish direct communication with the physical hardware located on the robot.
 
 <hr>
 
