@@ -199,7 +199,6 @@ def trajectory_2_local_frame(robot, traj, bezier=False, towr=False, original_tra
     for link in ('FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'):
         for mode in ("P", "D"):
             if mode == "P":
-                # tf_mtx = transformation_mtx(config['linkWorldPosition'], np.zeros(3))
                 tf_mtx = transformation_inv(transformation_mtx(config['linkWorldPosition'], config['linkWorldOrientation']))
             if mode == "D" and bezier:
                 tf_mtx = transformation_inv(transformation_mtx(np.zeros(3), config['linkWorldOrientation']))

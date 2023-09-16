@@ -10,13 +10,13 @@ stance_phase : False
 height_map : True
 track : True
 #=========Hyperparameters=======
-TRAJ_SIZE : 100000
-SIM_STEPS : 100000
+TRAJ_SIZE : 500000
+SIM_STEPS : 501000
 HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 300
 skip_forward_idx : 1
-track_rate : 200
+track_rate : 500
 friction : 1.0
 random_env : False
 #==Visual Planner CONFIGURATIONS==

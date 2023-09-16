@@ -164,7 +164,7 @@ def main():
     parser.add_argument('-e2', '--e2', nargs=3, type=float, help="The starting state for front right leg")
     parser.add_argument('-e3', '--e3', nargs=3, type=float, help="The starting state for back right leg")
     parser.add_argument('-e4', '--e4', nargs=3, type=float, help="The starting state for back left leg")
-    parser.add_argument('-step', '--step', type=float, default=1.0, help="The step size to traverse along the global trajectory spline")
+    parser.add_argument('-step', '--step', type=float, default=0.75, help="The step size to traverse along the global trajectory spline")
     parser.add_argument('-forced_steps', '--f_steps', type=int, default=2500, help="The amount of timesteps to force the robot to run and then start stitching the next planned trajectory")
     parser.add_argument('-l', '--look', type=float, default=3750, help='Number of timesteps to lookahead in the planned trajectory (the next starting state for the optimizer)')
     parser.add_argument('-r', '--record', type=bool, default=False, help="Record the joint-angle, joint-velocity, and torque while running the simulator")

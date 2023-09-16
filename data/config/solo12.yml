@@ -5,7 +5,7 @@
   start_pos : [0,0,0.35]
   # start_pos : [0,0,0.37]
   start_ang : [0.0, 0.0, 0.0, 1.0]
-  t_max : 10.0
+  t_max : 5.0
   # mode : "P" #position control
   mode : "torque"
   # mode : 'PD' #position-velocity control
@@ -21,7 +21,7 @@
   offsets : [0.5, 0.0, 0.0, 0.5]
   # kp : 1.0 #values for p-control or pd-control
   # kd : 0.2 #values for p-control or pd-control
-  kp : 20 #Good values for torque control
+  kp : 15 #Good values for torque control
   kd : 0.08 #Good values for torque control
   hip_gain_scale : 1.5
   knee_gain_scale : 1.0
