@@ -136,7 +136,7 @@ highlight {
     <a href="https://www.vanderbilt.edu/"><sup>1</sup>Vanderbilt University</a>
   </h2>
   <h3>IEEE International Conference on Robotics and Automation (ICRA), 2024</h3>
-  <h2><a href="http://arxiv.org/abs/2209.09233">Paper</a> | <a href="https://github.com/Alexyskoutnev/Quadruped-Trajectory-Optimization-Stack">Code</a></h2>
+  <h2><a href="http://arxiv.org">Paper</a> | <a href="https://github.com/Alexyskoutnev/Quadruped-Trajectory-Optimization-Stack">Code</a></h2>
   </center>
 
  <center><p><span style="font-size:20px;"></span></p></center>
@@ -186,7 +186,7 @@ highlight {
                 <tr>
                     <td>
 <p align="justify" width="20%">
-We introduce the Quadruped Trajectory Optimization Stack <b>Q-TOS</b>, a trajectory optimization framework for legged locomotion that autonomously determines full-body tra- jectory plans across challenging terrains. Q-TOS is a modu- lar software stack that seamlessly amalgamates state-of-the-art planners, mathematical solvers, control schemes, and deployment tools. This work allows long-horizon gait planning by integrating a local gait planner and model-predictive control, demonstrating its efficacy through simulations and real hardware experiments on Solo12. Leveraging Q-TOS, our new framework enhances the robustness and adaptability of trajectory solvers, facilitating improved traversal of elevated obstacles in quadruped locomotion planning and control.
+We introduce a new open-source framework, Quadruped Trajectory Optimization Stack (QTOS), which integrates a global planner, local planner, simulator, controller, and robot interface into a single package. QTOS serves as a full-stack interface, simplifying continuous motion planning on an open-source quadruped platform by bridging the gap between middleware and gait planning. It empowers users to effortlessly translate high-level navigation objectives into low-level robot commands. Furthermore, QTOS enhances the stability and adaptability of long-distance gait planning across challenging terrain.
 </p></td></tr></table>
 </p>
   </div>
@@ -329,10 +329,10 @@ src="./src/figure/pipeline.png" style="width:100%;"> </a></td>
     <!-- <left> -->
     <pre><code style="display:block; overflow-x: auto">
       @inproceedings{skoutnev2023qtos,
-        title={Quadruped-Trajectory-Optimization-Stack},
-        author={Alexy, Skoutnev},
-        booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
-        year={2024}
+        title={QTOS: An Open-Source Quadruped Trajectory Optimization Stack},
+        author={Alexy, Skoutnev and Andrewm Cinfal andPraful, Sigdel and Forrest, Laine},
+        booktitle={arXiv},
+        year={2023}
       }
     </code></pre>
     <!-- </left> -->
