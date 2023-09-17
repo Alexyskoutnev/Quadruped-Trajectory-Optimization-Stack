@@ -114,13 +114,22 @@ a {
   text-decoration: none;
   font-weight: 500;
 }
+
 .video-container {
-            display: flex; /* Use flexbox for layout */
-            justify-content: space-between; /* Distribute videos evenly */
-        }
-        /* Define styles for each video element */
+    display: flex;
+    justify-content: space-between; /* This evenly spaces the video elements */
+    align-items: center; /* Optional: Align videos vertically in the container */
+    padding: 10px; /* Optional: Add some padding around the videos */
+}
+
 .video {
-    max-width: 33%; /* Adjust the width as needed */
+    flex: 1; /* This allows each video to take an equal amount of space */
+    margin: 0 2px; /* Optional: Add margin between videos */
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
 }
 </style>
 
@@ -179,7 +188,7 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
     <tbody>
       <tr> 
         <td align="center" valign="middle">
-          <img src="./assets/QTOS_SYSTEM.png" type="application/pdf" width="800" height="500px" />
+          <img src="./assets/QTOS_SYSTEM.png" type="application/pdf" width="800" height="900px" />
         </td>
       </tr>
     </tbody>
@@ -197,19 +206,16 @@ The QTOS system architecture follows a hierarchical structure in which high-leve
 
 <h1 align="center">Navigation Demonstrations</h1>
   <div class="video-container">
-        <video class="video" controls>
-            <source src="assets/QTOS_WALKING_4.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-        <video class="video" controls>
-            <source src="assets/AVOIDANCE_4x_QTOS.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-        <video class="video" controls>
-            <source src="assets/QTOS_WALKING_4.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+    <div class="video">
+        <video src="./assets/Walking_QTOS.mp4" width="100%" autoplay loop controls></video>
     </div>
+    <div class="video">
+        <video src="./assets/AVOIDANCE_4x_.mp4" width="100%" autoplay loop controls></video>
+    </div>
+    <div class="video">
+        <video src="./assets/Extreme_Climbing_Demostration.mp4" width="100%" autoplay loop controls></video>
+    </div>
+</div>
   
 
   <table align=center width=800px><tr><td> <p align="justify" width="20%"> We demonstrate three different navigation tasks that QTOS can generate for a quadruped system. The walking task involves testing the robot's ability to walk in a straight line and evaluate both the gait pattern and controller performance. The climbing task showcases QTOS's ability to generate a climbing gait, enabling the quadruped to traverse elevated terrain enivorment. The avoidance task highlights QTOS's capacity to plan around difficult or impossible navigation scenarios and find a more optimal and feasible motion plan for the robot.
