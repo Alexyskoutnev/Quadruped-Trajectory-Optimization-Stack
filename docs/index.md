@@ -130,7 +130,7 @@ a {
 
 .fullscreen-video {
     object-fit: cover; /* Adjust this value to 'contain' or other options as needed */
-    width: 90%;
+    width: 78%;
 }
 
 iframe {
@@ -182,7 +182,7 @@ highlight {
                 <tr>
                     <td>
 <p align="justify" width="20%">
-We introduce a new open-source framework, Quadruped Trajectory Optimization Stack (</b>QTOS</b>), which integrates a global planner, local planner, simulator, controller, and robot interface into a single package. QTOS serves as a full-stack interface, simplifying continuous motion planning on an open-source quadruped platform by bridging the gap between middleware and gait planning. It empowers users to effortlessly translate high-level navigation objectives into low-level robot commands. Furthermore, QTOS enhances the stability and adaptability of long-distance gait planning across challenging terrain.
+We introduce a new open-source framework, Quadruped Trajectory Optimization Stack (<b>QTOS</b>), which integrates a global planner, local planner, simulator, controller, and robot interface into a single package. QTOS serves as a full-stack interface, simplifying continuous motion planning on an open-source quadruped platform by bridging the gap between middleware and gait planning. It empowers users to effortlessly translate high-level navigation objectives into low-level robot commands. Furthermore, QTOS enhances the stability and adaptability of long-distance gait planning across challenging terrain.
 </p></td></tr></table>
 </p>
   </div>
