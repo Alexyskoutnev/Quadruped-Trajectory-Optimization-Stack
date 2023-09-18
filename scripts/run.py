@@ -84,25 +84,23 @@ def _global_update(ROBOT, kwargs):
         global_cfg.RUN.step += 1
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 
-def keypress():
-    """thread to handle keyboard I/O
-    """
-    global key_press_init_phase
-    while True:
-        print("Press q to exit")
-        val = input('Enter your input: ')
-        if val == 'q':
-            print("Moving to trajectory")
-            key_press_init_phase = False
-            break
+# def keypress():
+#     """thread to handle keyboard I/O
+#     """
+#     global key_press_init_phase
+#     while True:
+#         print("Press q to exit")
+#         val = input('Enter your input: ')
+#         if val == 'q':
+#             print("Moving to trajectory")
+#             key_press_init_phase = False
+#             break
 
 def simulation(args):
     """Main simulation interface that runs the bullet engine
     
     """
-    print("ARGAS", args)
     goal = global_cfg.ROBOT_CFG.robot_goal
-    print(goal)
 
     if args.get('sim_cfg'):
         sim_cfg = args['sim_cfg']
@@ -121,8 +119,7 @@ def simulation(args):
         reader = csv.reader(csv_file, delimiter=',')
         TRAJ_SIZE = sum(1 for row in reader)
         traj = np.genfromtxt(TOWR, delimiter=',')
-        first_traj_point = traj[0]
-        print("SIMIMIM ",sim_cfg)
+        first_traj_point = traj[5]
         v_planner = Visual_Planner(TOWR, sim_cfg)
         if sim_cfg.get('stance_phase'):
             time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
@@ -154,28 +151,21 @@ def simulation(args):
         pybullet_interface = RecordInterface(args, ROBOT.robot)
     """=========================================="""
     cmd = np.zeros((12, 1))
-    keypress_io = Thread(target=keypress)
-    if init_phase:
-        keypress_io.start()
-        key_press_init_phase = True
-    else:
-        key_press_init_phase = False
-    
     stance_step = 0
-    while (key_press_init_phase):
+    while (init_phase):
         loop_time = time.time() - last_loop_time
-        if stance_step >= sim_cfg.get('stance_period'):
-            key_press_init_phase = False
-            break
-        if init_phase and key_press_init_phase:
+        # print("loop_time ", loop_time)
+        if loop_time > sim_cfg['TIMESTEPS']:
+            if stance_step >= sim_cfg.get('stance_period'):
+                init_phase = False
+                ROBOT._motor.set_motor_gains(ROBOT._kp, ROBOT._kd)
+                break
+            if init_phase:
                 _, _, joint_toq = ROBOT.default_stance_control(q_init)
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
-        if loop_time > sim_cfg['TIMESTEPS'] and RECORD_TRAJ:
-            csv_entry = ROBOT.csv_entry
-            writer.writerow(csv_entry)
-            last_loop_time = time.time()
-            stance_step += 1
+                last_loop_time = time.time()
+                stance_step += 1
 
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:

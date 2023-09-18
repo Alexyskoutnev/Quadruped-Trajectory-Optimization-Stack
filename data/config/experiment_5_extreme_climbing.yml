@@ -13,10 +13,10 @@ TRAJ_SIZE : 32000
 SIM_STEPS : 33000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_period : 500
+stance_period : 100
 skip_forward_idx : 1
 track_rate : 500
-friction : 0.90
+friction : 1.0
 random_env : True
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 25

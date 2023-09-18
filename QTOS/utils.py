@@ -70,19 +70,23 @@ def vec_to_cmd(vec, mode= "P", joint_cnt=3):
             cmd["HR_FOOT"][mode] = vec[9:12]
     return cmd
 
-def vec_to_cmd_pose(vec, mode="P", joint_cnt=3):
+def vec_to_cmd_pose(vec, mode="P", joint_cnt=3, z_shift=0.0):
     cmd = create_cmd_pose()
     for i in range(len(vec)//3):
         if i == 0:
             cmd["COM"] = vec[0:6]
         elif i == 1:
             cmd["FL_FOOT"][mode] = vec[6:9]
+            cmd["FL_FOOT"][mode][2] += z_shift
         elif i == 2:
             cmd["FR_FOOT"][mode] = vec[9:12]
+            cmd["FR_FOOT"][mode][2] += z_shift
         elif i == 3:
             cmd["HL_FOOT"][mode] = vec[12:15]
+            cmd["HL_FOOT"][mode][2] += z_shift
         elif i == 4:
             cmd["HR_FOOT"][mode] = vec[15:18]
+            cmd["HR_FOOT"][mode][2] += z_shift
         elif i == 5:
             cmd["COM_VEL"] = vec[18:24]
         elif i == 7:

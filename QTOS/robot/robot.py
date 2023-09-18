@@ -208,7 +208,11 @@ class SOLO12(object):
         Returns:
             dict: Dictionary containing CoM, orientation, and end-effector positions.
         """
+
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
+
+
+
         EE = self.get_endeffector_pose()
         return {"COM": CoM_pos, "linkWorldOrientation": CoM_angle, "FL_FOOT": EE['FL_FOOT']['linkWorldPosition'], 
                 "FR_FOOT": EE['FR_FOOT']['linkWorldPosition'], "HL_FOOT": EE['HL_FOOT']['linkWorldPosition'], "HR_FOOT": EE['HR_FOOT']['linkWorldPosition']}
@@ -635,18 +639,25 @@ class SOLO12(object):
             self._joint_vel_ref = q_vel
             self._joint_toq_ref = q_toq
         else:
-            q_cmd = q_init
-            q_vel = np.zeros(12)
-            q_mes = np.zeros(12)
-            v_mes = np.zeros(12)
-            jointStates = p.getJointStates(self.robot, self.jointidx['idx'])
-            q_mes[:] = [state[0] for state in jointStates]
-            v_mes[:] = [state[1] for state in jointStates]
-            self._motor.set_motor_gains(5, 0.01)
-            q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
-            self._joint_ang_ref = q_cmd
-            self._joint_vel_ref = q_vel
-            self._joint_toq_ref = q_toq
+            if self.mode == p.POSITION_CONTROL or self.mode == p.VELOCITY_CONTROL:
+                q_cmd = self.q_init * 1.5
+                q_vel = np.zeros(12)
+                q_mes, v_mes = self.get_PD_values()
+                self._motor.set_motor_gains(10, 0.05)
+                q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes, q_vel)
+                self._joint_ang_ref = q_cmd
+                self._joint_vel_ref = q_vel
+                self._joint_toq_ref = q_toq
+            elif self.ROBOT:
+                q_cmd = q_init 
+                q_vel = np.zeros(12)
+                q_mes, v_mes = self.get_PD_values()
+                self._motor.set_motor_gains(5, 0.1)
+                q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes, q_vel)
+                self._joint_ang_ref = q_cmd
+                self._joint_vel_ref = q_vel
+                self._joint_toq_ref = q_toq
+
 
         return q_cmd, q_vel, q_toq
 
