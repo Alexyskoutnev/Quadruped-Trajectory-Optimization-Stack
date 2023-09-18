@@ -201,9 +201,7 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
     <tbody>
       <tr> 
         <td align="center" valign="middle">
-        <div class="image-container">
-          <img src="./assets/QTOS_SYSTEM.png" type="application/pdf" />
-        </div>
+        <a href="./assets/QTOS_SYSTEM.png"><img src="./assets/QTOS_SYSTEM.png"  style="width:100%;" /> </a>
         </td>
       </tr>
     </tbody>
