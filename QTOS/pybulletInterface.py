@@ -20,10 +20,10 @@ class RecordInterface(object):
             args (dict): A dictionary containing camera settings, including camera_yaw, camera_pitch, camera_roll, and camera_distance.
             robot: The robot object for which the simulation is being recorded.
         """
-        self.camera_yaw = args.get('camera_yaw', 0)
-        self.camera_pitch = args.get('camera_pitch', -25)
+        self.camera_yaw = args.get('camera_yaw', 45)
+        self.camera_pitch = args.get('camera_pitch', -30)
         self.camera_roll = args.get('camera_roll', 0)
-        self.camera_distance = args.get('camera_distance', 3.0)
+        self.camera_distance = args.get('camera_distance', 1.25)
         
         self.robot = robot
 
@@ -32,7 +32,7 @@ class RecordInterface(object):
         Update the camera view based on the robot's position and camera settings.
         """
         cubePos, cubeOrn = p.getBasePositionAndOrientation(self.robot)
-        p.resetDebugVisualizerCamera(cameraDistance=self.camera_distance, cameraYaw=self.camera_yaw, cameraPitch=self.camera_pitch, cameraTargetPosition=[1.0, 1.0, 0.25])
+        p.resetDebugVisualizerCamera(cameraDistance=self.camera_distance, cameraYaw=self.camera_yaw, cameraPitch=self.camera_pitch, cameraTargetPosition=[1.0, 0.0, 0.25])
 
 
 class PybulletInterface(object):

@@ -3,7 +3,7 @@ mode : "towr"
 enviroment : "custom"
 map_id : ['climb_2', 'climb_1']
 custom_camera_view : True
-mesh_scale : 10
+mesh_scale : 11
 #=========Switches==============
 stance_phase : False
 height_map : True
@@ -17,12 +17,12 @@ stance_period : 100
 skip_forward_idx : 1
 track_rate : 500
 friction : 1.0
-random_env : True
+random_env : False
 #==Visual Planner CONFIGURATIONS==
 v_step_size : 25
 v_look_ahead : 2750
-show_com_plan : False
-show_feet_plan : False
+show_com_plan : True
+show_feet_plan : True
 #==Search Proprocess==#
 bool_map_search : False
 step_version : 'spine'

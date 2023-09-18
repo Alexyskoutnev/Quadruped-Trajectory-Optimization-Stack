@@ -112,6 +112,7 @@ def simulation(args):
     last_loop_time = time.time()
     sim_step = 1
     RECORD_TRAJ = False
+    start_STATE = None
     
     """============SIM-CONFIGURATION============"""
     if sim_cfg['mode'] == "towr":
@@ -121,10 +122,10 @@ def simulation(args):
         traj = np.genfromtxt(TOWR, delimiter=',')
         first_traj_point = traj[5]
         v_planner = Visual_Planner(TOWR, sim_cfg)
-        if sim_cfg.get('stance_phase'):
-            time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
-            ref_start_cmd = vec_to_cmd_pose(EE_POSE)
-            q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)    
+        time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
+        ref_start_cmd = vec_to_cmd_pose(EE_POSE)
+        q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)   
+        start_STATE = EE_POSE 
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
         if args.get('record') or sim_cfg.get('record'):
@@ -152,6 +153,7 @@ def simulation(args):
     """=========================================="""
     cmd = np.zeros((12, 1))
     stance_step = 0
+    args['sim'].start(ROBOT, start_STATE)
     while (init_phase):
         loop_time = time.time() - last_loop_time
         # print("loop_time ", loop_time)
@@ -205,6 +207,7 @@ def simulation(args):
                             mutex.release()
                         traj = np.array([float(x) for x in next(reader)])
                         time_step, EE_POSE = traj[0], traj[1:]
+
                         global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                         global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                         towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))

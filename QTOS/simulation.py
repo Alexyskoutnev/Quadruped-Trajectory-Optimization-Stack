@@ -1,10 +1,12 @@
 from QTOS.generateHeightField import Height_Map_Generator
+from QTOS.utils import vec_to_cmd_pose, towr_transform
 
 import time
 
 import pybullet as p
 import pybullet_data
 from scipy.spatial.transform import Rotation
+import numpy as np
 
 HEIGHT_FIELD = "heightmaps/heightfield.txt"
 HEIGHT_FIELD_TEST = "./data/heightmaps/heightfield_test.txt"
@@ -108,4 +110,13 @@ class Simulation(object):
             p.changeVisualShape(self.terrain_new , -1, rgbaColor=[1.0,1.0,1.0,1])
         except:
             pass
+
+    
+    def start(self, ROBOT, state):
+        inContact = tuple()
+        CoM = state[0:3]
+        CoM[2] += 0.10
+        p.resetBasePositionAndOrientation(ROBOT.robot, CoM, p.getQuaternionFromEuler(state[3:6]))
+        for i in range(1):
+            p.stepSimulation()
 

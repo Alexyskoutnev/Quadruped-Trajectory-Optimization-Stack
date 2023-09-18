@@ -714,7 +714,7 @@ class Height_Map_Generator(Maps):
             _map = self.random_height(_map)
         return _map
 
-    def random_height(self, map, height_delta=0.01):
+    def random_height(self, map, height_delta=0.005):
         """Randomly perturb the height values in a given map.
 
         Args:
