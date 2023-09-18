@@ -130,8 +130,7 @@ a {
 
 .fullscreen-video {
     object-fit: cover; /* Adjust this value to 'contain' or other options as needed */
-    width: 60%;
-    height: 60%;
+    width: 90%;
 }
 
 iframe {
@@ -171,8 +170,8 @@ highlight {
  <center><p><span style="font-size:20px;"></span></p></center>
 
 <center>
-<video width="300" height="400" class="fullscreen-video" autoplay loop>
-  <source src="./assets/Demo_1.mp4" type="video/mp4">
+<video width="300" height="400" class="fullscreen-video" autoplay loop, controls>
+  <source src="./assets/QTOS_DEMO_3.mp4" type="video/mp4">
 </video>
 <center>
 
