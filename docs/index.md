@@ -125,6 +125,13 @@ a {
 .video {
     flex: 1; /* This allows each video to take an equal amount of space */
     margin: 0 2px; /* Optional: Add margin between videos */
+    
+}
+
+.fullscreen-video {
+    object-fit: cover; /* Adjust this value to 'contain' or other options as needed */
+    width: 78%;
+    height: 100%;
 }
 
 iframe {
@@ -158,7 +165,7 @@ highlight {
  <center><p><span style="font-size:20px;"></span></p></center>
 
 <center>
-<video width="800" height="400" controls autoplay loop>
+<video width="700" height="400" class="fullscreen-video" controls autoplay loop>
   <source src="./assets/Demo_1.mp4" type="video/mp4">
 </video>
 <center>
