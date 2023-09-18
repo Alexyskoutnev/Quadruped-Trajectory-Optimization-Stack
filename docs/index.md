@@ -119,7 +119,7 @@ a {
     display: flex;
     justify-content: space-between; /* This evenly spaces the video elements */
     align-items: center; /* Optional: Align videos vertically in the container */
-    padding: 10px; /* Optional: Add some padding around the videos */
+    padding: 0px; /* Optional: Add some padding around the videos */
 }
 
 .video {
@@ -137,6 +137,12 @@ a {
 iframe {
     width: 100%;
     height: 100%;
+}
+.image-container {
+    max-width: 800px; /* Adjust the maximum width as needed */
+    max-height: 1000px; /* Adjust the maximum height as needed */
+    width: 100%;
+    height: auto;
 }
 </style>
 
@@ -165,7 +171,7 @@ highlight {
  <center><p><span style="font-size:20px;"></span></p></center>
 
 <center>
-<video width="700" height="400" class="fullscreen-video" controls autoplay loop>
+<video width="700" height="400" class="fullscreen-video" autoplay loop>
   <source src="./assets/Demo_1.mp4" type="video/mp4">
 </video>
 <center>
@@ -195,7 +201,9 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
     <tbody>
       <tr> 
         <td align="center" valign="middle">
-          <img src="./assets/QTOS_SYSTEM.png" type="application/pdf" width="400" height="450px" />
+        <div class="image-container">
+          <img src="./assets/QTOS_SYSTEM.png" type="application/pdf" />
+        </div>
         </td>
       </tr>
     </tbody>
@@ -214,13 +222,13 @@ The QTOS system architecture follows a hierarchical structure in which high-leve
 <h1 align="center">Navigation Demonstrations</h1>
   <div class="video-container">
     <div class="video">
-        <video src="./assets/Walking_QTOS.mp4" width="100%" autoplay loop controls></video>
+        <video src="./assets/Walking_QTOS.mp4" width="100%" autoplay loop></video>
     </div>
     <div class="video">
-        <video src="./assets/AVOIDANCE_4x_.mp4" width="100%" autoplay loop controls></video>
+        <video src="./assets/AVOIDANCE_4x_.mp4" width="100%" autoplay loop></video>
     </div>
     <div class="video">
-        <video src="./assets/QTOS_CLIMBING_6.mp4" width="100%" autoplay loop controls></video>
+        <video src="./assets/QTOS_CLIMBING_6.mp4" width="100%" autoplay loop></video>
     </div>
 </div>
   
