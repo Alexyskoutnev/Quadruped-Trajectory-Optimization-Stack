@@ -6,7 +6,7 @@ categories: projects
 
 <link href='https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic' rel='stylesheet' type='text/css'>
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>Quadruped Trajectory Optimization Stack</title>
+  <title>QTOS</title>
 
 
 <!-- <meta property="og:image" content="images/teaser_fb.jpg"> -->
@@ -171,7 +171,7 @@ highlight {
 
 <center>
 <video class="fullscreen-video" autoplay loop controls>
-  <source src="./assets/QTOS_DEMO_3.mp4" type="video/mp4">
+  <source src="./assets/QAUD_DEMO_QTOS.mp4" type="video/mp4">
 </video>
 <center>
 
@@ -249,7 +249,7 @@ The QTOS system architecture follows a hierarchical structure in which high-leve
     <pre><code style="display:block; overflow-x: auto">
       @inproceedings{skoutnev2023qtos,
         title={QTOS: An Open-Source Quadruped Trajectory Optimization Stack},
-        author={Alexy, Skoutnev and Andrewm Cinfal andPraful, Sigdel and Forrest, Laine},
+        author={Alexy, Skoutnev and Andrew Cinfal nad Praful, Sigdel, and Forrest, Laine},
         booktitle={arXiv},
         year={2023}
       }
