@@ -178,7 +178,7 @@ highlight {
 <center> -->
 
 <center>
-<video class="fullscreen-video" autoplay loop>
+<video class="fullscreen-video" autoplay loop controls>
   <source src="./assets/QAUD_DEMO_QTOS.mp4" type="video/mp4">
 </video>
 <center>
