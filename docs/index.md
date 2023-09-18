@@ -219,13 +219,13 @@ The QTOS system architecture follows a hierarchical structure in which high-leve
 <h1 align="center">Navigation Demonstrations</h1>
   <div class="video-container">
     <div class="video">
-        <video src="./assets/Walking_QTOS.mp4" width="100%" autoplay loop></video>
+        <video src="./assets/Walking_QTOS.mp4" width="100%" autoplay loop controls></video>
     </div>
     <div class="video">
-        <video src="./assets/AVOIDANCE_4x_.mp4" width="100%" autoplay loop></video>
+        <video src="./assets/AVOIDANCE_4x_.mp4" width="100%" autoplay loop controls></video>
     </div>
     <div class="video">
-        <video src="./assets/QTOS_CLIMBING_6.mp4" width="100%" autoplay loop></video>
+        <video src="./assets/QTOS_CLIMBING_6.mp4" width="100%" autoplay loop controls></video>
     </div>
 </div>
   
