@@ -157,7 +157,7 @@ highlight {
 <center><h1><strong>QTOS: An Open-Source Quadruped Trajectory Optimization Stack</strong></h1></center>
 <center><h2>
     <a href="https://alexyskoutnev.github.io/alexyskoutnev-github.io/">Alexy Skountev <sup>1</sup></a>&nbsp;&nbsp;&nbsp;
-    <a href="https://github.com/cinaral">Andrew Cinral<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
+    <a href="https://github.com/cinaral">Andrew Cinar<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
     <a href="https://praful22.github.io/">Praful Sigdel<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
     <a href="https://github.com/forrestlaine">Forrest Laine<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
   </h2>
@@ -169,9 +169,22 @@ highlight {
 
  <center><p><span style="font-size:20px;"></span></p></center>
 
-<center>
+<!-- <center>
 <img class="fullscreen-video" src="./assets/QAUD_DEMO_QTOS.gif" autoplay loop>
+<center> -->
+
+<!-- <center>
+<img class="fullscreen-video" src="./assets/QAUD_DEMO_QTOS.gif" autoplay loop>
+<center> -->
+
 <center>
+<video class="fullscreen-video" autoplay loop>
+  <source src="./assets/QAUD_DEMO_QTOS.mp4" type="video/mp4">
+</video>
+<center>
+
+
+
 
 
 <p>
@@ -260,7 +273,7 @@ We demonstrate three different navigation tasks that QTOS can generate for a qua
     <pre><code style="display:block; overflow-x: auto">
       @inproceedings{skoutnev2023qtos,
         title={QTOS: An Open-Source Quadruped Trajectory Optimization Stack},
-        author={Alexy, Skoutnev and Andrew Cinfal nad Praful, Sigdel, and Forrest, Laine},
+        author={Alexy, Skoutnev and Andrew, Cinar nad Praful, Sigdel, and Forrest, Laine},
         booktitle={arXiv},
         year={2023}
       }
