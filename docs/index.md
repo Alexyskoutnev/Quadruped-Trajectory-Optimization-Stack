@@ -170,9 +170,7 @@ highlight {
  <center><p><span style="font-size:20px;"></span></p></center>
 
 <center>
-<video class="fullscreen-video" autoplay loop controls>
-  <source src="./assets/QAUD_DEMO_QTOS.mp4" type="video/mp4">
-</video>
+<img class="fullscreen-video" src="./assets/QAUD_DEMO_QTOS.gif" autoplay loop>
 <center>
 
 
