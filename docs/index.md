@@ -213,13 +213,14 @@ The QTOS system architecture follows a hierarchical structure in which high-leve
         <video src="./assets/AVOIDANCE_4x_.mp4" width="100%" autoplay loop controls></video>
     </div>
     <div class="video">
-        <video src="./assets/Extreme_Climbing_Demostration.mp4" width="100%" autoplay loop controls></video>
+        <video src="./assets/QTOS_CLIMBING_6.mp4" width="100%" autoplay loop controls></video>
     </div>
 </div>
   
 
-  <table align=center width=800px><tr><td> <p align="justify" width="20%"> We demonstrate three different navigation tasks that QTOS can generate for a quadruped system. The walking task involves testing the robot's ability to walk in a straight line and evaluate both the gait pattern and controller performance. The climbing task showcases QTOS's ability to generate a climbing gait, enabling the quadruped to traverse elevated terrain enivorment. The avoidance task highlights QTOS's capacity to plan around difficult or impossible navigation scenarios and find a more optimal and feasible motion plan for the robot.
+  <table align=center width=800px><tr><td> <p align="justify" width="40%">
   </p></td></tr></table>
+  We demonstrate three different navigation tasks that QTOS can generate for a quadruped system. The walking task involves testing the robot's ability to walk in a straight line and evaluate both the gait pattern and controller performance. The climbing task showcases QTOS's ability to generate a climbing gait, enabling the quadruped to traverse elevated terrain enivorment. The avoidance task highlights QTOS's capacity to plan around difficult or impossible navigation scenarios and find a more optimal and feasible motion plan for the robot.
 <hr>
 
 <!-- <h1 align="center">Real-Hardware Demonstrations</h1>
