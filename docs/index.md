@@ -159,7 +159,7 @@ highlight {
 
 <center>
 <video width="800" height="400" controls autoplay loop>
-  <source src="./assets/Extreme_Climbing_Demostration.mp4" type="video/mp4">
+  <source src="./assets/Demo_1.mp4" type="video/mp4">
 </video>
 <center>
 
