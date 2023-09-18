@@ -205,14 +205,18 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
       </tr>
     </tbody>
   </table>
-  <table align=center width=800px>
+<p>
+<div width="500"><p>
+  <table align=center width=1000px>
                 <tr>
                     <td>
-  <p align="justify" width="20%">
-  
-</p></td></tr></table>
-
+<p align="justify" width="30%">
 The QTOS system architecture follows a hierarchical structure in which high-level commands, such as the desired starting and ending locations, are translated into low-level robot commands. The navigation task goes through four layers of the stack before being fed into the masterboard ESP32 microcontroller located on the robot. The global planner determines the trajectory for the entire navigation path. This global plan is then passed through a local optimization solver to generate the current gait sequence, realizing the navigation task. Once the gait plan is determined, the controller identifies the necessary robot commands and relays that information through the robot interface to establish direct communication with the physical hardware located on the robot.
+</p></td></tr></table>
+</p>
+  </div>
+</p>
+
 
 <hr>
 
@@ -230,9 +234,18 @@ The QTOS system architecture follows a hierarchical structure in which high-leve
 </div>
   
 
-  <table align=center width=800px><tr><td> <p align="justify" width="40%">
-  </p></td></tr></table>
-  We demonstrate three different navigation tasks that QTOS can generate for a quadruped system. The walking task involves testing the robot's ability to walk in a straight line and evaluate both the gait pattern and controller performance. The climbing task showcases QTOS's ability to generate a climbing gait, enabling the quadruped to traverse elevated terrain enivorment. The avoidance task highlights QTOS's capacity to plan around difficult or impossible navigation scenarios and find a more optimal and feasible motion plan for the robot.
+<p>
+<div width="500"><p>
+  <table align=center width=1000px>
+                <tr>
+                    <td>
+<p align="justify" width="30%">
+We demonstrate three different navigation tasks that QTOS can generate for a quadruped system. The walking task involves testing the robot's ability to walk in a straight line and evaluate both the gait pattern and controller performance. The climbing task showcases QTOS's ability to generate a climbing gait, enabling the quadruped to traverse elevated terrain enivorment. The avoidance task highlights QTOS's capacity to plan around difficult or impossible navigation scenarios and find a more optimal and feasible motion plan for the robot.
+</p></td></tr></table>
+</p>
+  </div>
+</p>
+
 <hr>
 
 <!-- <h1 align="center">Real-Hardware Demonstrations</h1>
