@@ -164,7 +164,7 @@ highlight {
   <h2>
     <a href="https://www.vanderbilt.edu/"><sup>1</sup>Vanderbilt University</a>
   </h2>
-  <h2><a href="http://arxiv.org">Paper</a> | <a href="https://github.com/Alexyskoutnev/Quadruped-Trajectory-Optimization-Stack">Code</a></h2>
+  <h2><a href="https://arxiv.org/abs/2309.09058">Paper</a> | <a href="https://github.com/Alexyskoutnev/Quadruped-Trajectory-Optimization-Stack">Code</a></h2>
   </center>
 
  <center><p><span style="font-size:20px;"></span></p></center>
