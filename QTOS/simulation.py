@@ -72,25 +72,26 @@ class Simulation(object):
             p.changeDynamics(self.terrain, -1, lateralFriction=cfg['friction'])
             p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 
-        elif cfg['enviroment'] == 'custom_test':
+        elif cfg['enviroment'] == 'custom_no_gui':
             py_client = p.connect(p.DIRECT)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
             p.setGravity(0,0,-10.0)
             self.height_map_generator = Height_Map_Generator(maps=cfg['map_id'], bool_map_search=cfg['bool_map_search'], scale_factor=cfg['mesh_scale'], randomize_env=cfg['random_env'])
             height_shift = self.height_map_generator.height_shift
+            tiles = len(cfg['map_id'])
             self.bool_map = self.height_map_generator.bool_map
             self.num_tiles = tiles
             self.height_map = self.height_map_generator.map
             self.resolution_xy = self.height_map_generator.resolution
             cfg['resolution'] =  self.height_map_generator.resolution
             num_rows, num_cols = self.height_map_generator.num_rows, self.height_map_generator.num_cols
-            terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[self.resolution_xy,self.resolution_xy, 1.0], heightfieldTextureScaling=128, heightfieldData=self.height_map_generator.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
-            terrain  = p.createMultiBody(0, terrainShape)
-            p.resetBasePositionAndOrientation(terrain,[1.0 * (tiles - 1), .0, height_shift+0.0001], [0,0,0,1.0])
+            self.terrainShape = p.createCollisionShape(shapeType = p.GEOM_HEIGHTFIELD, meshScale=[self.resolution_xy,self.resolution_xy, 1.0], heightfieldTextureScaling=128, heightfieldData=self.height_map_generator.map.flatten().tolist(), numHeightfieldRows=num_cols, numHeightfieldColumns=num_rows)
+            self.terrain  = p.createMultiBody(0, self.terrainShape)
+            p.resetBasePositionAndOrientation(self.terrain,[1.0 * (tiles - 1), .0, height_shift+0.0001], [0,0,0,1.0])
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
-            p.changeVisualShape(terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
+            p.changeVisualShape(self.terrain, -1, rgbaColor=[0.0,1.0,1.0,1])
             p.changeDynamics(1, -1, lateralFriction=cfg['friction'])
-            p.changeDynamics(terrain, -1, lateralFriction=cfg['friction'])
+            p.changeDynamics(self.terrain, -1, lateralFriction=cfg['friction'])
             p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) 

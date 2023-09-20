@@ -1,10 +1,8 @@
 #======Mode + Enviroment========
 mode : "towr"
 enviroment : "custom"
-# map_id : ['feasibility', 'feasibility_1', 'feasibility', 'feasibility_1', 'feasibility', 'plane']
-# map_id : ['step_1', 'step_1', 'step_1', 'step_1', 'step_1', 'step_1']
 map_id : ['plane', 'plane', 'plane']
-custom_camera_view : False
+custom_camera_view : True
 mesh_scale : 10
 #=========Switches==============
 stance_phase : False
@@ -33,5 +31,7 @@ camera_yaw : 40
 camera_pitch : -25
 camera_roll : 0
 camera_distance : 1.25
-#==GOAL========#
-# goal : [2.1, 0.0, 0.24]
+#==Record Option========#
+copy_trajectory_pts : 4  # Adjust to match the update rate of you simulator
+                         # (Usually Pybullet runs at 1.0 / 240.0 thus 4x copy rate 
+                         #  would help the 1000 hz controller to track better)

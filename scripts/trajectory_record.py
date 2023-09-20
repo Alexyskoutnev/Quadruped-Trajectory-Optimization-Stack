@@ -27,9 +27,8 @@ import QTOS.config.global_cfg as global_cfg
 
 URDF = "./data/urdf/solo12.urdf"
 config = "./data/config/solo12.yml"
-config_sim = "./data/config/simulation.yml"
+config_sim = "./data/config/record.yml"
 cfg = yaml.safe_load(open(config, 'r'))
-# sim_cfg = None
 TOWR = "./data/traj/towr.csv"
 TOWR_TRAJ = "./data/traj/towr_traj"
 BEZIER_TRAJ = "./data/traj/bezier_traj"
@@ -55,8 +54,6 @@ def parser():
     return args
 
 def update_file_name(file, cfg, sim_cfg):
-    step_period = str(sim_cfg['step_period'])
-    velocity = str(sim_cfg['velocity'])
     MODE = str(cfg['mode'])
     file_name = file +  "_cmode_" + MODE + ".csv"
     return file_name
@@ -121,31 +118,21 @@ def record_simulation(args):
         record_timestep = 0
         RECORD_TRAJ = True
     """=========================================="""
-
     cmd = np.zeros((12, 1))
-    keypress_io = Thread(target=keypress)
-    if init_phase:
-        keypress_io.start()
-        key_press_init_phase = True
-    else:
-        key_press_init_phase = False
-    
     stance_step = 0
-
-    while (key_press_init_phase):
+    while (init_phase):
         loop_time = time.time() - last_loop_time
-        if stance_step >= sim_cfg['stance_period']:
-            key_press_init_phase = False
-            break
-        if init_phase and key_press_init_phase:
+        if loop_time > sim_cfg['TIMESTEPS']:
+            if stance_step >= sim_cfg.get('stance_period'):
+                init_phase = False
+                ROBOT._motor.set_motor_gains(ROBOT._kp, ROBOT._kd)
+                break
+            if init_phase:
                 _, _, joint_toq = ROBOT.default_stance_control(q_init)
                 p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                 p.stepSimulation()
-        if loop_time > sim_cfg['TIMESTEPS'] and RECORD_TRAJ:
-            csv_entry = ROBOT.csv_entry
-            writer.writerow(csv_entry)
-            last_loop_time = time.time()
-            stance_step += 1
+                last_loop_time = time.time()
+                stance_step += 1
 
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:
@@ -157,7 +144,7 @@ def record_simulation(args):
                         if global_cfg.RUN._done:
                             print("ROBOT HAS REACHED THE GOAL")
                             break
-                        if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
+                        if global_cfg.RUN._wait:
                             time.sleep(0.0001)
                             continue
                         elif global_cfg.RUN._update:
@@ -174,6 +161,7 @@ def record_simulation(args):
                         towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
                         ref_cmd = vec_to_cmd_pose(EE_POSE)
                         COM = EE_POSE[0:6]
+                        last_loop_time = time.time()
                         if sim_cfg['skip_forward_idx'] > 1:
                             for _ in range(sim_cfg['skip_forward_idx']):
                                 next(reader)
@@ -194,8 +182,6 @@ def record_simulation(args):
                         joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                         ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
 
-                    
-
                     if record_timestep >= sim_cfg['TRAJ_SIZE']:
                         global_cfg.RUN._run_update_thread = False
                         break
@@ -207,46 +193,33 @@ def record_simulation(args):
                         sim_step -= 1
                     else:
                         ROBOT.time_step += 1
-
-
                     p.stepSimulation()
                     _global_update(ROBOT, ROBOT.state, sim_cfg)
                     ROBOT.update()
                     ROBOT.time_step += 1
-                # print(f"entered: {sim_step}")
-                # print(f"values: {ROBOT.csv_entry}")
-                # with mutex:
-                #     csv_entry = ROBOT.csv_entry
-                #     global_cfg.ROBOT_CFG.robot_states.append(csv_entry)
-                #     csv_entries.append(csv_entry)
-                # writer.writerow(csv_entry)
                 record_timestep += 1
-                last_loop_time = time.time()
                 sim_step += 1
                 with mutex:
                     csv_entry = ROBOT.csv_entry
-                    global_cfg.ROBOT_CFG.robot_states.append(csv_entry)
-                    csv_entries.append(csv_entry)
+                    for copy_itr in range(sim_cfg['copy_trajectory_pts']): #IMPORTANT to regulate the record frequence bc Pybullet can't run at 1000 hz but at 240 hz                       
+                        global_cfg.ROBOT_CFG.robot_states.append(csv_entry)
+                        csv_entries.append(csv_entry)
         else:
             loop_time = time.time() - last_loop_time
             time_loop = time.time()
             if loop_time > sim_cfg['TIMESTEPS']:
                 print("DONE")
-                if sim_cfg['mode'] == "towr":
-                    towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
-                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
-                    ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-                    p.stepSimulation()
-                    last_loop_time = time.time()
-                    sim_step += 1
-                else:
-                    break
-
+                towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                p.stepSimulation()
+                last_loop_time = time.time()
+                sim_step += 1
+                
         if make_even(sim_step) % 500 == 0:
-            pass
             print(f"step [{sim_step} / {sim_cfg['TRAJ_SIZE']}]")
 
     save_traj(writer, csv_entries)
-    
-    # print(f"TRAJ RECORD PATH -> {record_file}")
+    print("Trajectory Recording is done!")
+    global_cfg.RUN._done = True
     p.disconnect()

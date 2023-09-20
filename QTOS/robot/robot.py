@@ -425,9 +425,9 @@ class SOLO12(object):
                 if (q_toq_temp is not None):
                     q_toq[i:i+3] = q_toq_temp[i:i+3]
                 i += 3
-        self._joint_ang_ref = q_cmd
-        self._joint_vel_ref = q_vel
-        self._joint_toq_ref = q_toq
+        self._joint_ang = q_cmd
+        self._joint_vel = q_vel
+        self._joint_toq = q_toq
         return q_cmd, q_vel, q_toq
 
     def get_PD_values(self):

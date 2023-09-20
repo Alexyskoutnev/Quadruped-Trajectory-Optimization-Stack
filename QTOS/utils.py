@@ -443,7 +443,7 @@ def DockerInfo():
     return dockerid[idx]
 
 
-def experimentInfo(experiement_name):
+def experimentInfo(experiement_name, record_traj=False):
     """Helper function to setup different terrain experiments to test the Q-TOS Stack
 
     Args:
@@ -452,12 +452,17 @@ def experimentInfo(experiement_name):
     Returns:
         sim_cfg: The corresponding configuration file to setup + run the the experiment
     """
-    experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
-                        "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
-                        "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
-                        "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml",
-                        "exp_7" : "experiment_7_climb_obstacle.yml", "exp_8" : "experiment_8_dynamic_terrain.yml",
-                        "exp_9" : "experiment_9_continous_walking.yml", "exp_10" : "experiment_10_continous_climbing.yml"}
-    file_path = os.path.join("./data/config", experiment_names[experiement_name])
-    sim_cfg = yaml.safe_load(open(file_path, 'r'))
+    sim_cfg = None
+    if record_traj:
+        file_path = os.path.join("./data/config", "record.yml")
+        sim_cfg = yaml.safe_load(open(file_path, 'r'))
+    else:
+        experiment_names = {"default": "simulation.yml", "exp_1": "experiment_1_straight_line.yml",
+                            "exp_2": "experiment_2_climbing.yml", "exp_3": "experiment_3_collision_avoidance.yml",
+                            "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
+                            "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml",
+                            "exp_7" : "experiment_7_climb_obstacle.yml", "exp_8" : "experiment_8_dynamic_terrain.yml",
+                            "exp_9" : "experiment_9_continous_walking.yml", "exp_10" : "experiment_10_continous_climbing.yml"}
+        file_path = os.path.join("./data/config", experiment_names[experiement_name])
+        sim_cfg = yaml.safe_load(open(file_path, 'r'))
     return sim_cfg
