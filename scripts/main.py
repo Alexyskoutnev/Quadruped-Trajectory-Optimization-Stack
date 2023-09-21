@@ -58,7 +58,7 @@ def _update(args, log, combiner):
                 global_cfg.RUN._wait = False
                 _wait = False
                 while (not global_cfg.RUN._update):
-                            print("towr thread waiting")
+                            print("update thread waiting")
 
 def _init(args):
     """Configure trajectory solver in proper restart state

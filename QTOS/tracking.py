@@ -121,7 +121,7 @@ class Tracking:
         Returns:
             np.ndarray: An array representing the robot's distance information.
         """
-        return ROBOT_CFG.linkWorldPosition
+        return ROBOT_CFG.global_COM_xyz
         
     def _update(self):
         """

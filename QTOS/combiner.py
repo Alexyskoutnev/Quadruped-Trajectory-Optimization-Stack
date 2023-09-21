@@ -65,6 +65,13 @@ class Combiner(object):
         self.height_set = self.get_height_set(args['sim'].height_map)
 
     def get_height_set(self, map):
+        """
+        Args:
+            map (numpy.ndarray): A NumPy array representing a map with height values.
+
+        Returns:
+            set: A set containing unique height values found in the input map.
+        """
         height_values = np.unique(map)
         return set(height_values)
         

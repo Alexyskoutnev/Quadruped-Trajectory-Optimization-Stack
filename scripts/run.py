@@ -70,19 +70,26 @@ def update_file_name(file, cfg, sim_cfg):
     return file_name
 
 def _global_update(ROBOT, kwargs):
-    global_cfg.ROBOT_CFG.robot = ROBOT
-    global_cfg.ROBOT_CFG.linkWorldPosition = list(kwargs['COM'])
-    global_cfg.ROBOT_CFG.linkWorldOrientation = list(p.getEulerFromQuaternion(kwargs['linkWorldOrientation']))
+    """
+    Update global configuration settings with robot and simulation data.
+
+    Args:
+        ROBOT: An object representing the robot.
+        kwargs (dict): A dictionary containing various data related to the robot and simulation.
+    """
+    global_cfg.ROBOT_CFG.global_COM_xyz = list(kwargs['COM'])
+    global_cfg.ROBOT_CFG.global_COM_ang = list(p.getEulerFromQuaternion(kwargs['linkWorldOrientation']))
     global_cfg.ROBOT_CFG.EE['FL_FOOT'] = list(kwargs['FL_FOOT'])
     global_cfg.ROBOT_CFG.EE['FR_FOOT'] = list(kwargs['FR_FOOT'])
     global_cfg.ROBOT_CFG.EE['HL_FOOT'] = list(kwargs['HL_FOOT'])
     global_cfg.ROBOT_CFG.EE['HR_FOOT'] = list(kwargs['HR_FOOT'])
     global_cfg.ROBOT_CFG.runtime = ROBOT.time
+    global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
     if sim_cfg['skip_forward_idx'] > 1:
         global_cfg.RUN.step += sim_cfg['skip_forward_idx'] + 1
     else:
         global_cfg.RUN.step += 1
-    global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
+    
 
 def simulation(args):
     """Main simulation interface that runs the bullet engine
@@ -158,7 +165,6 @@ def simulation(args):
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:
             loop_time = time.time() - last_loop_time
-            time_loop = time.time()
             if loop_time > sim_cfg['TIMESTEPS']:
                 if sim_cfg['mode'] == "bezier":
                     if sim_cfg['py_interface']:
@@ -181,7 +187,7 @@ def simulation(args):
                         if global_cfg.RUN._done:
                             print("ROBOT HAS REACHED THE GOAL")
                             break
-                        if global_cfg.RUN._wait: #Waits for towr thread to copy over the trajectory
+                        if global_cfg.RUN._wait: #Waits for local planner thread to copy over the trajectory
                             time.sleep(0.001)
                             continue
                         elif global_cfg.RUN._update:
@@ -195,7 +201,6 @@ def simulation(args):
                         time_step, EE_POSE = traj[0], traj[1:]
 
                         global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
-                        global_cfg.RUN.TOWR_POS = EE_POSE[0:3]
                         towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
                         ref_cmd = vec_to_cmd_pose(EE_POSE)
                         COM = EE_POSE[0:6]
@@ -208,7 +213,7 @@ def simulation(args):
                     ##====================Logging====================##
                     log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
                     log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
-                    log.write(f"Global POS -> {global_cfg.ROBOT_CFG.linkWorldPosition}\n")
+                    log.write(f"Global POS -> {global_cfg.ROBOT_CFG.global_COM_xyz}\n")
                     log.write(f"=========Global Vars=========\n")
                     log.write(f"{global_cfg.print_vars(log.log)}\n")
                     ##===============================================##
@@ -246,13 +251,12 @@ def simulation(args):
                 if sim_cfg['custom_camera_view']:
                     pybullet_interface.update()
 
-                if global_cfg.ROBOT_CFG.linkWorldPosition[0] >= goal[0]:
+                if global_cfg.ROBOT_CFG.global_COM_xyz[0] >= goal[0]:
                     global_cfg.RUN._done = True
                     global_cfg.RUN._stance = True
                     break
         else:
             loop_time = time.time() - last_loop_time
-            time_loop = time.time()
             if loop_time > sim_cfg['TIMESTEPS']:
                 print("DONE")
                 if sim_cfg['mode'] == "towr":

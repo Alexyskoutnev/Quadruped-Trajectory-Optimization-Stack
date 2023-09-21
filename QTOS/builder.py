@@ -1,5 +1,6 @@
 from QTOS.robot.robot import SOLO12
 from QTOS.simulation import Simulation
+from QTOS.config.global_cfg import ROBOT_CFG
 
 import yaml
 import pinocchio as pin
@@ -26,6 +27,7 @@ class Loader:
             self.model = _load
             self.data = _load.createData()
         self.robot = p.loadURDF(urdf_path, config['start_pos'], config['start_ang'], useFixedBase=fixed)
+        ROBOT_CFG.robot = self.robot
         self.q0 = np.array(config['q_init'])
     
     def __repr__(self) -> str:
