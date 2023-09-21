@@ -466,3 +466,80 @@ def experimentInfo(experiement_name, record_traj=False):
         file_path = os.path.join("./data/config", experiment_names[experiement_name])
         sim_cfg = yaml.safe_load(open(file_path, 'r'))
     return sim_cfg
+
+
+
+def links_to_id(robot):
+    """
+    Helper function to retrieve the joint info of a robot into a dictionary.
+
+    Args:
+        robot (pybullet obj): pybullet robot object
+
+    Returns:
+        dict: Dictionary filled with corresponding link name and id.
+    """
+    _link_name_to_index = {p.getBodyInfo(robot)[0].decode('UTF-8'):-1,}
+    for _id in range(p.getNumJoints(robot)):
+        _name = p.getJointInfo(robot, _id)[12].decode('UTF-8')
+        _link_name_to_index[_name] = _id
+    return _link_name_to_index
+
+def link_info(link):
+    """
+    Retrieve information about a robot link.
+
+    Args:
+        link (tuple): A tuple containing information about a robot link.
+
+    Returns:
+        dict: A dictionary containing various properties of the link, such as position and orientation in the world frame,
+        and local inertial frame information.
+    """
+    return {"linkWorldPosition": link[0], "linkWorldOrientation": link[1], "localInertialFramePosition": link[2], "localInertialFrameOrientation": link[3], 
+     "worldLinkFramePosition": link[4], "worldLinkFrameOrientation": link[5]}
+
+def q_init_16_arr(q_init):
+    """
+    Place q_init values into a 16-index array to account for fixed joints in URDF.
+
+    Args:
+        q_init (list or np.array): Initial joint values.
+
+    Returns:
+        np.array: An array with 16 elements, with the values from q_init at specific indexes.
+    """
+    indexes = [0,1,2,4,5,6,8,9,10,12,13,14]
+    q_init_new = np.zeros(16)
+    for i, q_val in zip(indexes, q_init):
+        q_init_new[i] = q_val
+    return q_init_new
+
+def base_frame_tf(mtx, pt):
+    """
+    Helper function to transform a vector from one frame to another using a transformation matrix.
+
+    Args:
+        mtx (np.array): Transformation matrix.
+        pt (np.array): Position vector.
+
+    Returns:
+        np.array: Transformed position vector.
+    """
+    vec = np.concatenate((np.array([pt[0]]), np.array([pt[1]]),np.array([pt[2]]), np.ones(1)))
+    tf_vec = mtx @ vec
+    return tf_vec[:3]
+
+def shift_z(v, shift):
+    """
+    Helper function to shift a 3D vector and adjust the z-axis variable.
+
+    Args:
+        v (np.array or list): 3D vector to shift.
+        shift (float or int): Scalar value to shift the z-coordinate.
+
+    Returns:
+        np.array or list: The resulting 3D vector after the shift.
+    """
+    v[2] += shift
+    return v

@@ -17,7 +17,7 @@ HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 300
 skip_forward_idx : 1
-track_rate : 100
+track_rate : 250
 friction : 1.0
 random_env : False
 #==Visual Planner CONFIGURATIONS==
@@ -33,5 +33,3 @@ camera_yaw : 40
 camera_pitch : -25
 camera_roll : 0
 camera_distance : 1.25
-#==GOAL========#
-# goal : [2.1, 0.0, 0.24]

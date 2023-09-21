@@ -1,93 +1,19 @@
 import time
 import copy
 
+#third-party libraries
 import pybullet as p
 import numpy as np
 import pinocchio as pin
 
-from QTOS.utils import transformation_mtx, transformation_inv, convert12arr_2_16arr, create_cmd, trajectory_2_local_frame, EE_NAMES
+#QTOS modules
+from QTOS.utils import *
 from QTOS.robot.robot_motor import MotorModel
 from QTOS.stateEstimation import State_Estimation
 import QTOS.config.global_cfg as global_cfg
-
-
-def links_to_id(robot):
-    """
-    Helper function to retrieve the joint info of a robot into a dictionary.
-
-    Args:
-        robot (pybullet obj): pybullet robot object
-
-    Returns:
-        dict: Dictionary filled with corresponding link name and id.
-    """
-    _link_name_to_index = {p.getBodyInfo(robot)[0].decode('UTF-8'):-1,}
-    for _id in range(p.getNumJoints(robot)):
-        _name = p.getJointInfo(robot, _id)[12].decode('UTF-8')
-        _link_name_to_index[_name] = _id
-    return _link_name_to_index
-
-def link_info(link):
-    """
-    Retrieve information about a robot link.
-
-    Args:
-        link (tuple): A tuple containing information about a robot link.
-
-    Returns:
-        dict: A dictionary containing various properties of the link, such as position and orientation in the world frame,
-        and local inertial frame information.
-    """
-    return {"linkWorldPosition": link[0], "linkWorldOrientation": link[1], "localInertialFramePosition": link[2], "localInertialFrameOrientation": link[3], 
-     "worldLinkFramePosition": link[4], "worldLinkFrameOrientation": link[5]}
-
-def q_init_16_arr(q_init):
-    """
-    Place q_init values into a 16-index array to account for fixed joints in URDF.
-
-    Args:
-        q_init (list or np.array): Initial joint values.
-
-    Returns:
-        np.array: An array with 16 elements, with the values from q_init at specific indexes.
-    """
-    indexes = [0,1,2,4,5,6,8,9,10,12,13,14]
-    q_init_new = np.zeros(16)
-    for i, q_val in zip(indexes, q_init):
-        q_init_new[i] = q_val
-    return q_init_new
-
-def base_frame_tf(mtx, pt):
-    """
-    Helper function to transform a vector from one frame to another using a transformation matrix.
-
-    Args:
-        mtx (np.array): Transformation matrix.
-        pt (np.array): Position vector.
-
-    Returns:
-        np.array: Transformed position vector.
-    """
-    vec = np.concatenate((np.array([pt[0]]), np.array([pt[1]]),np.array([pt[2]]), np.ones(1)))
-    tf_vec = mtx @ vec
-    return tf_vec[:3]
-
-def shift_z(v, shift):
-    """
-    Helper function to shift a 3D vector and adjust the z-axis variable.
-
-    Args:
-        v (np.array or list): 3D vector to shift.
-        shift (float or int): Scalar value to shift the z-coordinate.
-
-    Returns:
-        np.array or list: The resulting 3D vector after the shift.
-    """
-    v[2] += shift
-    return v
         
 class SOLO12(object):
-    def __init__(self, URDF, config, fixed = 0, sim_cfg=None, loader=None):
+    def __init__(self, config, sim_cfg=None, loader=None):
         """
         Initialize the SOLO12 robot object.
 
@@ -109,7 +35,6 @@ class SOLO12(object):
         self.EE = {'FL_FOOT': None, 'FR_FOOT': None, "HL_FOOT": None, "HR_FOOT": None}
         self.EE_index = {'FL_FOOT': 3, 'FR_FOOT': 7, "HL_FOOT": 11, "HR_FOOT": 15, 'all': (3, 7, 11, 15)}
         self.time_step = 0
-        self.t_max = config['t_max']
         self.modes = {"P": p.POSITION_CONTROL, "PD": p.VELOCITY_CONTROL, "torque": p.TORQUE_CONTROL}
         self.mode = config['mode']
         self.sim_cfg = sim_cfg
@@ -138,17 +63,13 @@ class SOLO12(object):
         self._joint_ang = np.zeros(12)
         self._joint_vel = np.zeros(12)
         self._joint_toq = np.zeros(12)
-        self._joint_ang_ref = None
-        self._joint_vel_ref = None
-        self._joint_toq_ref = None
+        self._joint_ang_ref = np.zeros(12)
+        self._joint_vel_ref = np.zeros(12)
+        self._joint_toq_ref = np.zeros(12)
         self._joint_state = None
         self._time_step = config['timestep']
-        self.q_ref = self.q_init
-        self.stateEstimator = State_Estimation(config['start_pos'])
-        self.CoM_acceleration = np.array([0, 0, 0])
-        self.CoM_vel = np.array([0, 0, 0])
+        self.convergence_gain = 10
         self._update()
-
 
     def CoM_states(self):
         """
@@ -179,26 +100,6 @@ class SOLO12(object):
         time_step = np.array(self.time)
         state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
         return state
-
-    @property
-    def state_np_estimated(self):
-        """
-        Get the estimated robot state as a NumPy array.
-
-        Returns:
-            np.array: NumPy array containing estimated robot state values.
-        """
-        CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
-        EE = self.get_endeffector_pose()
-        CoM_pos = self.state_estimated['COM']
-        CoM_angle = p.getEulerFromQuaternion(np.array(CoM_angle))
-        EE_1 = np.array(EE['FL_FOOT']['linkWorldPosition'])
-        EE_2 = np.array(EE['FR_FOOT']['linkWorldPosition'])
-        EE_3 = np.array(EE['HL_FOOT']['linkWorldPosition'])
-        EE_4 = np.array(EE['HR_FOOT']['linkWorldPosition'])
-        time_step = np.array(self.time)
-        state = np.hstack((time_step, CoM_pos, CoM_angle, EE_1, EE_2, EE_3, EE_4))
-        return state
      
     @property
     def state(self):
@@ -210,30 +111,10 @@ class SOLO12(object):
         """
 
         CoM_pos, CoM_angle = p.getBasePositionAndOrientation(self.robot)
-
-
-
         EE = self.get_endeffector_pose()
         return {"COM": CoM_pos, "linkWorldOrientation": CoM_angle, "FL_FOOT": EE['FL_FOOT']['linkWorldPosition'], 
                 "FR_FOOT": EE['FR_FOOT']['linkWorldPosition'], "HL_FOOT": EE['HL_FOOT']['linkWorldPosition'], "HR_FOOT": EE['HR_FOOT']['linkWorldPosition']}
     
-    @property
-    def state_estimated(self):
-        """
-        Get the estimated state of the robot.
-
-        Returns:
-            dict: Dictionary containing estimated CoM and CoM velocity.
-        """
-        timestep = self.time
-        lin_vel, ang_vel = p.getBaseVelocity(self.robot)
-        updated_accelation = np.array([lin_vel[0] - self.CoM_vel[0], lin_vel[1] - self.CoM_vel[1], lin_vel[2] - self.CoM_vel[2]])
-        self.CoM_acceleration = updated_accelation
-        self.stateEstimator.update(updated_accelation, self.time)
-        CoM_pos, CoM_vel = self.stateEstimator.CoM, self.stateEstimator.CoM_vel
-        self.CoM_vel = CoM_vel
-        return {"COM": CoM_pos, "COM_VEL": CoM_vel}
-
     @property
     def csv_entry(self):
         """Helper function to quickly extract robot joint states into csv
@@ -241,7 +122,7 @@ class SOLO12(object):
         Returns:
             np.array: 36-idx array [12 ... joint angles 12 ... joint velocity 12 ... joint torques] 
         """
-        csv_entry = np.hstack([self._joint_ang, self._joint_vel, self._joint_toq])
+        csv_entry = np.hstack([self._joint_ang_ref, self._joint_vel_ref, self._joint_toq_ref])
         return csv_entry
 
     @property
@@ -267,11 +148,16 @@ class SOLO12(object):
 
     @property
     def traj_vec_estimated(self):
+        """
+        Property to compute the estimated trajectory vector.
+        
+        Returns:
+            numpy.ndarray: A 1D NumPy array representing the estimated trajectory vector.
+        """
         EE = self.get_endeffector_pose()
         CoM = self.state_estimated
         traj_vec = np.concatenate((CoM['COM'],  np.zeros(3), EE['FL_FOOT']['linkWorldPosition'], EE['FR_FOOT']['linkWorldPosition'], EE['HL_FOOT']['linkWorldPosition'], EE['HR_FOOT']['linkWorldPosition']))
         return traj_vec
-
 
     @property
     def jointstate(self):
@@ -363,9 +249,6 @@ class SOLO12(object):
             q_cmd, q_vel, q_toq = self.inv_dynamics(cmd, index)
         return q_cmd, q_vel, q_toq
 
-    def end_effector_correction(self, desired_EE, measured_EE):
-        pass
-
     def control_multi(self, cmds, indices, mode="P", usePin = False):
         """Helper function to find the control outputs for each end-effector
 
@@ -425,9 +308,9 @@ class SOLO12(object):
                 if (q_toq_temp is not None):
                     q_toq[i:i+3] = q_toq_temp[i:i+3]
                 i += 3
-        self._joint_ang = q_cmd
-        self._joint_vel = q_vel
-        self._joint_toq = q_toq
+        self._joint_ang_ref = q_cmd
+        self._joint_vel_ref = q_vel
+        self._joint_toq_ref = q_toq
         return q_cmd, q_vel, q_toq
 
     def get_PD_values(self):
@@ -459,29 +342,6 @@ class SOLO12(object):
         q_cmd, q_vel = self.inv_kinematics(cmd, index, mode = "PD")
         q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
         return q_cmd, q_vel, q_toq
-
-    def inv_dynamics_pin(self, q_cmd, q_vel_cmd, q_toq_cmd):
-        """Template for Pinocchio based inverse dynamics [NOT DONE]
-
-        Raises:
-            NotImplementedError: _description_
-        """
-        
-        #computing mass matrix
-
-        M = pin.crba(self.ROBOT.model, self.ROBOT.data, self._joint_ang)
-        toq = pin.rnea(self.ROBOT.model, self.ROBOT.data, self._joint_ang, self._joint_vel, self._joint_acc)
-
-        Kp_tau = 8.
-        Kd_tau = 0.2
-        torques_ref = -Kp_tau * (q_cmd - self._joint_ang) - Kd_tau * q_vel_cmd
-
-        self.q_dot2_ref = np.linalg.inv(M[6:, 6:]) * (torques_ref - toq[6:])
-
-        q_vel_cmd += self.q_dot2_ref * self._time_step
-        q_toq = self._motor.convert_to_torque_ff(q_cmd, self._joint_ang, self._joint_vel, q_vel_cmd, toq)
-
-        return q_cmd, q_vel_cmd, q_toq
         
     def inv_kinematics_multi(self, cmds, indices, mode = 'P'):
         """Helper function that utilizes bullet inverse kinematics algorithm to find the optimal
@@ -556,66 +416,114 @@ class SOLO12(object):
                     velocities.append(state[1])
                 for i, idx in enumerate([9, 10, 11]):
                     joint_velocity[idx] = velocities[i]
-        self._joint_ang_ref = joint_position #COULD BE POTENTIALY NOT 100% accurate if we update joint 4 but we want 1 (old joint reference)
-        self._joint_vel_ref = joint_velocity
         return joint_position, joint_velocity
 
-    def inv_kinematics_pin(self, cmd):
-        """Template for Pinocchio based inverse kinematics [NOT DONE]
-
-        Raises:
-            NotImplementedError: _description_
+    def calculate_rotation_jacobian(self, joint_ang, frames, cmd):
         """
+        Calculate the rotation Jacobian for specific frames.
 
-        K = 10.
+        This method computes the rotation Jacobian for a set of frames specified in the 'frames' list using the joint angles
+        and desired end-effector positions provided in the 'cmd' dictionary.
 
-        ID_FL = self.ROBOT.model.getFrameId("FL_FOOT")
-        ID_FR = self.ROBOT.model.getFrameId("FR_FOOT")
-        ID_HL = self.ROBOT.model.getFrameId("HL_FOOT")
-        ID_HR = self.ROBOT.model.getFrameId("HR_FOOT")
+        Parameters:
+            joint_ang (numpy.ndarray): The joint angles of the robot.
+            frames (list): A list of frame IDs for which the rotation Jacobian is calculated.
+            cmd (dict): A dictionary containing desired end-effector positions for each frame.
 
-        pin.forwardKinematics(self.ROBOT.model, self.ROBOT.data, self._joint_ang) #Update the state of robot for Pinocchio
+        Returns:
+            numpy.ndarray: A 2Nx12 numpy array representing the rotation Jacobian for each specified frame, where N is the number of frames.
+        """
+        J = np.zeros((8, 12))
+        for i, frame_id in enumerate(frames):
+            ID = self.ROBOT.model.getFrameId(frame_id)
+            fJ = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, joint_ang, ID)[:3, -12:]
+            oJ = self.ROBOT.data.oMf[ID].rotation @ fJ
+            J[2*i:2*(i+1), -12:] = oJ[0:2, -12:]
+        return J
+
+    def calculate_xyz_error(self, frames, cmd):
+        """
+        Calculate the XYZ error for specific frames.
+
+        This method computes the XYZ error for a set of frames specified in the 'frames' list by comparing the desired positions
+        in the 'cmd' dictionary with the actual positions obtained from Pinocchio.
+
+        Parameters:
+            frames (list): A list of frame IDs for which XYZ error is calculated.
+            cmd (dict): A dictionary containing desired end-effector positions for each frame.
+
+        Returns:
+            numpy.ndarray: A 2Nx1 numpy array containing the XYZ error for each specified frame, where N is the number of frames.
+        """
+        xyz_cmd = np.zeros((8, 1))
+        for i, frame_id in enumerate(frames):
+            ID = self.ROBOT.model.getFrameId(frame_id)
+            frame_translation = self.ROBOT.data.oMf[ID].translation
+            x = np.reshape(cmd[frame_id]['P'][0:2] - frame_translation[0:2], (2, 1))
+            xyz_cmd[2*i:2*(i + 1)] = x
+        return xyz_cmd
+
+    def calculate_joint_commands(self, J, nu):
+        """
+        Calculate joint-space velocity command.
+
+        Parameters:
+            J (numpy.ndarray): The Jacobian matrix.
+            nu (numpy.ndarray): The error vector.
+
+        Returns:
+            numpy.ndarray: A 12-element numpy array representing the joint velocity commands.
+        """
+        return (self.convergence_gain * np.linalg.pinv(J) @ nu).reshape(12 )
+    
+    def integrate_joint_commands(self, joint_ang, q_dot_cmd, time_step):
+        """
+        Integrate joint commands to obtain joint position commands.
+
+        Parameters:
+            robot (pinocchio.RobotWrapper): The robot model.
+            joint_ang (numpy.ndarray): The current joint angles.
+            q_dot_cmd (numpy.ndarray): The joint velocity commands.
+            time_step (float): The time step.
+
+        Returns:
+            numpy.ndarray: A 12-element numpy array representing the joint position commands.
+        """
+        return pin.integrate(self.ROBOT.model, joint_ang, q_dot_cmd * time_step)
+
+    def inv_kinematics_pin(self, cmd):
+        """
+        Perform inverse kinematics using Pinocchio library for controlling end-effector positions.
+
+        This method calculates joint commands to achieve the desired end-effector positions specified in the 'cmd' dictionary.
+
+        Parameters:
+            cmd (dict): A dictionary containing desired end-effector positions for each foot.
+
+        Returns:
+            Tuple: A tuple containing joint commands (q_cmd) and joint velocity commands (q_dot_cmd) to achieve the desired positions.
+
+        Notes:
+            This method performs the following steps:
+            1. Computes the current end-effector positions using the Pinocchio library.
+            2. Calculates the position errors between the current and desired end-effector positions.
+            3. Computes the Jacobian matrices for each end-effector.
+            4. Solves for joint velocity commands using the calculated Jacobians and position errors.
+            5. Integrates joint velocity commands to obtain joint position commands.
+            
+            The 'cmd' dictionary should have keys 'FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', each containing 'P' (position) information.
+        
+        Returns:
+            Tuple: A tuple containing joint commands (q_cmd) and joint velocity commands (q_dot_cmd) to achieve the desired positions.
+
+        """
+        pin.forwardKinematics(self.ROBOT.model, self.ROBOT.data, self._joint_ang)
         pin.updateFramePlacements(self.ROBOT.model, self.ROBOT.data)
-
-        xyz_FL = self.ROBOT.data.oMf[ID_FL].translation
-        xyz_FR = self.ROBOT.data.oMf[ID_FR].translation
-        xyz_HL = self.ROBOT.data.oMf[ID_HL].translation
-        xyz_HR = self.ROBOT.data.oMf[ID_HR].translation
-
-        err_FL = np.reshape(xyz_FL[0:2] - cmd['FL_FOOT']['P'][0:2], (2, 1))
-        err_FR = np.reshape(xyz_FR[0:2] - cmd['FR_FOOT']['P'][0:2], (2, 1))
-        err_HL = np.reshape(xyz_HL[0:2] - cmd['HL_FOOT']['P'][0:2], (2, 1))
-        err_HR = np.reshape(xyz_HR[0:2] - cmd['HR_FOOT']['P'][0:2], (2, 1))
-
-        o_FL = self.ROBOT.data.oMf[ID_FL].rotation
-        o_FR = self.ROBOT.data.oMf[ID_FR].rotation
-        o_HL = self.ROBOT.data.oMf[ID_HL].rotation
-        o_HR = self.ROBOT.data.oMf[ID_HR].rotation
-
-        fJ_FL3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_FL)[:3, -12:]  # Take only the translation terms
-        oJ_FL3 = o_FL @ fJ_FL3  #Transforms to rotation to global frame
-        oJ_FLxz = oJ_FL3[0:2, -12:]
-
-        fJ_FR3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_FR)[:3, -12:]
-        oJ_FR3 = o_FR @ fJ_FR3
-        oJ_FRxz = oJ_FR3[0:2, -12:]
-
-        fJ_HL3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_HL)[:3, -12:]
-        oJ_HL3 = o_HL @ fJ_HL3
-        oJ_HLxz = oJ_HL3[0:2, -12:]
-
-        fJ_HR3 = pin.computeFrameJacobian(self.ROBOT.model, self.ROBOT.data, self._joint_ang, ID_HR)[:3, -12:]
-        oJ_HR3 = o_HR @ fJ_HR3
-        oJ_HRxz = oJ_HR3[0:2, -12:]
-
-        nu = np.vstack([err_FL, err_FR, err_HL, err_HR])
-        J = np.vstack([oJ_FLxz, oJ_FRxz, oJ_HLxz, oJ_HRxz])
-        q_dot_cmd = - K * np.linalg.pinv(J) @ nu
-        q_dot_cmd = np.reshape(q_dot_cmd, (12, ))
-
-        q_cmd = pin.integrate(self.ROBOT.model, self._joint_ang, q_dot_cmd * self._time_step)
-
-        return q_cmd, q_dot_cmd
+        nu = np.vstack(self.calculate_xyz_error(self.EE.keys(), cmd))
+        J = np.vstack(self.calculate_rotation_jacobian(self._joint_ang, self.EE.keys(), cmd))
+        q_cmd_dot = self.calculate_joint_commands(J, nu)
+        q_cmd = self.integrate_joint_commands(self._joint_ang, q_cmd_dot, self._time_step)
+        return q_cmd, q_cmd_dot
 
     def default_stance_control(self, q_init = None):
         """Robot default stance standing still
@@ -635,9 +543,6 @@ class SOLO12(object):
             v_mes[:] = [state[1] for state in jointStates]
             self._motor.set_motor_gains(5, 0.01)
             q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes)
-            self._joint_ang_ref = q_cmd
-            self._joint_vel_ref = q_vel
-            self._joint_toq_ref = q_toq
         else:
             if self.mode == p.POSITION_CONTROL or self.mode == p.VELOCITY_CONTROL:
                 q_cmd = self.q_init * 1.5
@@ -645,28 +550,21 @@ class SOLO12(object):
                 q_mes, v_mes = self.get_PD_values()
                 self._motor.set_motor_gains(10, 0.05)
                 q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes, q_vel)
-                self._joint_ang_ref = q_cmd
-                self._joint_vel_ref = q_vel
-                self._joint_toq_ref = q_toq
             elif self.ROBOT:
                 q_cmd = q_init 
                 q_vel = np.zeros(12)
                 q_mes, v_mes = self.get_PD_values()
                 self._motor.set_motor_gains(5, 0.1)
                 q_toq = self._motor.convert_to_torque(q_cmd, q_mes, v_mes, q_vel)
-                self._joint_ang_ref = q_cmd
-                self._joint_vel_ref = q_vel
-                self._joint_toq_ref = q_toq
-
-
+        self._joint_ang_ref = q_cmd
+        self._joint_vel_ref = q_vel
+        self._joint_toq_ref = q_toq
         return q_cmd, q_vel, q_toq
 
     def update(self):
         """Updates the global varaibles corresponding to robot
         """
         global_cfg.ROBOT_CFG.state = self.state_np
-        # global_cfg.ROBOT_CFG.state = self.state_np_estimated #state estimation of robot state
-
 
     def _update(self):
         """Current joint angles, joint velocity, base state, and base velocity of the robot 
@@ -675,6 +573,7 @@ class SOLO12(object):
         base_state = p.getBasePositionAndOrientation(self.robot)
         base_vel = p.getBaseVelocity(self.robot)
         self._joint_state = p.getJointStates(self.robot, self.jointidx['idx'])
+        self._joint_toq = np.array([state[3] for state in self._joint_state])
         self._joint_ang = np.array([state[0] for state in self._joint_state])
         self._joint_vel = np.array([state[1] for state in self._joint_state])
         

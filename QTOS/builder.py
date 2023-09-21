@@ -50,5 +50,5 @@ def builder(cfg=_cfg, sim_cfg=None):
     """
     SIMULATION = Simulation(sim_cfg)
     loader = Loader(URDF, cfg)
-    ROBOT = SOLO12(URDF, cfg, sim_cfg=sim_cfg, loader=loader)
+    ROBOT = SOLO12(cfg, sim_cfg=sim_cfg, loader=loader)
     return {"robot": ROBOT, "sim": SIMULATION, "args": sim_cfg}
