@@ -28,13 +28,9 @@ from QTOS.visual import Visual_Planner
 from QTOS.builder import builder
 import QTOS.config.global_cfg as global_cfg
 
-URDF = "./data/urdf/solo12.urdf"
-config = "./data/config/solo12.yml"
 config_sim = "./data/config/simulation.yml"
-cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
 PLAN = "./data/traj/towr.csv"
-TOWR_TRAJ = "./data/traj/towr_traj"
 
 mutex = Lock()
 
@@ -85,7 +81,6 @@ def _global_update(ROBOT, kwargs):
     else:
         global_cfg.RUN.step += 1
     
-
 def simulation(args):
     """
     Main simulation interface that runs the Bullet physics engine.
@@ -127,24 +122,29 @@ def simulation(args):
     sim_step = 1
     start_STATE = None
     stance_step = 0
+    update_data = {"ROBOT": ROBOT, "sim_step": sim_step,
+                  "TRACK_RECORD": None, "v_planner" : None,  "pybullet_interface": None,
+                  "ref_cmd" : None}
     """============SIM-CONFIGURATION============"""
-    if sim_cfg['mode'] == "towr":
-        csv_file = open(PLAN, 'r', newline='')
-        reader = csv.reader(csv_file, delimiter=',')
-        TRAJ_SIZE = sum(1 for row in reader)
-        traj = np.genfromtxt(PLAN, delimiter=',')
-        first_traj_point = traj[5]
-        v_planner = Visual_Planner(PLAN, sim_cfg)
-        time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
-        ref_start_cmd = vec_to_cmd_pose(EE_POSE)
-        q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)   
-        start_STATE = EE_POSE 
-        if sim_cfg.get('track'):
-            TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
+    csv_file = open(PLAN, 'r', newline='')
+    reader = csv.reader(csv_file, delimiter=',')
+    TRAJ_SIZE = sum(1 for row in reader)
+    traj = np.genfromtxt(PLAN, delimiter=',')
+    first_traj_point = traj[5]
+    update_data['v_planner'] = Visual_Planner(PLAN, sim_cfg)
+    time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
+    ref_start_cmd = vec_to_cmd_pose(EE_POSE)
+    q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)   
+    start_STATE = EE_POSE 
+    if sim_cfg.get('track'):
+        TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
+        update_data['TRACK_RECORD'] = TRACK_RECORD
     if sim_cfg.get('py_interface'):
         pybullet_interface = PybulletInterface()
+        update_data['pybullet_interface'] = pybullet_interface
     elif sim_cfg.get('custom_camera_view'):
         pybullet_interface = RecordInterface(args, ROBOT.robot)
+        update_data['pybullet_interface'] = pybullet_interface
     """=========================================="""
     args['sim'].start(ROBOT, start_STATE)
     """==Init stance to force robot in good starting position=="""
@@ -166,91 +166,110 @@ def simulation(args):
         if sim_step < sim_cfg["TRAJ_SIZE"]:
             loop_time = time.time() - last_loop_time
             if loop_time > sim_cfg['TIMESTEPS']:
-                if sim_cfg['mode'] == "towr":
-                    try:
-                        if global_cfg.RUN._done:
-                            print("ROBOT HAS REACHED THE GOAL")
-                            break
-                        if global_cfg.RUN._wait: #Waits for local planner thread to copy over the trajectory
-                            time.sleep(0.001)
-                            continue
-                        elif global_cfg.RUN._update:
-                            print("============UPDATE STATE============")
-                            mutex.acquire()
-                            reader = csv.reader(open(PLAN, 'r', newline=''))
-                            global_cfg.RUN._update = False 
-                            global_cfg.RUN.step = 0
-                            mutex.release()
-                        traj = np.array([float(x) for x in next(reader)])
-                        time_step, EE_POSE = traj[0], traj[1:]
-                        global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
-                        towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
-                        ref_cmd = vec_to_cmd_pose(EE_POSE)
-                        if sim_cfg['skip_forward_idx'] > 1:
-                            for _ in range(sim_cfg['skip_forward_idx']):
-                                next(reader)
-                    except StopIteration:
-                        log.write("==========STANCE==========")
-                        global_cfg.RUN._stance = True
-                    ##====================Logging====================##
-                    log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
-                    log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
-                    log.write(f"Global POS -> {global_cfg.ROBOT_CFG.global_COM_xyz}\n")
-                    log.write(f"=========Global Vars=========\n")
-                    log.write(f"{global_cfg.print_vars(log.log)}\n")
-                    ##===============================================##
-
-                    #==============Controlling Robot=================##
-                    if global_cfg.RUN._stance:
-                        _, _, joint_toq = ROBOT.default_stance_control()
-                        p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
-                    else:
-                        joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
-                        ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-                     #==============Controlling Robot=================##
-
-                    if sim_cfg['skip_forward_idx'] > 1: #Maybe put in this in seperate update() function within run.py?
-                        for _ in range(sim_cfg['skip_forward_idx'] + 1):
-                            ROBOT.time_step += 1
-                            sim_step += 1
-                        sim_step -= 1
-                    else:
-                        ROBOT.time_step += 1
-                    if sim_cfg.get('track'):
-                        TRACK_RECORD.update(ref_cmd, ROBOT.time_step)
-                    p.stepSimulation()
-                    _global_update(ROBOT, ROBOT.state)
-                    v_planner.step(sim_step, ROBOT.time)
-                    ROBOT.update()
-
-                last_loop_time = time.time()
-                sim_step += 1
-
-                if sim_cfg['custom_camera_view']:
-                    pybullet_interface.update()
-
+                try:
+                    if global_cfg.RUN._done:
+                        print("ROBOT REACHED THE GOAL!")
+                        break
+                    if global_cfg.RUN._wait: #Waits for local planner thread to copy over the trajectory
+                        time.sleep(0.001)
+                        continue
+                    elif global_cfg.RUN._update:
+                        print("============UPDATE STATE============")
+                        mutex.acquire()
+                        reader = csv.reader(open(PLAN, 'r', newline=''))
+                        global_cfg.RUN._update = False 
+                        global_cfg.RUN.step = 0
+                        mutex.release()
+                    traj = np.array([float(x) for x in next(reader)])
+                    time_step, EE_POSE = traj[0], traj[1:]
+                    global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
+                    towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
+                    update_data['ref_cmd'] = vec_to_cmd_pose(EE_POSE)
+                    if sim_cfg['skip_forward_idx'] > 1:
+                        for _ in range(sim_cfg['skip_forward_idx']):
+                            next(reader)
+                except StopIteration:
+                    global_cfg.RUN._stance = True
+                #==============Controlling Robot=================##
+                if global_cfg.RUN._stance:
+                    _, _, joint_toq = ROBOT.default_stance_control()
+                    p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
+                else:
+                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                    ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                #==============Controlling Robot=================##
+                #==============Update Simulation State=================##
+                sim_step = update(update_data, sim_cfg)
                 if global_cfg.ROBOT_CFG.global_COM_xyz[0] >= goal[0]:
                     global_cfg.RUN._done = True
                     global_cfg.RUN._stance = True
                     break
+                last_loop_time = time.time()
+                p.stepSimulation()
+                #==============Update Simulation State=================##
+                write(log, EE_POSE)
         else:
             loop_time = time.time() - last_loop_time
             if loop_time > sim_cfg['TIMESTEPS']:
-                print("DONE")
-                if sim_cfg['mode'] == "towr":
-                    towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
-                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
-                    ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-                    p.stepSimulation()
-                    last_loop_time = time.time()
-                    sim_step += 1
-                else:
-                    break
+                towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
+                joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
+                ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                p.stepSimulation()
+                last_loop_time = time.time()
+                sim_step += 1
     """============Main-running-loop============"""
-
     if sim_cfg.get('track'):
         TRACK_RECORD.plot()
     p.disconnect()
+
+def write(log, EE_POSE):
+    """
+    Write data to a log file.
+
+    Parameters:
+        log (Logger): An instance of a logger for writing log data.
+        EE_POSE (list): A list containing End-Effector (EE) position information.
+
+    Args:
+        log (Logger): An instance of a logger for writing log data.
+        EE_POSE (list): A list containing End-Effector (EE) position information.
+    """
+    log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
+    log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
+    log.write(f"Global POS -> {global_cfg.ROBOT_CFG.global_COM_xyz}\n")
+    log.write(f"=========Global Vars=========\n")
+    log.write(f"{global_cfg.print_vars(log.log)}\n")
+
+def update(data_dic, sim_cfg):
+    """
+    Update function for simulation data and control.
+
+    This function updates various components and data within the simulation based on the provided data dictionary and simulation configuration.
+
+    Parameters:
+        data_dic (dict): A dictionary containing simulation data and components.
+        sim_cfg (dict): A dictionary containing simulation configuration parameters.
+
+    Args:
+        data_dic (dict): A dictionary containing simulation data and components.
+        sim_cfg (dict): A dictionary containing simulation configuration parameters.
+    """
+    if sim_cfg['skip_forward_idx'] > 1:
+        for _ in range(sim_cfg['skip_forward_idx'] + 1):
+            data_dic['ROBOT'].time_step += 1
+            data_dic['sim_step'] += 1
+        data_dic['sim_step'] -= 1
+    else:
+        data_dic['ROBOT'].time_step += 1
+    if sim_cfg.get('track'):
+        data_dic['TRACK_RECORD'].update(data_dic['ref_cmd'], data_dic['ROBOT'].time_step)
+    _global_update(data_dic['ROBOT'], data_dic['ROBOT'].state)
+    data_dic['v_planner'].step(data_dic['sim_step'], data_dic['ROBOT'].time)
+    data_dic['ROBOT'].update()
+    data_dic['sim_step'] += 1
+    if sim_cfg['custom_camera_view']:
+        data_dic['pybullet_interface'].update()
+    return data_dic['sim_step']
 
 def init(args):
     """Default configuration for default TOWR based planning
