@@ -4,23 +4,17 @@ import time
 import subprocess
 import shlex
 import argparse
-import copy
 import sys
-import csv
-import os
 from threading import Thread, Lock
 
-import run
-import trajectory_record
+import run, trajectory_record #importing running modules from run.py and trajectory_record.py
 
 import numpy as np
-import yaml
 
 import QTOS.config.global_cfg as global_cfg
 from QTOS.utils import *
-from QTOS.combiner import Combiner, Combiner_Thread
+from QTOS.combiner import Combiner
 from QTOS.logger import Logger
-from QTOS.simulation import Simulation
 from QTOS.builder import builder
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
@@ -28,30 +22,21 @@ NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
 
 mutex = Lock()
 
-# def mpc_update_thread(mpc):
-#     """MPC thread that runs the global planner
-
-#     Args:
-#         mpc (MPC): MPC object that interfaces with the global planner
-#     """
-#     while True:
-#         mpc.update()
-
-def _update(args, log, mpc):
+def _update(args, log, combiner):
     """Update function for the motion combiner
 
     Args:
         args (dict): Q-TOS user arguments + hyperparameters
         log (log): logger for simulator and local planner
-        mpc (MPC): MPC object that interfaces with the global planner
+        combiner: object that stitches the motion plans from global planner
     """
     _wait = False
     while (global_cfg.RUN._run_update_thread):
             mutex.acquire()
-            mpc.update()
+            combiner.update()
             mutex.release()
             time.sleep(0.001)
-            if mpc.goal_diff < 0.1 or global_cfg.RUN._done:
+            if combiner.goal_diff < 0.1 or global_cfg.RUN._done:
                 print("Robot reach the goal!")
                 global_cfg.RUN._stance = True
                 global_cfg.RUN._wait = False
@@ -59,15 +44,15 @@ def _update(args, log, mpc):
                 global_cfg.RUN._done = True
                 break
             elif not _wait:
-                args = mpc.plan(args)
-                MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
-                p_status = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+                args = combiner.plan(args)
+                combiner_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
+                p_status = subprocess.run(combiner_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
                 _wait = True
-            elif mpc.cutoff_idx >= args['f_steps']:
+            elif combiner.cutoff_idx >= args['f_steps']:
                 global_cfg.RUN._wait = True
                 p = subprocess.run(shlex.split(scripts['data'])) 
-                mpc.update()
-                mpc.combine()
+                combiner.update()
+                combiner.combine()
                 p = subprocess.run(shlex.split(scripts['copy_tmp']))
                 global_cfg.RUN._update = True
                 global_cfg.RUN._wait = False
@@ -101,8 +86,8 @@ def _run(args):
     log = _init(args)
     combiner = Combiner(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
     combiner.plan_init(args)
-    combiner_script = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
-    p = subprocess.run(combiner_script, stdout=log.log, stderr=subprocess.STDOUT)
+    combiner_runscript = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
+    p = subprocess.run(combiner_runscript, stdout=log.log, stderr=subprocess.STDOUT)
     p_copy = subprocess.run(shlex.split(scripts['copy']))
     if p_copy.returncode == 0 and p.returncode == 0:
         print("Launching Simulation")
