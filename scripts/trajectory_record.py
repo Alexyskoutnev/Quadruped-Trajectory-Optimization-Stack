@@ -14,7 +14,7 @@ import pybullet_data as pd
 import yaml
 import numpy as np
 
-#project
+#project modules
 from QTOS.robot.robot import SOLO12
 from QTOS.utils import *
 from QTOS.pybulletInterface import PybulletInterface

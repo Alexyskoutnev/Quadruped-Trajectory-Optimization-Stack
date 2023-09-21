@@ -1,9 +1,6 @@
 #! /usr/bin/python3
 
 import time
-import os
-import sys
-import math
 import csv
 import argparse
 from threading import Thread, Lock
@@ -16,10 +13,9 @@ import pybullet_data as pd
 import yaml
 import numpy as np
 
-#project
+#project modules
 from QTOS.robot.robot import SOLO12
 from QTOS.utils import *
-from QTOS.gaitPlanner import Gait
 from QTOS.pybulletInterface import PybulletInterface, RecordInterface
 from QTOS.simulation import Simulation
 from QTOS.logger import Logger
