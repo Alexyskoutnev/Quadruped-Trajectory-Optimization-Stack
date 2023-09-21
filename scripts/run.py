@@ -33,12 +33,9 @@ config = "./data/config/solo12.yml"
 config_sim = "./data/config/simulation.yml"
 cfg = yaml.safe_load(open(config, 'r'))
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
-TOWR = "./data/traj/towr.csv"
+PLAN = "./data/traj/towr.csv"
 TOWR_TRAJ = "./data/traj/towr_traj"
-BEZIER_TRAJ = "./data/traj/bezier_traj"
 
-# global keypressed
-key_press_init_phase = True
 mutex = Lock()
 
 def parser():
@@ -63,8 +60,6 @@ def parser():
     return args
 
 def update_file_name(file, cfg, sim_cfg):
-    step_period = str(sim_cfg['step_period'])
-    velocity = str(sim_cfg['velocity'])
     MODE = str(cfg['mode'])
     file_name = file +  "_cmode_" + MODE + ".csv"
     return file_name
@@ -95,60 +90,43 @@ def simulation(args):
     """Main simulation interface that runs the bullet engine
     
     """
-    goal = global_cfg.ROBOT_CFG.robot_goal
 
+    """============Sim-Init-Variables============"""
+
+    goal = global_cfg.ROBOT_CFG.robot_goal
     if args.get('sim_cfg'):
         sim_cfg = args['sim_cfg']
     log = Logger("./logs", "simulation_log")
-    global key_press_init_phase
     ROBOT = args['robot']
-    gait = Gait(ROBOT)
     init_phase = sim_cfg['stance_phase']
     last_loop_time = time.time()
     sim_step = 1
-    RECORD_TRAJ = False
     start_STATE = None
+    stance_step = 0
     
     """============SIM-CONFIGURATION============"""
     if sim_cfg['mode'] == "towr":
-        csv_file = open(TOWR, 'r', newline='')
+        csv_file = open(PLAN, 'r', newline='')
         reader = csv.reader(csv_file, delimiter=',')
         TRAJ_SIZE = sum(1 for row in reader)
-        traj = np.genfromtxt(TOWR, delimiter=',')
+        traj = np.genfromtxt(PLAN, delimiter=',')
         first_traj_point = traj[5]
-        v_planner = Visual_Planner(TOWR, sim_cfg)
+        v_planner = Visual_Planner(PLAN, sim_cfg)
         time_step, EE_POSE = first_traj_point[0], first_traj_point[1:]
         ref_start_cmd = vec_to_cmd_pose(EE_POSE)
         q_init, _, _ = ROBOT.control_multi(ref_start_cmd, ROBOT.EE_index['all'], mode=ROBOT.mode)   
         start_STATE = EE_POSE 
         if sim_cfg.get('track'):
             TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
-        if args.get('record') or sim_cfg.get('record'):
-            FILE = update_file_name(TOWR_TRAJ, cfg, sim_cfg)
-            record_file = open(FILE, 'w', newline='')
-            writer = csv.writer(record_file) 
-            record_timestep = 0
-            RECORD_TRAJ = True
-    elif sim_cfg['mode'] == 'bezier':
-        trot_2_stance_ratio = cfg['trot_2_stance_ratio']
-        velocity, angle, angle_velocity, step_period, offsets = sim_cfg['velocity'], sim_cfg['angle'], sim_cfg['angle_velocity'], sim_cfg['step_period'], np.array(cfg['offsets'])
-        TRAJ_SIZE = sim_cfg['TRAJ_SIZE']
-        if sim_cfg.get('track'):
-            TRACK_RECORD = Tracking(ROBOT, TRAJ_SIZE, sim_cfg)
-        if args.get('record') or sim_cfg.get('record'):
-            FILE = update_file_name(BEZIER_TRAJ, cfg, sim_cfg)
-            record_file = open(FILE, 'w', newline='')
-            writer = csv.writer(record_file) 
-            record_timestep = 0
-            RECORD_TRAJ = True
     if sim_cfg.get('py_interface'):
         pybullet_interface = PybulletInterface()
     elif sim_cfg.get('custom_camera_view'):
         pybullet_interface = RecordInterface(args, ROBOT.robot)
     """=========================================="""
-    cmd = np.zeros((12, 1))
-    stance_step = 0
+
     args['sim'].start(ROBOT, start_STATE)
+
+    """Init stance to force robot in good starting position"""
     while (init_phase):
         loop_time = time.time() - last_loop_time
         if loop_time > sim_cfg['TIMESTEPS']:
@@ -162,27 +140,13 @@ def simulation(args):
                 p.stepSimulation()
                 last_loop_time = time.time()
                 stance_step += 1
+
+    """============Main-running-loop============"""
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:
             loop_time = time.time() - last_loop_time
             if loop_time > sim_cfg['TIMESTEPS']:
-                if sim_cfg['mode'] == "bezier":
-                    if sim_cfg['py_interface']:
-                        pos, angle, velocity, angle_velocity, step_period = pybullet_interface.robostates(ROBOT.robot)
-                    gait_traj, newCmd = gait.runTrajectory(velocity, angle, angle_velocity, offsets, step_period, trot_2_stance_ratio)
-                    joint_ang, joint_vel, joint_toq = ROBOT.control_multi(gait_traj, ROBOT.EE_index['all'], mode=ROBOT.mode, usePin=cfg['use_pinocchio'])
-                    ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
-                    p.stepSimulation()
-                    ROBOT.time_step += 1
-                    if sim_cfg.get('track'):
-                        TRACK_RECORD.update(gait_traj, ROBOT.time_step)
-                    if RECORD_TRAJ:
-                        csv_entry = ROBOT.csv_entry
-                        writer.writerow(csv_entry)
-                        record_timestep += 1
-                        if record_timestep >= sim_cfg['TRAJ_SIZE']:
-                            break
-                elif sim_cfg['mode'] == "towr":
+                if sim_cfg['mode'] == "towr":
                     try:
                         if global_cfg.RUN._done:
                             print("ROBOT HAS REACHED THE GOAL")
@@ -193,17 +157,15 @@ def simulation(args):
                         elif global_cfg.RUN._update:
                             print("============UPDATE STATE============")
                             mutex.acquire()
-                            reader = csv.reader(open(TOWR, 'r', newline=''))
+                            reader = csv.reader(open(PLAN, 'r', newline=''))
                             global_cfg.RUN._update = False 
                             global_cfg.RUN.step = 0
                             mutex.release()
                         traj = np.array([float(x) for x in next(reader)])
                         time_step, EE_POSE = traj[0], traj[1:]
-
                         global_cfg.ROBOT_CFG.last_POSE = EE_POSE[0:3]
                         towr_traj = towr_transform(ROBOT, vec_to_cmd_pose(EE_POSE))
                         ref_cmd = vec_to_cmd_pose(EE_POSE)
-                        COM = EE_POSE[0:6]
                         if sim_cfg['skip_forward_idx'] > 1:
                             for _ in range(sim_cfg['skip_forward_idx']):
                                 next(reader)
@@ -217,20 +179,16 @@ def simulation(args):
                     log.write(f"=========Global Vars=========\n")
                     log.write(f"{global_cfg.print_vars(log.log)}\n")
                     ##===============================================##
+
+                    #==============Controlling Robot=================##
                     if global_cfg.RUN._stance:
                         _, _, joint_toq = ROBOT.default_stance_control()
                         p.setJointMotorControlArray(ROBOT.robot, ROBOT.jointidx['idx'], controlMode=p.TORQUE_CONTROL, forces=joint_toq)
                     else:
                         joint_ang, joint_vel, joint_toq = ROBOT.control_multi(towr_traj, ROBOT.EE_index['all'], mode=ROBOT.mode)
                         ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
+                     #==============Controlling Robot=================##
 
-                    if RECORD_TRAJ:
-                        csv_entry = ROBOT.csv_entry
-                        writer.writerow(csv_entry)
-                        record_timestep += 1
-                        if record_timestep >= sim_cfg['TRAJ_SIZE']:
-                            global_cfg.RUN._run_update_thread = False
-                            break
                     if sim_cfg['skip_forward_idx'] > 1:
                         for _ in range(sim_cfg['skip_forward_idx'] + 1):
                             ROBOT.time_step += 1
@@ -238,7 +196,6 @@ def simulation(args):
                         sim_step -= 1
                     else:
                         ROBOT.time_step += 1
-
                     if sim_cfg.get('track'):
                         TRACK_RECORD.update(ref_cmd, ROBOT.time_step)
                     p.stepSimulation()
@@ -248,6 +205,7 @@ def simulation(args):
 
                 last_loop_time = time.time()
                 sim_step += 1
+                
                 if sim_cfg['custom_camera_view']:
                     pybullet_interface.update()
 
@@ -268,10 +226,10 @@ def simulation(args):
                     sim_step += 1
                 else:
                     break
+    """============Main-running-loop============"""
+
     if sim_cfg.get('track'):
         TRACK_RECORD.plot()
-    if RECORD_TRAJ:
-        print(f"TRAJ RECORD PATH -> {record_file}")
     p.disconnect()
 
 def init(args):
@@ -306,7 +264,7 @@ if __name__ == "__main__":
         args['sim_cfg'] = experimentInfo(args['experiment'])
         args['scripts'] = parse_scripts(scripts, docker_id)
         sim_cfg = args['sim_cfg']
-        TOWR = "./test/data/traj/towr.csv"
+        PLAN = "./test/data/traj/towr.csv"
         args.update(builder(sim_cfg=args['sim_cfg']))
         init(args)
         simulation(args)
