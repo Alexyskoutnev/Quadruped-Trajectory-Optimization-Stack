@@ -13,8 +13,8 @@ from QTOS.planner import Global_Planner
 
 
 
-class MPC_THREAD(threading.Thread):
-    """A custom thread class for running Model Predictive Control (MPC) updates.
+class Combiner_Thread(threading.Thread):
+    """A custom thread class for running Combiner updates.
 
     Args:
         obj (object): The object with the 'update' method to be called in the loop.
@@ -34,10 +34,10 @@ class MPC_THREAD(threading.Thread):
             self.obj.update()
             time.sleep(0.01)
 
-class MPC(object):
+class Combiner(object):
 
-    def __init__(self, args, current_traj, new_traj, lookahead=None, hz=1000) -> None:
-        """Initialize the Model Predictive Control (MPC) class.
+    def __init__(self, args, current_traj, new_traj, lookahead=None, hz=1000):
+        """Initialize the Combiner class.
 
         Args:
             args (dict): Configuration arguments.
@@ -52,7 +52,7 @@ class MPC(object):
         self.new_traj = new_traj
         self.cutoff_idx = 0
         self.last_timestep = 0.0
-        self.lookahead = lookahead if lookahead else 7500
+        self.lookahead = lookahead if lookahead else 2750
         self.lookahead_original = lookahead
         self.next_traj_step = 0
         self.hz = hz
@@ -62,11 +62,7 @@ class MPC(object):
         self.spine_x = self.global_solver.spine_x_track
         self.spine_y = self.global_solver.spine_y_track
         self.traj_plan = txt_2_np_reader(self.current_traj)
-        self.robot = args['robot']
-        self.set_correct_flag = False
-        self.set_spine_flag = True
-        self.map = args['sim'].height_map
-        self.height_set = self.get_height_set(self.map)
+        self.height_set = self.get_height_set(args['sim'].height_map)
 
     def get_height_set(self, map):
         height_values = np.unique(map)
@@ -147,15 +143,8 @@ class MPC(object):
             args['-e3'] = [-0.21, 0.19, 0.0]
             args['-e4'] = [-0.21, -0.19, 0.0]
             args['-s_ang'] = [0, 0, 0]
-
         start_config(args)
-        step_size = args['step_size']
-        global_pos = np.array(global_cfg.ROBOT_CFG.linkWorldPosition)
-        goal = self.spine_step(args['-s'], self.last_timestep) if self.set_spine_flag else global_cfg.ROBOT_CFG.robot_goal
-        diff_vec = np.clip(goal - global_pos, -step_size, step_size)
-        diff_vec[2] = 0.0
-        args['-g'] = list(global_pos + diff_vec)
-        args['-g'][2] = 0.24
+        args['-g'] = list(self.spine_step(args['-s'], self.last_timestep))
         return args
 
 
@@ -168,7 +157,7 @@ class MPC(object):
         Returns:
             dict: Updated configuration arguments.
         """
-        if self.set_spine_flag or self.global_planner.P_correction and not self.global_planner.empty():
+        if not self.global_planner.empty():
             _state_dic = self._state()
             start_pos, end_pos = self.global_planner.pop()
             self.args['-s'] = _state_dic["CoM"]
@@ -218,7 +207,7 @@ class MPC(object):
 
     def update(self):
         """
-        Updates the state of the MPC loop
+        Updates the state of the Combiner loop
         """
         self.cutoff_idx = int(global_cfg.RUN.step)
         self.last_timestep = round(global_cfg.ROBOT_CFG.runtime, int(self.decimal_precision))
@@ -226,7 +215,7 @@ class MPC(object):
         goal_step_vec = np.array(self.args['-g']) - np.array(self.args['-s'])
         self.global_planner.update(self.last_timestep, self.global_plan_state, self.robot_state[1:3], goal_step_vec)
         if self.global_planner.max_t < self.last_timestep - 5.0:
-            print("STOPING MPC CONTROLLER")
+            print("Stoping Combiner")
             global_cfg.RUN._done = True
 
     def update_timestep(self):

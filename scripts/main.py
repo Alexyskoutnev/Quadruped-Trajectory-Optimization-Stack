@@ -18,7 +18,7 @@ import yaml
 
 import QTOS.config.global_cfg as global_cfg
 from QTOS.utils import *
-from QTOS.global_planner import MPC, MPC_THREAD
+from QTOS.combiner import Combiner, Combiner_Thread
 from QTOS.logger import Logger
 from QTOS.simulation import Simulation
 from QTOS.builder import builder
@@ -28,17 +28,17 @@ NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
 
 mutex = Lock()
 
-def mpc_update_thread(mpc):
-    """MPC thread that runs the global planner
+# def mpc_update_thread(mpc):
+#     """MPC thread that runs the global planner
 
-    Args:
-        mpc (MPC): MPC object that interfaces with the global planner
-    """
-    while True:
-        mpc.update()
+#     Args:
+#         mpc (MPC): MPC object that interfaces with the global planner
+#     """
+#     while True:
+#         mpc.update()
 
 def _update(args, log, mpc):
-    """Update function for the MPC controller
+    """Update function for the motion combiner
 
     Args:
         args (dict): Q-TOS user arguments + hyperparameters
@@ -90,7 +90,6 @@ def _init(args):
     subprocess.run(shlex.split(args['scripts']['touch_file']))
     subprocess.run(shlex.split(args['scripts']['heightfield_rm']))
     subprocess.run(shlex.split(args['scripts']['heightfield_copy']))
-    args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     return log
 
 def _run(args):
@@ -100,21 +99,21 @@ def _run(args):
         args (dict): user + config inputs for simulation and solver
     """
     log = _init(args)
-    mpc = MPC(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
-    mpc.plan_init(args)
-    MPC_SCRIPT = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
-    p = subprocess.run(MPC_SCRIPT, stdout=log.log, stderr=subprocess.STDOUT)
+    combiner = Combiner(args, CURRENT_TRAJ_CSV_FILE, NEW_TRAJ_CSV_FILE, lookahead=args['look_ahead'])
+    combiner.plan_init(args)
+    combiner_script = shlex.split(args['scripts']['run'] + " " + cmd_args(args))
+    p = subprocess.run(combiner_script, stdout=log.log, stderr=subprocess.STDOUT)
     p_copy = subprocess.run(shlex.split(scripts['copy']))
-    if p_copy.returncode == 0:
+    if p_copy.returncode == 0 and p.returncode == 0:
         print("Launching Simulation")
-        mpc_thread = Thread(target=_update, args=(args, log, mpc))
-        mpc_thread.start()
+        combiner_thread = Thread(target=_update, args=(args, log, combiner))
+        combiner_thread.start()
         if args.get('record'):
             trajectory_record.record_simulation(args)
         else:
             run.simulation(args)
     else: 
-        print("Error in copying MPC Trajectory")
+        print("Error in finding or copying global trajectory")
         sys.exit(1)
 
 def default_init(args):
@@ -154,9 +153,36 @@ def run_default(args):
     default_init(args)
     run.simulation(args)
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--g', nargs=3, type=float, default=[3.0,0,0.24], dest='-g', help="The initial global position of the robot")
+def build_args():
+    """
+    Parse command-line arguments for interacting with the QTOS stack.
+
+    Returns:
+        dict: A dictionary containing the parsed arguments.
+
+    This function parses command-line arguments using argparse and returns a dictionary
+    containing the parsed arguments. The parsed arguments also builds the enviroment and 
+    configures QTOS with the running TOWR solver and gets necessary configuration files.
+
+    Command-line arguments:
+        -g, --g: The initial global position of the robot as a list of three floats.
+        -s, --s: The initial position of the robot as a list of three floats. Default: [0.0, 0.0, 0.24].
+        -s_ang, --s_ang: The initial angular velocity of the robot as a list of three floats.
+        -s_vel, --s_vel: The initial velocity of the robot as a list of three floats.
+        -e1, --e1: The starting state for the front left leg as a list of three floats.
+        -e2, --e2: The starting state for the front right leg as a list of three floats.
+        -e3, --e3: The starting state for the back right leg as a list of three floats.
+        -e4, --e4: The starting state for the back left leg as a list of three floats.
+        -step, --step: The step size to traverse along the global trajectory spline as a float. Default: 1.0.
+        -forced_steps, --f_steps: The number of timesteps to force the robot to run and then start stitching the next planned trajectory as an integer. Default: 2500.
+        -l, --look: The number of timesteps to lookahead in the planned trajectory as a float. Default: 3750.
+        -r, --record: A boolean flag to indicate whether to record joint-angle, joint-velocity, and torque while running the simulator. Default: False.
+        -exp, --experiment: The name of the experiment to run in the simulator as a string. Default: "default".
+        -p, --mpc_p: A boolean flag indicating a switch for global plan correction. Default: False.
+        -t, --towr: A boolean flag indicating the use of the default TOWR local planner. Default: False.
+    """
+    parser = argparse.ArgumentParser(description="I/O arguments to interact with the QTOS stack")
+    parser.add_argument('-g', '--g', nargs=3, type=float, default=None, dest='-g', help="The initial global position of the robot")
     parser.add_argument('-s', '--s', nargs=3, type=float, default=[0.0, 0.0, 0.24], dest='-s', help="The initial position of the robot")
     parser.add_argument('-s_ang', '--s_ang', nargs=3, type=float, dest='-s_ang', help="The initial angular velocity of the robot")
     parser.add_argument('-s_vel', '--s_vel', nargs=3, type=float, dest='-s_vel', help="The initial velocity of the robot")
@@ -175,7 +201,12 @@ def main():
     docker_id = DockerInfo()
     args.update({"scripts": parse_scripts(scripts, docker_id)})
     args['sim_cfg'] = experimentInfo(args['experiment'], args['record'])
+    args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     args.update(builder(sim_cfg=args['sim_cfg']))
+    return args
+
+def main():
+    args = build_args()
     if args.get('towr'):
         print("Default Test")
         args['-r'] = 30 * args['sim'].num_tiles
@@ -183,10 +214,8 @@ def main():
             args['-g'] = args['args']['goal']
         args['-duration'] = 1.0 * args['sim'].num_tiles
         run_default(args)
-    elif args['sim_cfg'].get('goal'):
-        args['-g'] = args['sim_cfg']['goal']
-    else:
-        args['-g'][0] = (args['sim'].num_tiles - 1) * 2.0 + 0.5
+    elif args.get('-g') is None:
+        args['-g'] = [(args['sim'].num_tiles - 1) * 2.0 + 0.5, 0, 0.24]
     _run(args)
 
 if __name__ == "__main__":
