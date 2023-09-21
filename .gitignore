@@ -46,6 +46,7 @@ env.bak/
 *.log
 *.sqlite3
 *.db
+*.out
 
 # macOS-specific files
 .DS_Store
@@ -55,4 +56,6 @@ Thumbs.db
 
 # data/logs created by QTOS
 /data/tracking/*
-/logs/*
+/data/traj/*
+/data/plots/*
+/logs/
