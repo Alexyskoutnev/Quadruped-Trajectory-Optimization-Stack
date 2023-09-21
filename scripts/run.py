@@ -87,12 +87,36 @@ def _global_update(ROBOT, kwargs):
     
 
 def simulation(args):
-    """Main simulation interface that runs the bullet engine
-    
+    """
+    Main simulation interface that runs the Bullet physics engine.
+
+    This function initializes and runs a simulation using the Bullet physics engine based on the provided arguments.
+
+    Parameters:
+        args (dict): A dictionary containing simulation configuration and robot information.
+
+    Notes:
+        This function performs the following steps:
+        1. Initializes various simulation-related variables and settings.
+        2. Configures the simulation based on the provided simulation mode ('QTOS' or other).
+        3. Initializes the PyBullet interface or a custom camera view if specified.
+        4. Starts the simulation with the provided robot and initial state.
+        5. Conducts an initial stance phase to position the robot properly.
+        6. Enters the main simulation loop, which controls the robot according to the specified mode.
+        7. Updates the simulation and robot state in each loop iteration.
+        8. Checks for termination conditions, such as reaching the goal or completing trajectory steps.
+        9. Handles custom camera view updates if configured.
+        10. Optionally plots tracking data if tracking is enabled.
+        11. Disconnects from the simulation.
+
+    Args:
+        args (dict): A dictionary containing simulation configuration and robot information.
+
+    Returns:
+        None
     """
 
     """============Sim-Init-Variables============"""
-
     goal = global_cfg.ROBOT_CFG.robot_goal
     if args.get('sim_cfg'):
         sim_cfg = args['sim_cfg']
@@ -103,7 +127,6 @@ def simulation(args):
     sim_step = 1
     start_STATE = None
     stance_step = 0
-    
     """============SIM-CONFIGURATION============"""
     if sim_cfg['mode'] == "towr":
         csv_file = open(PLAN, 'r', newline='')
@@ -123,10 +146,8 @@ def simulation(args):
     elif sim_cfg.get('custom_camera_view'):
         pybullet_interface = RecordInterface(args, ROBOT.robot)
     """=========================================="""
-
     args['sim'].start(ROBOT, start_STATE)
-
-    """Init stance to force robot in good starting position"""
+    """==Init stance to force robot in good starting position=="""
     while (init_phase):
         loop_time = time.time() - last_loop_time
         if loop_time > sim_cfg['TIMESTEPS']:
@@ -140,7 +161,6 @@ def simulation(args):
                 p.stepSimulation()
                 last_loop_time = time.time()
                 stance_step += 1
-
     """============Main-running-loop============"""
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:
@@ -189,7 +209,7 @@ def simulation(args):
                         ROBOT.set_joint_control_multi(ROBOT.jointidx['idx'], ROBOT.mode, joint_ang, joint_vel, joint_toq)
                      #==============Controlling Robot=================##
 
-                    if sim_cfg['skip_forward_idx'] > 1:
+                    if sim_cfg['skip_forward_idx'] > 1: #Maybe put in this in seperate update() function within run.py?
                         for _ in range(sim_cfg['skip_forward_idx'] + 1):
                             ROBOT.time_step += 1
                             sim_step += 1
@@ -205,7 +225,7 @@ def simulation(args):
 
                 last_loop_time = time.time()
                 sim_step += 1
-                
+
                 if sim_cfg['custom_camera_view']:
                     pybullet_interface.update()
 
