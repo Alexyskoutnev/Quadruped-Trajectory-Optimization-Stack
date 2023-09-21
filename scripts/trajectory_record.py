@@ -1,4 +1,4 @@
-#! /opt/homebrew/Caskroom/miniforge/base/envs/soloSim/bin/python3
+#! /usr/bin/python3
 
 import time
 import os
