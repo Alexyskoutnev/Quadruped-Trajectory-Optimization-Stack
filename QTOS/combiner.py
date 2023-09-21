@@ -178,7 +178,6 @@ class Combiner(object):
             self.args['s_vel'] = _state_dic['CoM_vel']
             self.args['s_ang_vel'] = _state_dic['CoM_vel_ang']
         else:
-            print("default Plan")
             _state_dic = self._state()
             self.args['-s'] = _state_dic["CoM"]
             self.args['-s_ang'] = _state_dic['orientation']

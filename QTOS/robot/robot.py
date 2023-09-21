@@ -9,7 +9,6 @@ import pinocchio as pin
 #QTOS modules
 from QTOS.utils import *
 from QTOS.robot.robot_motor import MotorModel
-from QTOS.stateEstimation import State_Estimation
 import QTOS.config.global_cfg as global_cfg
         
 class SOLO12(object):

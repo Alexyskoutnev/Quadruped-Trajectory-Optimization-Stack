@@ -195,14 +195,9 @@ class Tracking:
                     self.HR_FOOT['error'].append(error)
         
         self.logger.write(f"[{self.idx}] Total COM ERROR : {self.total_error_com_error}\n")
-        self.logger.write(f"[{self.idx}] Average COM ERROR PER Second : {(self.total_error_com_error / self.idx) * 1000}\n")
+        self.logger.write(f"[{self.idx}] Average COM ERROR PER Second : {(self.total_error_com_error / (self.idx + 1)) * 1000}\n")
         self.logger.write(f"[{self.idx}] Distance : {self.distance}\n")
         self.logger.write(f"[{self.idx}] x-distance : {self.distance[0]}\n")
-        
-
-        print(f"x distance {self.distance[0]}")
-        print(f"[{self.idx}] Average COM ERROR PER Second : {(self.total_error_com_error / self.idx) * 1000}\n")
-
 
     def plot_reference_vs_sim(self, plot_graph=False):
         """
@@ -397,8 +392,6 @@ class Tracking:
             self.plot_error_over_time(plot_graph)
             self.distance_v_time.append(self.distance[0])
             self.error_v_time.append(self.total_error_com_error / self.idx * 1000) 
-            print(f"TOTAL FEET ERROR -> [{self.total_error_feet_error:.2f}]")
-            print(f"TOTAL COM ERROR -> [{self.total_error_com_error:.2f}]")
 
     def get_sim_cmd(self):
         """

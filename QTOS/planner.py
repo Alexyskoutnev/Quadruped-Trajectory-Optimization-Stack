@@ -36,10 +36,8 @@ class Global_Planner(object):
         if not os.path.exists(GLOBAL_TRAJ_DIR):
             os.makedirs(GLOBAL_TRAJ_DIR)
         if args['sim'].bool_map is not None:
-            print("Using bool map")
             self.path_solver = PATH_Solver(self.map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args, bool_map=args['sim'].bool_map, grid_res=args['args']['resolution'])
         else:
-            print("Using basic A-star")
             self.path_solver = PATH_Solver(self.map, args['-s'], global_cfg.ROBOT_CFG.robot_goal, self.args, grid_res=args['args']['resolution'])
         self.error_tol = 0.05
         self.CoM_avg = 0.0

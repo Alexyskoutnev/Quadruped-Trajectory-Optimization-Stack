@@ -5,9 +5,9 @@
            https://github.com/ethz-adrl/towr
 ************************************************************
 
-0.5022222222222222
-1.5157803197624987e-116
-0.24
+0.5018181818181817
+2.2277564457471433e-64
+0.29
 0
 0
 0.24
@@ -42,9 +42,9 @@ ee start pos z -> 0
 start pos x -> 0
 start pos y -> 0
 start pos z -> 0.24
-goal pos x -> 0.502222
-goal pos y -> 1.51578e-116
-goal pos z -> 0.24
+goal pos x -> 0.501818
+goal pos y -> 2.22776e-64
+goal pos z -> 0.29
 ee start pos x -> 0.21
 ee start pos y -> 0.19
 ee start pos z -> 0
@@ -84,22 +84,22 @@ Total number of inequality constraints...............:     1024
 
 iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
    0  0.0000000e+00 1.94e+01 1.00e+00   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
-   1  0.0000000e+00 1.72e+01 2.38e+01  -0.3 8.26e+00    -  4.04e-01 1.17e-01f  1
-   2  0.0000000e+00 1.22e+01 1.22e+02   0.4 1.04e+01    -  9.93e-01 2.92e-01f  1
-   3  0.0000000e+00 3.72e+00 2.90e+02   0.4 8.88e+00    -  7.51e-01 6.94e-01f  1
-   4  0.0000000e+00 2.93e-02 8.08e+01  -0.0 2.69e+00    -  9.94e-01 1.00e+00h  1
-   5  0.0000000e+00 1.40e-04 1.75e+00  -1.0 1.03e-01    -  9.94e-01 1.00e+00h  1
-   6  0.0000000e+00 1.81e-07 8.68e-02  -7.0 8.37e-04    -  9.90e-01 1.00e+00h  1
-   7  0.0000000e+00 4.32e-05 2.17e-04  -4.4 6.51e-02    -  9.97e-01 1.00e+00h  1
+   1  0.0000000e+00 1.72e+01 2.26e+01  -0.3 8.09e+00    -  4.02e-01 1.13e-01f  1
+   2  0.0000000e+00 1.22e+01 1.33e+02   0.4 1.10e+01    -  9.93e-01 2.92e-01f  1
+   3  0.0000000e+00 1.51e+00 4.52e+02   0.4 1.00e+01    -  7.30e-01 8.76e-01h  1
+   4  0.0000000e+00 2.65e-02 3.95e+01  -0.0 1.64e+00    -  9.99e-01 1.00e+00f  1
+   5  0.0000000e+00 3.95e-04 9.59e+00  -2.1 2.05e-01    -  9.64e-01 1.00e+00h  1
+   6  0.0000000e+00 1.48e-08 8.41e-02  -7.4 2.60e-03    -  9.90e-01 1.00e+00h  1
+   7  0.0000000e+00 3.15e-12 8.41e-04  -9.4 1.90e-04    -  9.90e-01 1.00e+00h  1
 
 Number of Iterations....: 7
 
                                    (scaled)                 (unscaled)
 Objective...............:   0.0000000000000000e+00    0.0000000000000000e+00
-Dual infeasibility......:   2.1708921272532451e-04    2.1708921272532451e-04
-Constraint violation....:   4.3162376600430763e-05    4.3162376600430763e-05
-Complementarity.........:   5.3796701320983300e-05    5.3796701320983300e-05
-Overall NLP error.......:   2.1708921272532451e-04    2.1708921272532451e-04
+Dual infeasibility......:   8.4140439957240383e-04    8.4140439957240383e-04
+Constraint violation....:   3.1479263640221689e-12    3.1479263640221689e-12
+Complementarity.........:   1.9430498862020722e-05    1.9430498862020722e-05
+Overall NLP error.......:   8.4140439957240383e-04    8.4140439957240383e-04
 
 
 Number of objective function evaluations             = 8
@@ -109,8 +109,8 @@ Number of inequality constraint evaluations          = 8
 Number of equality constraint Jacobian evaluations   = 8
 Number of inequality constraint Jacobian evaluations = 8
 Number of Lagrangian Hessian evaluations             = 0
-Total CPU secs in IPOPT (w/o function evaluations)   =      0.288
-Total CPU secs in NLP function evaluations           =      0.487
+Total CPU secs in IPOPT (w/o function evaluations)   =      0.306
+Total CPU secs in NLP function evaluations           =      0.447
 
 EXIT: Optimal Solution Found.
 status -> 0
@@ -168,62 +168,62 @@ cost-terms:
            https://github.com/ethz-adrl/towr
 ************************************************************
 
-0.878888888888889
+0.8781818181818182
 0.0
-0.24
-0.32756
--0.0121864
-0.220703
--0.0390706
--0.0417247
-0.0135739
-0.530629
-0.144364
+0.29
+0.325826
+-0.0132156
+0.233987
+-0.0405157
+-0.106425
+0.0047417
+0.537451
+0.148762
+0.025
+0.593628
+-0.176731
+0.065
+0.117332
+0.175984
 0
-0.587258
--0.173956
-0
-0.109141
-0.174154
-0
-0.144326
--0.176869
+0.156303
+-0.176009
 0
 3.756
 s_vel
-0.133098
+0.124753
 0.01
 -t
 3.756
-ee start pos x -> 0.530629
-ee start pos y -> 0.144364
+ee start pos x -> 0.537451
+ee start pos y -> 0.148762
+ee start pos z -> 0.025
+ee start pos x -> 0.593628
+ee start pos y -> -0.176731
+ee start pos z -> 0.065
+ee start pos x -> 0.117332
+ee start pos y -> 0.175984
 ee start pos z -> 0
-ee start pos x -> 0.587258
-ee start pos y -> -0.173956
+ee start pos x -> 0.156303
+ee start pos y -> -0.176009
 ee start pos z -> 0
-ee start pos x -> 0.109141
-ee start pos y -> 0.174154
-ee start pos z -> 0
-ee start pos x -> 0.144326
-ee start pos y -> -0.176869
-ee start pos z -> 0
-start pos x -> 0.32756
-start pos y -> -0.0121864
-start pos z -> 0.220703
-goal pos x -> 0.878889
+start pos x -> 0.325826
+start pos y -> -0.0132156
+start pos z -> 0.233987
+goal pos x -> 0.878182
 goal pos y -> 0
-goal pos z -> 0.24
-ee start pos x -> 0.530629
-ee start pos y -> 0.144364
+goal pos z -> 0.29
+ee start pos x -> 0.537451
+ee start pos y -> 0.148762
+ee start pos z -> 0.025
+ee start pos x -> 0.593628
+ee start pos y -> -0.176731
+ee start pos z -> 0.065
+ee start pos x -> 0.117332
+ee start pos y -> 0.175984
 ee start pos z -> 0
-ee start pos x -> 0.587258
-ee start pos y -> -0.173956
-ee start pos z -> 0
-ee start pos x -> 0.109141
-ee start pos y -> 0.174154
-ee start pos z -> 0
-ee start pos x -> 0.144326
-ee start pos y -> -0.176869
+ee start pos x -> 0.156303
+ee start pos y -> -0.176009
 ee start pos z -> 0
 SOLVER RUN TIME : 15
 
@@ -252,191 +252,23 @@ Total number of inequality constraints...............:     1024
 
 iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
    0  0.0000000e+00 1.94e+01 1.00e+00   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
-   1  0.0000000e+00 1.74e+01 3.41e+01  -0.3 8.32e+00    -  4.05e-01 1.05e-01f  1
-   2  0.0000000e+00 1.28e+01 1.19e+02   0.4 1.05e+01    -  9.93e-01 2.61e-01f  1
-   3  0.0000000e+00 4.16e+00 2.80e+02   0.4 9.28e+00    -  7.56e-01 6.76e-01h  1
-   4  0.0000000e+00 2.81e-02 9.96e+01  -0.0 2.95e+00    -  1.00e+00 1.00e+00h  1
-   5  0.0000000e+00 1.93e-04 2.99e+00  -0.9 1.22e-01    -  9.93e-01 1.00e+00h  1
-   6  0.0000000e+00 2.00e-07 1.07e-01  -6.9 1.43e-03    -  9.90e-01 1.00e+00h  1
-   7  0.0000000e+00 4.80e-05 2.23e-04  -4.4 7.70e-02    -  9.98e-01 1.00e+00h  1
-
-Number of Iterations....: 7
-
-                                   (scaled)                 (unscaled)
-Objective...............:   0.0000000000000000e+00    0.0000000000000000e+00
-Dual infeasibility......:   2.2299662916195359e-04    2.2299662916195359e-04
-Constraint violation....:   4.8009426356944440e-05    4.8009426356944440e-05
-Complementarity.........:   6.4648053923686840e-05    6.4648053923686840e-05
-Overall NLP error.......:   2.2299662916195359e-04    2.2299662916195359e-04
-
-
-Number of objective function evaluations             = 8
-Number of objective gradient evaluations             = 8
-Number of equality constraint evaluations            = 8
-Number of inequality constraint evaluations          = 8
-Number of equality constraint Jacobian evaluations   = 8
-Number of inequality constraint Jacobian evaluations = 8
-Number of Lagrangian Hessian evaluations             = 0
-Total CPU secs in IPOPT (w/o function evaluations)   =      0.309
-Total CPU secs in NLP function evaluations           =      0.456
-
-EXIT: Optimal Solution Found.
-status -> 0
-
-************************************************************
-    IFOPT - Interface to Nonlinear Optimizers (v2.0)
-                © Alexander W. Winkler
-           https://github.com/ethz-adrl/ifopt
-************************************************************
-Legend:
-c - number of variables, constraints or cost terms
-i - indices of this set in overall problem
-v - number of [violated variable- or constraint-bounds] or [cost term value]
-
-                                   c             i             v 
-variable-sets:
-   base-lin                       306        0....305[0m           0[0m
-   base-ang                       306      306....611[0m           0[0m
-   ee-motion_0                     35      612....646[0m           0[0m
-   ee-motion_1                     35      647....681[0m           0[0m
-   ee-motion_2                     35      682....716[0m           0[0m
-   ee-motion_3                     35      717....751[0m           0[0m
-   ee-force_0                      72      752....823[0m           0[0m
-   ee-force_1                      72      824....895[0m           0[0m
-   ee-force_2                      72      896....967[0m           0[0m
-   ee-force_3                      72      968...1039[0m           0[0m
-
-constraint-sets:
-   terrain-ee-motion_0             13        0.....12[0m           0[0m
-   terrain-ee-motion_1             13       13.....25[0m           0[0m
-   terrain-ee-motion_2             13       26.....38[0m           0[0m
-   terrain-ee-motion_3             13       39.....51[0m           0[0m
-   dynamic                        312       52....363[0m           0[0m
-   splineacc-base-lin             147      364....510[0m           0[0m
-   splineacc-base-ang             147      511....657[0m           0[0m
-   rangeofmotion-0                192      658....849[0m           0[0m
-   rangeofmotion-1                192      850...1041[0m           0[0m
-   rangeofmotion-2                192     1042...1233[0m           0[0m
-   rangeofmotion-3                192     1234...1425[0m           0[0m
-   force-ee-force_0                60     1426...1485[0m           0[0m
-   force-ee-force_1                60     1486...1545[0m           0[0m
-   force-ee-force_2                60     1546...1605[0m           0[0m
-   force-ee-force_3                60     1606...1665[0m           0[0m
-   swing-ee-motion_0               16     1666...1681[0m           0[0m
-   swing-ee-motion_1               16     1682...1697[0m           0[0m
-   swing-ee-motion_2               16     1698...1713[0m           0[0m
-   swing-ee-motion_3               16     1714...1729[0m           0[0m
-
-cost-terms:
-
-
-************************************************************
- TOWR - Trajectory Optimization for Walking Robots (v1.4)
-                © Alexander W. Winkler
-           https://github.com/ethz-adrl/towr
-************************************************************
-
-1.1300000000000001
-0.0
-0.24
-0.58413
-0.0197131
-0.243153
-0.0463104
-0.012134
-0.0229944
-0.781618
-0.166239
-0
-0.822729
--0.176709
-0
-0.354516
-0.175132
-0
-0.401465
--0.167034
-0
-6.281000000000001
-s_vel
-0.100029
-0.01
--t
-6.281000000000001
-ee start pos x -> 0.781618
-ee start pos y -> 0.166239
-ee start pos z -> 0
-ee start pos x -> 0.822729
-ee start pos y -> -0.176709
-ee start pos z -> 0
-ee start pos x -> 0.354516
-ee start pos y -> 0.175132
-ee start pos z -> 0
-ee start pos x -> 0.401465
-ee start pos y -> -0.167034
-ee start pos z -> 0
-start pos x -> 0.58413
-start pos y -> 0.0197131
-start pos z -> 0.243153
-goal pos x -> 1.13
-goal pos y -> 0
-goal pos z -> 0.24
-ee start pos x -> 0.781618
-ee start pos y -> 0.166239
-ee start pos z -> 0
-ee start pos x -> 0.822729
-ee start pos y -> -0.176709
-ee start pos z -> 0
-ee start pos x -> 0.354516
-ee start pos y -> 0.175132
-ee start pos z -> 0
-ee start pos x -> 0.401465
-ee start pos y -> -0.167034
-ee start pos z -> 0
-SOLVER RUN TIME : 15
-
-******************************************************************************
-This program contains Ipopt, a library for large-scale nonlinear optimization.
- Ipopt is released as open source code under the Eclipse Public License (EPL).
-         For more information visit http://projects.coin-or.org/Ipopt
-******************************************************************************
-
-This is Ipopt version 3.11.9, running with linear solver mumps.
-NOTE: Other linear solvers might be more efficient (see Ipopt documentation).
-
-Number of nonzeros in equality constraint Jacobian...:    11557
-Number of nonzeros in inequality constraint Jacobian.:    20605
-Number of nonzeros in Lagrangian Hessian.............:        0
-
-Total number of variables............................:     1005
-                     variables with only lower bounds:        0
-                variables with lower and upper bounds:        0
-                     variables with only upper bounds:        0
-Total number of equality constraints.................:      706
-Total number of inequality constraints...............:     1024
-        inequality constraints with only lower bounds:      112
-   inequality constraints with lower and upper bounds:      816
-        inequality constraints with only upper bounds:       96
-
-iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
-   0  0.0000000e+00 1.94e+01 1.00e+00   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
-   1  0.0000000e+00 1.65e+01 1.53e+01  -0.5 8.19e+00    -  3.80e-01 1.50e-01f  1
-   2  0.0000000e+00 1.46e+01 1.95e+02   0.4 1.31e+01    -  9.92e-01 1.14e-01f  1
-   3  0.0000000e+00 4.88e+00 3.33e+02   0.5 1.04e+01    -  9.62e-01 6.66e-01h  1
-   4  0.0000000e+00 5.79e-02 1.64e+02   0.4 3.93e+00    -  9.49e-01 1.00e+00f  1
-   5  0.0000000e+00 2.73e-04 2.72e+00  -0.6 1.62e-01    -  9.94e-01 1.00e+00h  1
-   6  0.0000000e+00 4.05e-07 1.42e-01  -6.6 2.64e-03    -  9.90e-01 1.00e+00h  1
-   7  0.0000000e+00 1.00e-12 1.43e-03  -8.6 2.64e-04    -  9.90e-01 1.00e+00h  1
-   8  0.0000000e+00 4.16e-13 2.03e-06 -10.6 2.22e-04    -  9.99e-01 1.00e+00h  1
+   1  0.0000000e+00 1.61e+01 1.64e+01  -0.5 8.06e+00    -  4.07e-01 1.69e-01f  1
+   2  0.0000000e+00 1.38e+01 1.44e+02   0.4 1.23e+01    -  9.92e-01 1.42e-01f  1
+   3  0.0000000e+00 6.13e+00 2.58e+02   0.6 1.03e+01    -  1.00e+00 5.57e-01f  1
+   4  0.0000000e+00 7.75e-02 2.39e+02   0.4 4.56e+00    -  9.60e-01 1.00e+00h  1
+   5  0.0000000e+00 4.54e-04 4.11e+00  -0.4 1.93e-01    -  9.93e-01 1.00e+00f  1
+   6  0.0000000e+00 7.23e-07 2.59e-01  -6.4 4.84e-03    -  9.89e-01 1.00e+00h  1
+   7  0.0000000e+00 3.60e-12 2.54e-03  -8.4 2.61e-04    -  9.90e-01 1.00e+00h  1
+   8  0.0000000e+00 2.38e-13 6.43e-06 -10.4 7.37e-05    -  9.97e-01 1.00e+00h  1
 
 Number of Iterations....: 8
 
                                    (scaled)                 (unscaled)
 Objective...............:   0.0000000000000000e+00    0.0000000000000000e+00
-Dual infeasibility......:   2.0332941396172275e-06    2.0332941396172275e-06
-Constraint violation....:   4.1602832290266178e-13    4.1602832290266178e-13
-Complementarity.........:   4.8352886453665076e-08    4.8352886453665076e-08
-Overall NLP error.......:   2.0332941396172275e-06    2.0332941396172275e-06
+Dual infeasibility......:   6.4255299866117753e-06    6.4255299866117753e-06
+Constraint violation....:   2.3772650514786164e-13    2.3772650514786164e-13
+Complementarity.........:   1.3424586488409631e-07    1.3424586488409631e-07
+Overall NLP error.......:   6.4255299866117753e-06    6.4255299866117753e-06
 
 
 Number of objective function evaluations             = 9
@@ -446,8 +278,176 @@ Number of inequality constraint evaluations          = 9
 Number of equality constraint Jacobian evaluations   = 9
 Number of inequality constraint Jacobian evaluations = 9
 Number of Lagrangian Hessian evaluations             = 0
-Total CPU secs in IPOPT (w/o function evaluations)   =      0.345
-Total CPU secs in NLP function evaluations           =      0.514
+Total CPU secs in IPOPT (w/o function evaluations)   =      0.341
+Total CPU secs in NLP function evaluations           =      0.508
+
+EXIT: Optimal Solution Found.
+status -> 0
+
+************************************************************
+    IFOPT - Interface to Nonlinear Optimizers (v2.0)
+                © Alexander W. Winkler
+           https://github.com/ethz-adrl/ifopt
+************************************************************
+Legend:
+c - number of variables, constraints or cost terms
+i - indices of this set in overall problem
+v - number of [violated variable- or constraint-bounds] or [cost term value]
+
+                                   c             i             v 
+variable-sets:
+   base-lin                       306        0....305[0m           0[0m
+   base-ang                       306      306....611[0m           0[0m
+   ee-motion_0                     35      612....646[0m           0[0m
+   ee-motion_1                     35      647....681[0m           0[0m
+   ee-motion_2                     35      682....716[0m           0[0m
+   ee-motion_3                     35      717....751[0m           0[0m
+   ee-force_0                      72      752....823[0m           0[0m
+   ee-force_1                      72      824....895[0m           0[0m
+   ee-force_2                      72      896....967[0m           0[0m
+   ee-force_3                      72      968...1039[0m           0[0m
+
+constraint-sets:
+   terrain-ee-motion_0             13        0.....12[0m           0[0m
+   terrain-ee-motion_1             13       13.....25[0m           0[0m
+   terrain-ee-motion_2             13       26.....38[0m           0[0m
+   terrain-ee-motion_3             13       39.....51[0m           0[0m
+   dynamic                        312       52....363[0m           0[0m
+   splineacc-base-lin             147      364....510[0m           0[0m
+   splineacc-base-ang             147      511....657[0m           0[0m
+   rangeofmotion-0                192      658....849[0m           0[0m
+   rangeofmotion-1                192      850...1041[0m           0[0m
+   rangeofmotion-2                192     1042...1233[0m           0[0m
+   rangeofmotion-3                192     1234...1425[0m           0[0m
+   force-ee-force_0                60     1426...1485[0m           0[0m
+   force-ee-force_1                60     1486...1545[0m           0[0m
+   force-ee-force_2                60     1546...1605[0m           0[0m
+   force-ee-force_3                60     1606...1665[0m           0[0m
+   swing-ee-motion_0               16     1666...1681[0m           0[0m
+   swing-ee-motion_1               16     1682...1697[0m           0[0m
+   swing-ee-motion_2               16     1698...1713[0m           0[0m
+   swing-ee-motion_3               16     1714...1729[0m           0[0m
+
+cost-terms:
+
+
+************************************************************
+ TOWR - Trajectory Optimization for Walking Robots (v1.4)
+                © Alexander W. Winkler
+           https://github.com/ethz-adrl/towr
+************************************************************
+
+1.129090909090909
+0.0
+0.305
+0.569895
+0.0145892
+0.263539
+0.0562947
+-0.067939
+0.0250631
+0.779027
+0.163331
+0.05
+0.823617
+-0.178593
+0.04
+0.354052
+0.173526
+0
+0.402404
+-0.165802
+0
+6.285
+s_vel
+0.109597
+0.01
+-t
+6.285
+ee start pos x -> 0.779027
+ee start pos y -> 0.163331
+ee start pos z -> 0.05
+ee start pos x -> 0.823617
+ee start pos y -> -0.178593
+ee start pos z -> 0.04
+ee start pos x -> 0.354052
+ee start pos y -> 0.173526
+ee start pos z -> 0
+ee start pos x -> 0.402404
+ee start pos y -> -0.165802
+ee start pos z -> 0
+start pos x -> 0.569895
+start pos y -> 0.0145892
+start pos z -> 0.263539
+goal pos x -> 1.12909
+goal pos y -> 0
+goal pos z -> 0.305
+ee start pos x -> 0.779027
+ee start pos y -> 0.163331
+ee start pos z -> 0.05
+ee start pos x -> 0.823617
+ee start pos y -> -0.178593
+ee start pos z -> 0.04
+ee start pos x -> 0.354052
+ee start pos y -> 0.173526
+ee start pos z -> 0
+ee start pos x -> 0.402404
+ee start pos y -> -0.165802
+ee start pos z -> 0
+SOLVER RUN TIME : 15
+
+******************************************************************************
+This program contains Ipopt, a library for large-scale nonlinear optimization.
+ Ipopt is released as open source code under the Eclipse Public License (EPL).
+         For more information visit http://projects.coin-or.org/Ipopt
+******************************************************************************
+
+This is Ipopt version 3.11.9, running with linear solver mumps.
+NOTE: Other linear solvers might be more efficient (see Ipopt documentation).
+
+Number of nonzeros in equality constraint Jacobian...:    11557
+Number of nonzeros in inequality constraint Jacobian.:    20605
+Number of nonzeros in Lagrangian Hessian.............:        0
+
+Total number of variables............................:     1005
+                     variables with only lower bounds:        0
+                variables with lower and upper bounds:        0
+                     variables with only upper bounds:        0
+Total number of equality constraints.................:      706
+Total number of inequality constraints...............:     1024
+        inequality constraints with only lower bounds:      112
+   inequality constraints with lower and upper bounds:      816
+        inequality constraints with only upper bounds:       96
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   0  0.0000000e+00 1.94e+01 1.00e+00   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
+   1  0.0000000e+00 1.66e+01 1.24e+01  -0.5 8.11e+00    -  3.75e-01 1.46e-01f  1
+   2  0.0000000e+00 1.46e+01 2.09e+02   0.5 1.31e+01    -  9.91e-01 1.19e-01f  1
+   3  0.0000000e+00 4.31e+00 9.31e+01   0.7 2.66e+01    -  1.00e+00 7.05e-01f  1
+   4  0.0000000e+00 6.47e-02 6.49e+01   0.4 8.87e+00    -  8.62e-01 1.00e+00f  1
+   5  0.0000000e+00 1.26e-04 3.18e+00  -1.0 2.93e-01    -  9.91e-01 1.00e+00h  1
+   6  0.0000000e+00 8.88e-08 7.82e-02  -6.9 1.83e-04    -  9.90e-01 1.00e+00h  1
+   7  0.0000000e+00 2.11e-06 1.46e-04  -4.5 9.54e-02    -  9.98e-01 1.00e+00h  1
+
+Number of Iterations....: 7
+
+                                   (scaled)                 (unscaled)
+Objective...............:   0.0000000000000000e+00    0.0000000000000000e+00
+Dual infeasibility......:   1.4638347037470233e-04    1.4638347037470233e-04
+Constraint violation....:   2.1124617275436464e-06    2.1124617275436464e-06
+Complementarity.........:   4.9680519113796645e-05    4.9680519113796645e-05
+Overall NLP error.......:   1.4638347037470233e-04    1.4638347037470233e-04
+
+
+Number of objective function evaluations             = 8
+Number of objective gradient evaluations             = 8
+Number of equality constraint evaluations            = 8
+Number of inequality constraint evaluations          = 8
+Number of equality constraint Jacobian evaluations   = 8
+Number of inequality constraint Jacobian evaluations = 8
+Number of Lagrangian Hessian evaluations             = 0
+Total CPU secs in IPOPT (w/o function evaluations)   =      0.319
+Total CPU secs in NLP function evaluations           =      0.456
 
 EXIT: Optimal Solution Found.
 status -> 0

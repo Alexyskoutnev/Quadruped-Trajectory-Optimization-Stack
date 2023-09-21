@@ -535,7 +535,6 @@ class Maps(object):
             map_data = scale_map(heighmap_2_np_reader(file_path), scale_factor)
             self.name_2_np_arr[map_name] = map_data
 
-
 class Height_Map_Generator(Maps):
 
     def __init__(self, dim=20, maps='plane', bool_map_search=False, scale_factor=1, randomize_env=False, random_shift_num=10, random_height_num=10, dynamic=False):
@@ -591,10 +590,6 @@ class Height_Map_Generator(Maps):
         self.map = self.shift_map(self.map, direction)
         self.create_height_file(HEIGHT_FIELD_OUT, self.map)
         self.create_height_file(TOWR_HEIGHTFIELD_OUT, self.towr_map_adjusted)
-
-
-    def read_obstacle_map(self, obs_map):
-        pass
 
     def create_height_file(self, file, h_data):
         """Create a height data file from a 2D array.
