@@ -84,18 +84,6 @@ def _global_update(ROBOT, kwargs):
         global_cfg.RUN.step += 1
     global_cfg.ROBOT_CFG.joint_state = ROBOT.jointstate
 
-# def keypress():
-#     """thread to handle keyboard I/O
-#     """
-#     global key_press_init_phase
-#     while True:
-#         print("Press q to exit")
-#         val = input('Enter your input: ')
-#         if val == 'q':
-#             print("Moving to trajectory")
-#             key_press_init_phase = False
-#             break
-
 def simulation(args):
     """Main simulation interface that runs the bullet engine
     
@@ -156,7 +144,6 @@ def simulation(args):
     args['sim'].start(ROBOT, start_STATE)
     while (init_phase):
         loop_time = time.time() - last_loop_time
-        # print("loop_time ", loop_time)
         if loop_time > sim_cfg['TIMESTEPS']:
             if stance_step >= sim_cfg.get('stance_period'):
                 init_phase = False
@@ -168,7 +155,6 @@ def simulation(args):
                 p.stepSimulation()
                 last_loop_time = time.time()
                 stance_step += 1
-
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:
             loop_time = time.time() - last_loop_time
@@ -264,10 +250,6 @@ def simulation(args):
                     global_cfg.RUN._done = True
                     global_cfg.RUN._stance = True
                     break
-
-                # if sim_step % 10 == 0:
-                #     args['sim'].update(idx = sim_step / 100)
-
         else:
             loop_time = time.time() - last_loop_time
             time_loop = time.time()
@@ -282,7 +264,6 @@ def simulation(args):
                     sim_step += 1
                 else:
                     break
-
     if sim_cfg.get('track'):
         TRACK_RECORD.plot()
     if RECORD_TRAJ:

@@ -9,8 +9,8 @@ stance_phase : False
 height_map : True
 track : True
 #=========Hyperparameters=======
-TRAJ_SIZE : 1000
-SIM_STEPS : 1100
+TRAJ_SIZE : 10000
+SIM_STEPS : 11000
 HZ : 1000
 TIMESTEPS : 0.001
 stance_period : 300

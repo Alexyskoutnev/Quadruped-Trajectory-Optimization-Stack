@@ -71,6 +71,7 @@ class Simulation(object):
             p.changeDynamics(1, -1, lateralFriction=cfg['friction'])
             p.changeDynamics(self.terrain, -1, lateralFriction=cfg['friction'])
             p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+            p.setTimeStep(1.0/250.0)
 
         elif cfg['enviroment'] == 'custom_no_gui':
             py_client = p.connect(p.DIRECT)
