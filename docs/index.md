@@ -206,7 +206,7 @@ We introduce a new open-source framework, Quadruped Trajectory Optimization Stac
 
   <center>
 <video class="fullscreen-video" autoplay loop controls>
-  <source src="./assets/Demostration_Video_QTOS.mp4" type="video/mp4">
+  <source src="./assets/Deployment_QTOS.mp4" type="video/mp4">
 </video>
 <center>
   <table align=center width=800px><tr><td> <p align="justify" width="20%"> We showcase the workflow established by QTOS, which takes us from the initial setup to real-world execution. Before running the quadruped, it must undergo a sequence of hard and soft calibrations, to ensure proper alignment of the joint encoders. Following this, a trajectory plan can be executed through the QTOS user interface.
