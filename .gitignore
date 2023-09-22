@@ -59,3 +59,4 @@ Thumbs.db
 /data/traj/*
 /data/plots/*
 /logs/
+/data/test_traj

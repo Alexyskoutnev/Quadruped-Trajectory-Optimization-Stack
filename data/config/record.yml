@@ -5,7 +5,7 @@ map_id : ['plane', 'plane', 'plane']
 custom_camera_view : True
 mesh_scale : 10
 #=========Switches==============
-stance_phase : False
+stance_phase : True
 height_map : True
 track : True
 #=========Hyperparameters=======
@@ -13,7 +13,7 @@ TRAJ_SIZE : 10000
 SIM_STEPS : 11000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_period : 300
+stance_period : 200
 skip_forward_idx : 1
 track_rate : 100
 friction : 1.0

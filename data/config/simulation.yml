@@ -4,10 +4,10 @@ enviroment : "custom"
 # map_id : ['feasibility', 'feasibility_1', 'feasibility', 'feasibility_1', 'feasibility', 'plane']
 # map_id : ['step_1', 'step_1', 'step_1', 'step_1', 'step_1', 'step_1']
 map_id : ['plane', 'plane', 'plane']
-custom_camera_view : False
+custom_camera_view : True
 mesh_scale : 10
 #=========Switches==============
-stance_phase : False
+stance_phase : True
 height_map : True
 track : True
 #=========Hyperparameters=======
@@ -15,7 +15,7 @@ TRAJ_SIZE : 10000
 SIM_STEPS : 11000
 HZ : 1000
 TIMESTEPS : 0.001
-stance_period : 300
+stance_period : 500
 skip_forward_idx : 1
 track_rate : 250
 friction : 1.0
