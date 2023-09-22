@@ -26,6 +26,18 @@ scripts =  {'copy_tmp': 'cp /tmp/towr.csv ./data/traj/towr.csv',
 _flags = ['-g', '-s', '-s_ang', '-s_vel', '-e1', '-e2', '-e3', '-e4', '-t', '-r', '-resolution', 's_vel', 's_ang_vel', '-duration']
 
 def create_cmd(q_ang=None, q_vel=None):
+    """
+    Create a command dictionary for controlling a robot's joints.
+
+    This function creates a dictionary that represents a command for controlling a robot's joints. It can be used to specify desired joint angles and velocities.
+
+    Parameters:
+        q_ang (list or numpy.ndarray, optional): Desired joint angles for the robot. Should be a list or array of length 12.
+        q_vel (list or numpy.ndarray, optional): Desired joint velocities for the robot. Should be a list or array of length 12.
+
+    Returns:
+        dict: A dictionary with keys for different robot components and values representing joint angle or velocity commands.
+    """
     cmd = {"FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}}
     if q_ang is not None:
@@ -53,11 +65,33 @@ def create_cmd(q_ang=None, q_vel=None):
     return cmd
 
 def create_cmd_pose():
+    """
+    Create a command pose dictionary for controlling a robot's end effectors and center of mass.
+
+    This function creates a dictionary that represents a command pose for controlling a robot's end effectors (feet), center of mass (COM), COM velocity, and foot forces.
+
+    Returns:
+        dict: A dictionary with keys for "COM," "COM_VEL," "FL_FOOT," "FR_FOOT," "HL_FOOT," "HR_FOOT," "FL_FOOT_FORCE," "FR_FOOT_FORCE," "HL_FOOT_FORCE," and "HR_FOOT_FORCE."
+    """
     return {"COM": np.zeros(6), "FL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "FR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)},
             "HL_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "HR_FOOT": {"P": np.zeros(3), "D": np.zeros(3)}, "COM_VEL" : np.zeros(6),
             "FL_FOOT_FORCE": np.zeros(3), "FR_FOOT_FORCE": np.zeros(3), "HL_FOOT_FORCE": np.zeros(3), "HR_FOOT_FORCE": np.zeros(3)}
 
 def vec_to_cmd(vec, mode= "P", joint_cnt=3):
+    """
+    Convert a flattened vector to a command dictionary.
+
+    This function takes a flattened vector and converts it into a dictionary that represents a command for controlling a robot's joints or end effectors. The input vector is assumed to contain either joint angle or position information.
+
+    Parameters:
+        vec (list or numpy.ndarray): A flattened vector containing joint angle or position information.
+        mode (str, optional): The mode for specifying the command, either "P" for position or "D" for joint angles.
+        joint_cnt (int): The number of joints or components in the vector for each element of the command.
+
+    Returns:
+        dict: A dictionary representing the command with keys for different robot components.
+
+    """
     cmd = create_cmd()
     for i in range(len(vec)//joint_cnt):
         if i == 0:
@@ -71,6 +105,20 @@ def vec_to_cmd(vec, mode= "P", joint_cnt=3):
     return cmd
 
 def vec_to_cmd_pose(vec, mode="P", joint_cnt=3, z_shift=0.0):
+    """
+    Convert a flattened vector to a command pose dictionary.
+
+    This function takes a flattened vector and converts it into a dictionary that represents a command pose for controlling a robot or system. The input vector is assumed to contain position and orientation information for various components of the robot or system.
+
+    Parameters:
+        vec (list or numpy.ndarray): A flattened vector containing the pose information.
+        mode (str): The mode for specifying pose information, either "P" for position or "D" for orientation.
+        joint_cnt (int): The number of joints or components in the vector for each element of the command pose.
+        z_shift (float): A value to adjust the Z-coordinate of certain components (e.g., foot positions) in the command pose.
+
+    Returns:
+        dict: A dictionary representing the command pose with keys for different components, such as "COM," "FL_FOOT," "FR_FOOT," etc.
+    """
     cmd = create_cmd_pose()
     for i in range(len(vec)//3):
         if i == 0:
@@ -100,6 +148,17 @@ def vec_to_cmd_pose(vec, mode="P", joint_cnt=3, z_shift=0.0):
     return cmd
 
 def combine(*vectors):
+    """
+    Combine multiple 3D vectors into a single 12-element vector.
+
+    This function takes multiple 3D vectors as input and combines them into a single 12-element vector.
+
+    Parameters:
+        *vectors: Variable number of 3D vectors to combine.
+
+    Returns:
+        numpy.ndarray: A 12-element vector containing the combined values.
+    """
     v = np.zeros(12)
     cnt = len(vectors)
     i = 1
@@ -112,6 +171,21 @@ def combine(*vectors):
     return v
 
 def transformation_mtx(t, R):
+    """
+    Create a 4x4 transformation matrix given translation and rotation information.
+
+    This function creates a 4x4 transformation matrix that represents a transformation from one frame to another frame in 3D space. It takes translation and rotation information as input and constructs the transformation matrix accordingly.
+
+    Parameters:
+        t (list or numpy.ndarray): A list or array containing the translation [x, y, z].
+        R (list, numpy.ndarray, or quaternion): Rotation information, which can be provided in different formats.
+            - If R is a list or numpy array of size (3, 3), it represents a 3x3 rotation matrix.
+            - If R is a list or numpy array of size (4,), it represents a quaternion [x, y, z, w].
+            - If R is a list of size (3,), it represents Euler angles [roll, pitch, yaw].
+
+    Returns:
+        numpy.ndarray: A 4x4 transformation matrix that combines the translation and rotation.
+    """
     mtx = np.eye(4)
     if type(R) == list or type(R) == np.ndarray:
         r = Rotation.from_euler('xyz', [R[0], R[1], R[2]])
@@ -127,6 +201,18 @@ def transformation_mtx(t, R):
     return mtx
 
 def transformation_inv(M):
+    """
+    Create a 4x4 transformation matrix from translation and rotation components.
+
+    This function creates a 4x4 transformation matrix from translation and rotation components.
+
+    Parameters:
+        t (numpy.ndarray or list): Translation vector [x, y, z].
+        R (numpy.ndarray or list): Rotation matrix (3x3) or quaternion [x, y, z, w].
+
+    Returns:
+        numpy.ndarray: A 4x4 transformation matrix.
+    """
     mtx = np.eye(4)
     R_inv = np.linalg.inv(M[:3, :3])
     R_inv_t = -np.linalg.inv(M[:3, :3])@M[:,3][:3]
@@ -135,28 +221,57 @@ def transformation_inv(M):
     return mtx
 
 def transformation_multi(M, v):
+    """
+    Compute the inverse transformation matrix.
+
+    This function computes the inverse transformation matrix of a given transformation matrix.
+
+    Parameters:
+        M (numpy.ndarray): A 4x4 transformation matrix.
+
+    Returns:
+        numpy.ndarray: The inverse of the input transformation matrix.
+    """
     if type(v) is list:
         v = np.array(v + [1])
     result = (M @ v)[0:3]
     return result
 
 def euler_to_quaternion(yaw, pitch, roll):
-        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        return [qx, qy, qz, qw]
-    
-def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_traj=None):
-    """Helper function to transform from base frame to global frame 
-       of pybullet enviroment. 
+    """
+    Convert Euler angles to a quaternion.
 
-    Args:
-        robot (_type_): _description_
-        traj (_type_): _description_
+    This function converts Euler angles (yaw, pitch, roll) to a quaternion representation.
+
+    Parameters:
+        yaw (float): Yaw angle in radians.
+        pitch (float): Pitch angle in radians.
+        roll (float): Roll angle in radians.
 
     Returns:
-        _type_: _description_
+        list: A list representing the quaternion in the [x, y, z, w] format.
+    """
+    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    return [qx, qy, qz, qw]
+    
+def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_traj=None):
+    """
+    Transform a trajectory from the base frame to the global frame of the PyBullet environment.
+
+    This function transforms a trajectory represented in the robot's base frame to the global frame of the PyBullet environment.
+
+    Parameters:
+        robot: The robot object.
+        traj (dict): A dictionary containing trajectory data for each foot in the robot's base frame.
+        bezier (bool): A boolean indicating whether the trajectory uses Bezier control points.
+        towr (bool): A boolean indicating whether the trajectory uses TOWR control points.
+        original_traj: An optional original trajectory used for reference.
+
+    Returns:
+        dict: A dictionary containing the transformed trajectory data in the global frame.
     """
     config = robot.CoM_states() #Query the state of robot in global frame
     before_tf_towr = copy.deepcopy(traj)
@@ -188,15 +303,20 @@ def trajectory_2_world_frame(robot, traj, bezier=False, towr=False, original_tra
     return traj
 
 def trajectory_2_local_frame(robot, traj, bezier=False, towr=False, original_traj=None):
-    """Helper function to transform from base frame to global frame 
-       of pybullet enviroment. 
+    """
+    Transform a trajectory from the global frame to the robot's local frame.
 
-    Args:
-        robot (_type_): _description_
-        traj (_type_): _description_
+    This function transforms a trajectory represented in the global frame of the PyBullet environment to the robot's local frame.
+
+    Parameters:
+        robot: The robot object.
+        traj (dict): A dictionary containing trajectory data in the global frame.
+        bezier (bool): A boolean indicating whether the trajectory uses Bezier control points.
+        towr (bool): A boolean indicating whether the trajectory uses TOWR control points.
+        original_traj: An optional original trajectory used for reference.
 
     Returns:
-        _type_: _description_
+        dict: A dictionary containing the transformed trajectory data in the robot's local frame.
     """
     config = robot.CoM_states() #Query the state of robot in global frame
     before_tf_towr = copy.deepcopy(traj)
@@ -216,12 +336,40 @@ def trajectory_2_local_frame(robot, traj, bezier=False, towr=False, original_tra
     return traj
     
 def tf_2_world_frame(traj, CoM):
+    """
+    Transform a trajectory from the robot's local frame to the global frame.
+
+    This function transforms a trajectory represented in the robot's local frame to the global frame of the PyBullet environment.
+
+    Parameters:
+        traj (list or numpy.ndarray): A trajectory vector in the robot's local frame.
+        CoM (dict): The state of the robot's center of mass (CoM) in the global frame.
+
+    Returns:
+        list or numpy.ndarray: The transformed trajectory vector in the global frame.
+    """
     traj[0] = traj[0] - CoM['linkWorldPosition'][0]
     traj[1] = traj[1] - CoM['linkWorldPosition'][1]
     traj[2] = 0
     return traj
 
 def sampleTraj(robot, r=0.1, N=100):
+    """
+    Sample a trajectory for each foot end-effector of a robot.
+
+    This function generates a trajectory for each foot end-effector of a robot by sampling points on a circular path.
+    The trajectory is specified as a dictionary containing positions for each foot at each sampled point.
+
+    Parameters:
+        robot: An object representing the robot.
+        r (float): The radius of the circular path (default is 0.1 units).
+        N (int): The number of points to sample on the circular path (default is 100).
+
+    Returns:
+        dict: A dictionary containing trajectories for each foot end-effector.
+            The keys are 'FL_FOOT', 'FR_FOOT', 'HL_FOOT', and 'HR_FOOT', and the values are lists of 3D positions.
+
+    """
     traj_dic = {}
     traj = list()
     theta = np.linspace(0, 2*np.pi, N)
@@ -240,6 +388,18 @@ def sampleTraj(robot, r=0.1, N=100):
     return traj_dic
 
 def convert12arr_2_16arr(arr):
+    """
+    Convert a 12-element array into a 16-element array with zero padding.
+
+    This function takes a 12-element array and expands it into a 16-element array by adding zero padding.
+    The resulting 16-element array has a specific pattern where every fourth element is zero.
+
+    Parameters:
+        arr (numpy.ndarray): A 12-element NumPy array to be converted.
+
+    Returns:
+        numpy.ndarray: A 16-element NumPy array with zero-padding.
+    """
     arr16 = np.zeros(16,)
     idx = 0
     for i in range(4):
@@ -333,6 +493,22 @@ def percentage_look_ahead(file, percent=0.5):
     return reader
 
 def look_ahead(file, start_time=0.0, timesteps=6000, decimal_roundoff=3):
+    """
+    Look ahead in a CSV file to find a specific starting time and retrieve subsequent data.
+
+    This function reads a CSV file and looks for a specific starting time (or closest available time) to begin reading data.
+    It then retrieves a specified number of timesteps of data from that starting point.
+
+    Parameters:
+        file (file-like object): The CSV file-like object to read from.
+        start_time (float, optional): The desired starting time. Default is 0.0.
+        timesteps (int, optional): The number of timesteps (rows) of data to retrieve after the starting time. Default is 6000.
+        decimal_roundoff (int, optional): The number of decimal places to round the timestamp for comparison. Default is 3.
+
+    Returns:
+        csv.reader: A CSV reader object positioned at the requested starting time.
+        int: The index of the row where the reader is positioned.
+    """
     reader = csv.reader(file)
     stop_idx = 0
     while (True):
@@ -345,12 +521,38 @@ def look_ahead(file, start_time=0.0, timesteps=6000, decimal_roundoff=3):
     return reader, stop_idx
 
 def zero_filter(x, tol=1e-4):
+    """
+    Filter out values in an iterable that are close to zero.
+
+    This function takes an iterable `x` and a tolerance `tol` and filters out values that are close to zero within the specified tolerance.
+    Values with absolute magnitude less than `tol` are replaced with zero.
+
+    Parameters:
+        x (iterable): The input iterable containing numeric values to be filtered.
+        tol (float, optional): The tolerance level to determine if a value is close to zero. Default is 1e-4.
+
+    Returns:
+        iterable: An iterable with values filtered by replacing near-zero values with zero.
+
+    """
     for i, val in enumerate(x):
         if abs(val) < tol:
             x[i] = 0
     return x
 
 def is_numeric(s):
+    """
+    Check if a string can be converted to a numeric value.
+
+    This function checks whether a given string can be successfully converted to a numeric (float) value.
+
+    Parameters:
+        s (str): The input string to be checked.
+
+    Returns:
+        bool: True if the string can be converted to a numeric value, False otherwise.
+    """
+
     try:
         float(s)
         return True
@@ -358,6 +560,19 @@ def is_numeric(s):
         return False
 
 def txt_2_np_reader(file, delimiter=','):
+    """
+    Read data from a text file and convert it to a NumPy array.
+
+    This function reads data from a text file, where each line represents a row of data with values separated by a delimiter.
+    It then converts the data into a NumPy array.
+
+    Parameters:
+        file (str): The path to the text file containing the data.
+        delimiter (str, optional): The delimiter used to separate values in each line. Default is ',' (comma).
+
+    Returns:
+        numpy.ndarray: A NumPy array containing the data read from the text file.
+    """
     data = []
     with open(file, 'r') as f:
         reader = f.readlines()
@@ -368,6 +583,23 @@ def txt_2_np_reader(file, delimiter=','):
     return np.array(data)
 
 def save_height_grid_map(height_map, save_file="./data/plots/height_map.png"):
+    """
+    Save a height grid map as an image file.
+
+    This function takes a height grid map represented as a 2D numpy array and saves it as an image file in PNG format.
+
+    Parameters:
+        height_map (numpy.ndarray): A 2D numpy array representing a height grid map.
+        save_file (str): The file path where the image will be saved. Default is "./data/plots/height_map.png".
+
+    Notes:
+        This function creates an image of the height grid map with a specified width and height. It reverses the map,
+        sets axis labels, hides axes, and saves the image with high DPI and tight bounding box settings.
+
+    Args:
+        height_map (numpy.ndarray): A 2D numpy array representing a height grid map.
+        save_file (str, optional): The file path where the image will be saved. Default is "./data/plots/height_map.png".
+    """
     dpi = 600
     width, height = 10, 6
     fig, ax = plt.subplots(figsize=(width, height))
@@ -380,6 +612,23 @@ def save_height_grid_map(height_map, save_file="./data/plots/height_map.png"):
     plt.close()
 
 def save_bool_map(bool_map, save_file="./data/plots/bool_map.png"):
+    """
+    Save a boolean map as an image file.
+
+    This function takes a boolean map represented as a 2D numpy array and saves it as an image file in PNG format.
+
+    Parameters:
+        bool_map (numpy.ndarray): A 2D numpy array representing a boolean map.
+        save_file (str): The file path where the image will be saved. Default is "./data/plots/bool_map.png".
+
+    Notes:
+        This function creates an image of the boolean map with a specified width and height. It reverses the map,
+        sets axis labels, hides axes, and saves the image with high DPI and tight bounding box settings.
+
+    Args:
+        bool_map (numpy.ndarray): A 2D numpy array representing a boolean map.
+        save_file (str, optional): The file path where the image will be saved. Default is "./data/plots/bool_map.png".
+    """
     dpi = 600
     width, height = 10, 6
     fig, ax = plt.subplots(figsize=(width, height))
