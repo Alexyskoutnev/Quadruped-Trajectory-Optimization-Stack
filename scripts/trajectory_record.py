@@ -60,7 +60,7 @@ def update_file_name(file, cfg, sim_cfg):
 
 def _global_update(ROBOT, kwargs, sim_cfg):
     global_cfg.ROBOT_CFG.robot = ROBOT
-    global_cfg.ROBOT_CFG.linkWorldPosition = list(kwargs['COM'])
+    global_cfg.ROBOT_CFG.global_COM_xyz = list(kwargs['COM'])
     global_cfg.ROBOT_CFG.linkWorldOrientation = list(p.getEulerFromQuaternion(kwargs['linkWorldOrientation']))
     global_cfg.ROBOT_CFG.EE['FL_FOOT'] = list(kwargs['FL_FOOT'])
     global_cfg.ROBOT_CFG.EE['FR_FOOT'] = list(kwargs['FR_FOOT'])
@@ -171,7 +171,7 @@ def record_simulation(args):
                     ##====================Logging====================##
                     log.write(f"TIME STEP ==> {global_cfg.RUN.step}\n")
                     log.write(f"Towr CoM POS -> {EE_POSE[0:3]}\n")
-                    log.write(f"Global POS -> {global_cfg.ROBOT_CFG.linkWorldPosition}\n")
+                    log.write(f"Global POS -> {global_cfg.ROBOT_CFG.global_COM_xyz}\n")
                     log.write(f"=========Global Vars=========\n")
                     log.write(f"{global_cfg.print_vars(log.log)}\n")
                     ##===============================================##
