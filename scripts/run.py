@@ -26,7 +26,8 @@ import QTOS.config.global_cfg as global_cfg
 
 config_sim = "./data/config/simulation.yml"
 sim_cfg = yaml.safe_load(open(config_sim, 'r'))
-PLAN = "./data/traj/towr.csv"
+PLAN_ = "./data/traj/towr.csv"
+PLAN_TEST = "./test/data/traj/gait.csv"
 
 mutex = Lock()
 
@@ -108,6 +109,9 @@ def simulation(args):
     """
 
     """============Sim-Init-Variables============"""
+    PLAN = PLAN_
+    if args.get('test'):
+        PLAN = PLAN_TEST
     goal = global_cfg.ROBOT_CFG.robot_goal
     if args.get('sim_cfg'):
         sim_cfg = args['sim_cfg']
@@ -157,6 +161,7 @@ def simulation(args):
                 p.stepSimulation()
                 last_loop_time = time.time()
                 stance_step += 1
+
     """============Main-running-loop============"""
     while (sim_step < sim_cfg["SIM_STEPS"]):
         if sim_step < sim_cfg["TRAJ_SIZE"]:

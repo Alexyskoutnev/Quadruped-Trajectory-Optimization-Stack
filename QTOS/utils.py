@@ -692,7 +692,7 @@ def DockerInfo():
     return dockerid[idx]
 
 
-def experimentInfo(experiement_name, record_traj=False):
+def experimentInfo(experiement_name, record_traj=False, test=False):
     """Helper function to setup different terrain experiments to test the Q-TOS Stack
 
     Args:
@@ -711,8 +711,12 @@ def experimentInfo(experiement_name, record_traj=False):
                             "exp_4" : "experiment_4_rough_terrain.yml", "exp_5": "experiment_5_extreme_climbing.yml",
                             "exp_6" : "experiment_6_stairs.yml", "FSS_Plot" : "create_FSS_plots.yml",
                             "exp_7" : "experiment_7_climb_obstacle.yml", "exp_8" : "experiment_8_dynamic_terrain.yml",
-                            "exp_9" : "experiment_9_continous_walking.yml", "exp_10" : "experiment_10_continous_climbing.yml"}
-        file_path = os.path.join("./data/config", experiment_names[experiement_name])
+                            "exp_9" : "experiment_9_continous_walking.yml", "exp_10" : "experiment_10_continous_climbing.yml",
+                            "test" : "simulation_QTOS_test.yml"}
+        if test:
+            file_path = os.path.join("./test/data/config", experiment_names[experiement_name])
+        else:
+            file_path = os.path.join("./data/config", experiment_names[experiement_name])
         sim_cfg = yaml.safe_load(open(file_path, 'r'))
     return sim_cfg
 

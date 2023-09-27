@@ -53,7 +53,6 @@ class Global_Planner(object):
         self.lookahead = lookahead
         self.hz = hz
         self.start_goal_pts = Limited_Stack(start_goal_pts_history_sz)
-        self.P_correction = args['mpc_p']
         self.plan_state = np.zeros(3)
         self.robot_state = np.zeros(3)
         self.plan_desired_goal_pt = np.zeros(3)

@@ -39,9 +39,13 @@ jobs:
     - name : Install local Python enviroment
       run : pip3 install -e .
 
-    - name : SOLO12_SIMULATION Test Script
+    - name : SOLO12_SIMULATION Test Scripts for each navigation tasks
       run: |
-          python scripts/run.py -t
+          python scripts/run.py -T
+          python scripts/run.py -T -exp exp_1
+          python scripts/run.py -T -exp exp_3
+          python scripts/run.py -T -exp exp_5
+
           
 
     

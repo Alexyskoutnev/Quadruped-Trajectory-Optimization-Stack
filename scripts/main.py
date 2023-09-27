@@ -18,6 +18,7 @@ from QTOS.logger import Logger
 from QTOS.builder import builder
 
 CURRENT_TRAJ_CSV_FILE = "./data/traj/towr.csv"
+CURRENT_TRAJ_TEST_CSV = "./test/data/gait.csv"
 NEW_TRAJ_CSV_FILE = "/tmp/towr.csv"
 
 mutex = Lock()
@@ -160,7 +161,6 @@ def build_args():
         -l, --look: The number of timesteps to lookahead in the planned trajectory as a float. Default: 3750.
         -r, --record: A boolean flag to indicate whether to record joint-angle, joint-velocity, and torque while running the simulator. Default: False.
         -exp, --experiment: The name of the experiment to run in the simulator as a string. Default: "default".
-        -p, --mpc_p: A boolean flag indicating a switch for global plan correction. Default: False.
         -t, --towr: A boolean flag indicating the use of the default TOWR local planner. Default: False.
     """
     parser = argparse.ArgumentParser(description="I/O arguments to interact with the QTOS stack")
@@ -177,28 +177,36 @@ def build_args():
     parser.add_argument('-l', '--look', type=float, default=3750, dest='look_ahead', help='Number of timesteps to lookahead in the planned trajectory (the next starting state for the optimizer)')
     parser.add_argument('-r', '--record', type=bool, default=False, dest='record', help="Record the joint-angle, joint-velocity, and torque while running the simulator")
     parser.add_argument('-exp', '--experiment', type=str, default="default", dest='experiment', help="Selects the experiment to run in the simulator")
-    parser.add_argument('-p', '--mpc_p', type=bool, default=False, dest='mpc_p', help="Switch for global plan correction")
     parser.add_argument('-t', '--towr', action="store_true", dest='towr', help="Default TOWR local planner", default=False)
+    parser.add_argument('-T', '--test', action="store_true", dest="test", help="Evoke testing functionality for each experiment in QTOS")
     args = vars(parser.parse_args())
     docker_id = DockerInfo()
     args.update({"scripts": parse_scripts(scripts, docker_id)})
-    args['sim_cfg'] = experimentInfo(args['experiment'], args['record'])
+    if args.get('test'):
+        args['sim_cfg'] = experimentInfo("test", args['record'], True)
+    else:
+        args['sim_cfg'] = experimentInfo(args['experiment'], args['record'])
     args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     args.update(builder(sim_cfg=args['sim_cfg']))
     return args
 
 def main():
     args = build_args()
-    if args.get('towr'):
-        print("Default Test")
-        args['-r'] = 30 * args['sim'].num_tiles
-        if args['sim_cfg'].get('goal'):
-            args['-g'] = args['args']['goal']
-        args['-duration'] = 1.0 * args['sim'].num_tiles
-        run_default(args)
-    elif args.get('-g') is None:
+    if args.get('test'):
         args['-g'] = [(args['sim'].num_tiles - 1) * 2.0 + 0.5, 0, 0.24]
-    _run(args)
+        log = _init(args)
+        run.simulation(args)
+    else:
+        if args.get('towr'):
+            print("Default Test")
+            args['-r'] = 30 * args['sim'].num_tiles
+            if args['sim_cfg'].get('goal'):
+                args['-g'] = args['args']['goal']
+            args['-duration'] = 1.0 * args['sim'].num_tiles
+            run_default(args)
+        elif args.get('-g') is None:
+            args['-g'] = [(args['sim'].num_tiles - 1) * 2.0 + 0.5, 0, 0.24]
+        _run(args)
 
 if __name__ == "__main__":
     main()
