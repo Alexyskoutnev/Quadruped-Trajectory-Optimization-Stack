@@ -39,12 +39,12 @@ jobs:
     - name : Install local Python enviroment
       run : pip3 install -e .
 
-    - name : SOLO12_SIMULATION Test Scripts for each navigation tasks
+    - name : QTOS test scripts for each navigation tasks
       run: |
-          python scripts/run.py -T
-          python scripts/run.py -T -exp exp_1
-          python scripts/run.py -T -exp exp_3
-          python scripts/run.py -T -exp exp_5
+          python scripts/main.py -T
+          python scripts/main.py -T -exp exp_1
+          python scripts/main.py -T -exp exp_3
+          python scripts/main.py -T -exp exp_5
 
           
 
