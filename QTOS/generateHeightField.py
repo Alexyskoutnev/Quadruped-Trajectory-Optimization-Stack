@@ -427,7 +427,6 @@ class Maps(object):
         random_terrain_1 (str): Path to the random_terrain height map file.
         climb_1 (str): Path to the climb_1 height map file.
         climb_2 (str): Path to the climb_2 height map file.
-        plane_file_200 (str): Path to the plane_200 height map file.
         stairs (str): Path to the stairs height map file.
         stairs_1 (str): Path to the stairs_1 height map file.
         collision_hills (str): Path to the collision_wall_hills height map file.
@@ -449,7 +448,6 @@ class Maps(object):
     random_terrain_1 = "./data/heightfields/random_terrain.txt"
     climb_1 = "./data/heightfields/climb_1.txt"
     climb_2 = "./data/heightfields/climb_2.txt"
-    plane_file_200 = "./data/heightfields/plane_200.txt"
     stairs = "./data/heightfields/stairs.txt"
     stairs_1 = "./data/heightfields/stairs_1.txt"
     collision_hills = "./data/heightfields/collision_wall_hills.txt"

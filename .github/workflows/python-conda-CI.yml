@@ -36,6 +36,17 @@ jobs:
       run : 
           Xvfb :99 -screen 0 1024x768x24 & export DISPLAY=:99
 
+    - name : Installing Pinocchio 
+      run  : |
+          sudo apt install -qqy lsb-release curl
+          sudo mkdir -p /etc/apt/keyrings 
+          curl http://robotpkg.openrobots.org/packages/debian/robotpkg.asc
+          sudo tee /etc/apt/keyrings/robotpkg.asc
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg"
+          sudo tee /etc/apt/sources.list.d/robotpkg.list
+          sudo apt update
+          sudo apt install -qqy robotpkg-py3*-pinocchio
+
     - name : Install local Python enviroment
       run : pip3 install -e .
 
