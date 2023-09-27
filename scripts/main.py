@@ -180,12 +180,12 @@ def build_args():
     parser.add_argument('-t', '--towr', action="store_true", dest='towr', help="Default TOWR local planner", default=False)
     parser.add_argument('-T', '--test', action="store_true", dest="test", help="Evoke testing functionality for each experiment in QTOS")
     args = vars(parser.parse_args())
-    docker_id = DockerInfo()
-    args.update({"scripts": parse_scripts(scripts, docker_id)})
     if args.get('test'):
         args['sim_cfg'] = experimentInfo("test", args['record'], True)
     else:
         args['sim_cfg'] = experimentInfo(args['experiment'], args['record'])
+        docker_id = DockerInfo()
+        args.update({"scripts": parse_scripts(scripts, docker_id)})
     args['-resolution'] = 0.01 if args['sim_cfg'].get('resolution') is None else args['sim_cfg']['resolution'] 
     args.update(builder(sim_cfg=args['sim_cfg']))
     return args
@@ -194,7 +194,8 @@ def main():
     args = build_args()
     if args.get('test'):
         args['-g'] = [(args['sim'].num_tiles - 1) * 2.0 + 0.5, 0, 0.24]
-        log = _init(args)
+        args['scripts'] = scripts
+        global_cfg.ROBOT_CFG.robot_goal = args['-g']
         run.simulation(args)
     else:
         if args.get('towr'):
