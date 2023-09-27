@@ -1,12 +1,12 @@
 name: Python Package using Conda
 
-on: [push]
+on: [push, pull]
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 5
+      max-parallel: 10
 
     steps:
 
@@ -38,14 +38,19 @@ jobs:
 
     - name : Installing Pinocchio 
       run  : |
-          sudo apt install -qqy lsb-release curl
-          sudo mkdir -p /etc/apt/keyrings 
-          curl http://robotpkg.openrobots.org/packages/debian/robotpkg.asc
-          sudo tee /etc/apt/keyrings/robotpkg.asc
-          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg"
-          sudo tee /etc/apt/sources.list.d/robotpkg.list
-          sudo apt update
-          sudo apt install -qqy robotpkg-py3*-pinocchio
+          git clone --recursive https://github.com/stack-of-tasks/pinocchio
+          cd pinocchio && mkdir build && cd build
+          git checkout master
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+          make -j4
+          make install
+          # sudo mkdir -p /etc/apt/keyrings 
+          # curl http://robotpkg.openrobots.org/packages/debian/robotpkg.asc
+          # sudo tee /etc/apt/keyrings/robotpkg.asc
+          # echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg"
+          # sudo tee /etc/apt/sources.list.d/robotpkg.list
+          # sudo apt update
+          # sudo apt install -qqy robotpkg-py3*-pinocchio
 
     - name : Install local Python enviroment
       run : pip3 install -e .
