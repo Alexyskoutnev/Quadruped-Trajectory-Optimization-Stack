@@ -36,6 +36,11 @@ jobs:
       run : 
           Xvfb :99 -screen 0 1024x768x24 & export DISPLAY=:99
 
+    - name: Install Eigen
+      run: |
+        sudo apt-get update
+        sudo apt-get install libeigen3-dev
+
     - name : Installing Pinocchio 
       run  : |
           git clone --recursive https://github.com/stack-of-tasks/pinocchio
