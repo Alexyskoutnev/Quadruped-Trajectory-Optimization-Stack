@@ -46,7 +46,6 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-
     - name : Install local Python enviroment
       run : pip3 install -e .
 
@@ -54,11 +53,8 @@ jobs:
       run: |
           python scripts/main.py -T
           python scripts/main.py -T -exp exp_1
-          python scripts/main.py -T -exp exp_2
           python scripts/main.py -T -exp exp_3
-          python scripts/main.py -T -exp exp_4
           python scripts/main.py -T -exp exp_5
-          python scripts/main.py -T -exp exp_6
 
           
 
