@@ -22,4 +22,4 @@
   knee_gain_scale : 1.0
   ankle_gain_scale : 1.0
   timestep : 0.001
-  use_pinocchio : True
+  use_pinocchio : False
