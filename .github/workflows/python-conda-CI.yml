@@ -22,10 +22,6 @@ jobs:
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
 
-    - name : Installing pip requirements
-      run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
 
     - name : Setting up fake display
       run : |
@@ -43,19 +39,25 @@ jobs:
 
     - name : Installing Pinocchio 
       run  : |
-          git clone --recursive https://github.com/stack-of-tasks/pinocchio
-          cd pinocchio && mkdir build && cd build
-          git checkout master
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
-          make -j4
-          make install
+          # git clone --recursive https://github.com/stack-of-tasks/pinocchio
+          # cd pinocchio && mkdir build && cd build
+          # git checkout master
+          # cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+          # make -j4
+          # make install
           # sudo mkdir -p /etc/apt/keyrings 
-          # curl http://robotpkg.openrobots.org/packages/debian/robotpkg.asc
-          # sudo tee /etc/apt/keyrings/robotpkg.asc
-          # echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg"
-          # sudo tee /etc/apt/sources.list.d/robotpkg.list
-          # sudo apt update
-          # sudo apt install -qqy robotpkg-py3*-pinocchio
+          curl http://robotpkg.openrobots.org/packages/debian/robotpkg.asc
+          sudo tee /etc/apt/keyrings/robotpkg.asc
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg"
+          sudo tee /etc/apt/sources.list.d/robotpkg.list
+          sudo apt update
+          sudo apt install -qqy robotpkg-py3*-pinocchio
+
+    - name : Installing pip requirements
+      run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
 
     - name : Install local Python enviroment
       run : pip3 install -e .
