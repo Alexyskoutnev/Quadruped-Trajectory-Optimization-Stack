@@ -3,6 +3,8 @@
 
 [Project](https://alexyskoutnev.github.io/Quadruped-Trajectory-Optimization-Stack/) | [arXiv](https://arxiv.org/abs/2309.09058)
 
+![intro](/test/data/plots/QTOS_SYSTEM.png)
+
 ## Abstract
 
 We introduce a new open-source framework, Quadruped Trajectory Optimization Stack (QTOS), which integrates a global planner, local planner, simulator, controller, and robot interface into a single package. QTOS serves as a full-stack interface, simplifying continuous motion planning on an open-source quadruped platform by bridging the gap between middleware and gait planning. It empowers users to effortlessly translate high-level navigation objectives into low-level robot commands. Furthermore, QTOS enhances the stability and adaptability of long-distance gait planning across challenging terrain.
@@ -80,7 +82,7 @@ roslaunch towr_ros towr_ros.launch
 
 ## Running Demos
 The demos presented below showcase the features provided by QTOS. To run an example trajectory and test if everything is installed correctly, execute the following command:
-```
+```console
 cd ~/SOLO12_SIM_CONTROL
 python3 scripts/main.py
 ```
@@ -90,7 +92,7 @@ To investigate the motion planning capabilities, you can run the following three
 - Climbing (exp_5)
 
 These tasks can be executed using the following commands:
-```
+```console
 python3 scripts/main.py -exp exp_1
 python3 scripts/main.py -exp exp_3
 python3 scripts/main.py -exp exp_5
